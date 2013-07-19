@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-# todo: добавить быстрый метод замены flow и строки типа s[3:5] = ...
 from collections import namedtuple
 
 SizedAttr = namedtuple('SizedAttr', ('size', 'attr'))
@@ -41,6 +40,11 @@ class AttrFlow(object):
 				pos += size
 			return r
 		raise KeyError(s)
+
+	def __setitem__(self, s, data):
+		# todo: сделать это горе чуть более производительным
+		assert isinstance(s, slice), not s.step
+		self.data[:] = (self[:s.start] + data + self[s.stop:]).data
 
 	def __add__(self, other):
 		if self.data and other.data:
@@ -88,6 +92,11 @@ class AttrString(object):
 		if isinstance(s, int):
 			return self.flow[s], s[s]
 		return AttrString(self.str[s], self.flow[s])
+
+	def __setitem__(self, s, data):
+		assert isinstance(s, slice), not s.step
+		self.str[s] = data.str
+		self.flow[s] = data.flow
 
 	def __add__(self, other):
 		return AttrString(self.str + other.str, self.flow + other.flow)

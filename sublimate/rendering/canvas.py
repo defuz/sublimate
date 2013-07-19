@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from sublimate.utils.attrbuted import AttrFlow, AttrString
+from sublimate.utils.attributed import AttrFlow, AttrString
 
 
 class VerticalSplitter(object):
@@ -42,7 +42,7 @@ class HorizontalSplitter(object):
             pos += width
 
 
-class UrwidCanvasWrapper(object):
+class UrwidCanvasAdapter(object):
 
     def __init__(self, canvas):
         self.canvas = canvas
@@ -75,7 +75,6 @@ class BaseCanvas(object):
 
     vert = property(VerticalSplitter)
     horz = property(HorizontalSplitter)
-    as_urwid = property(UrwidCanvasWrapper)
 
     def __iter__(self):
         raise NotImplementedError()
@@ -90,21 +89,24 @@ class BaseCanvas(object):
     def draw(self, attrstr, x=0, y=0):
         raise NotImplementedError()
 
-    def get_zone(self, x, y):
+    def get_mouse_target(self, x, y):
         raise NotImplementedError()
 
-    def set_mouse_target(self, zone, x=0, y=0, width=None, height=None):
+    def set_mouse_target(self, target, x=0, y=0, width=None, height=None):
         raise NotImplementedError()
 
     def overlay(self, x, y, width, height):
         return SubCanvas(self, x, y, width, height)
 
     def padding(self, left=0, right=0, top=0, bottom=0):
+        assert left + right <= self.width
+        assert top + bottom <= self.height
         width = self.width - left - right
         height = self.height - top - bottom
         return SubCanvas(self, left, top, width, height)
 
     def aligment(self, left_width, right_width):
+        assert left_width + right_width <= self.width
         return (SubCanvas(self, 0, 0, left_width, self.height),
                 SubCanvas(self, self.width - right_width, 0, right_width, self.height))
 
@@ -131,7 +133,7 @@ class Canvas(BaseCanvas):
         self.y, self.x = 0, 0
         self.base_canvas = self
         self.data = [self.create_solid(self.width) for i in range(self.height)]
-        self.zone = [AttrFlow.fill(self.width) for i in range(self.height)]
+        self.mouse_target = [AttrFlow.fill(self.width) for i in range(self.height)]
 
     def __iter__(self):
         return iter(self.data)
@@ -141,21 +143,17 @@ class Canvas(BaseCanvas):
 
     def draw(self, attrstr, x=0, y=0):
         assert y < self.height, x + len(attrstr) < self.width
-        self.data[y] = (self.data[y][:x] + 
-                        attrstr + 
-                        self.data[y][x + len(attrstr):])
+        self.data[y][x:x+len(attrstr)] = attrstr
 
-    def get_zone(self, x, y):
-        return self.zone[y][x]
+    def get_mouse_target(self, x, y):
+        return self.mouse_target[y][x]
 
-    def set_mouse_target(self, zone, x=0, y=0, width=None, height=None):
+    def set_mouse_target(self, target, x=0, y=0, width=None, height=None):
         width = self.width if width is None else width
         height = self.height if height is None else height
         assert x + width <= self.width, y + height <= self.height
         for i in range(height):
-            self.zone[y+i] = (self.zone[y+i][:x] +
-                              AttrFlow.fill(width, zone) +
-                              self.zone[y+i][x + width:])
+            self.mouse_target[y+i][x:x+width] = AttrFlow.fill(width, target)
 
 class SubCanvas(BaseCanvas):
     def __init__(self, base_canvas, x, y, width, height):
@@ -180,11 +178,11 @@ class SubCanvas(BaseCanvas):
         assert y < self.height, x + len(attrstr) < self.width
         self.base_canvas.draw(attrstr, x=self.x+x, y=self.y+y)
 
-    def get_zone(self, x, y):
-        return self.base_canvas.get_zone(self.x + x, self.y + y)
+    def get_mouse_target(self, x, y):
+        return self.base_canvas.get_mouse_target(self.x + x, self.y + y)
 
-    def set_mouse_target(self, zone, x=0, y=0, width=None, height=None):
+    def set_mouse_target(self, target, x=0, y=0, width=None, height=None):
         width = self.width if width is None else width
         height = self.height if height is None else height
         assert x + width <= self.width, y + height <= self.height
-        self.base_canvas.set_mouse_target(zone, self.x+x, self.y+y, width, height)
+        self.base_canvas.set_mouse_target(target, self.x+x, self.y+y, width, height)

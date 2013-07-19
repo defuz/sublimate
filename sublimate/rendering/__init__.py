@@ -1,10 +1,7 @@
 # -*- coding: utf-8 -*-
 
-from .widget import Widget, NullWidget
-from .base import TextWidget, SolidWidget
-from .inputs import FixedButtonWidget
-from .containers import (HorzFrameContainer, VertFrameContainer,
-                         HorzFlowContainer, VertFlowContainer,
-                         HorzAligmentContainer)
-
-from .decorators import (DecoratorWidget, OverlayDecorator, ModalDecorator)
+from .widget import Widget
+from mixins import (ContainerMixin,
+	                HorzRenderingMixin, VertRenderingMixin,
+	                ControlListMixin, SelectedMixin, 
+	                OverlayMixin, ModalMixin)

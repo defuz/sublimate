@@ -2,21 +2,13 @@
 import urwid
 
 from sublimate.palette import palette
-
-from sublimate.rendering import VertFrameContainer, HorzFrameContainer, OverlayDecorator
-from sublimate.view import get_menubar, get_sidebar, get_editor, get_statusbar
+from sublimate.view import get_view
 
 class Sublimate(object):
 
     def __init__(self):
         self.palette = palette
-        self.editor = get_editor(self)
-        self.sidebar = get_sidebar(self)
-        self.body = HorzFrameContainer(self.editor, self.sidebar)
-        self.overlay = OverlayDecorator(self.body)
-        self.menubar = get_menubar(self)
-        self.statusbar = get_statusbar(self)
-        self.view = VertFrameContainer(self.overlay, self.menubar, self.statusbar)
+        self.view = get_view(self)
 
     def run(self):
         self.loop = urwid.MainLoop(self.view.as_urwid, self.palette,

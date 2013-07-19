@@ -1,6 +1,18 @@
 # -*- coding: utf-8 -*-
-from sublimate.widgets import Widget, HorzFlowContainer
-from sublimate.utils import ListWalker
+from sublimate.rendering import Widget, ControlListMixin
+from sublimate.utils.monitored import ListWalker
+
+def get_sidebar(app):
+	folders = PropertyWalker(app, "project", "folders")
+	return Sidebar(folders)
+
+class Sidebar(Widget):
+
+	def __init__(self, folders):
+		self.children = ListWalker(folders, self.create_child)
+
+	def create_child(self, folder):
+		return FolderWidget(self, folder)
 
 
 class FileWidget(Widget):
@@ -24,14 +36,35 @@ class FileWidget(Widget):
 	def height(self):
 		return 1
 
-	def _render(self, canvas):
+	def render(self, canvas):
 		canvas.set_style(self.style).padding(left=self.padding).draw_text(self.file.name)
 
 
-class FolderHeader(Widget):
+class FolderWidget(Widget, ControlListMixin):
 
-	def __init__(self, parent):
+	def __init__(self, parent, folder):
 		self.parent = parent
+		self.padding = parent.padding + 2
+		self.folder = folder
+		self.opened = False
+		self.widgets = ListWalker(folder.content, self.create_child)
+
+	def create_child(self, file):
+		if hasattr(file, 'content'):
+			return FolderHeader(self, file)
+		return FileWidget(self, file)
+
+	@property
+	def width(self):
+		max_children_width = max(widget.width for widget in self.children) \
+							 if self.children else 0
+		return max(max_children_width, self.folder.name) + 2
+
+	@property
+	def height(self):
+		if not self.opened:
+			return 1
+		return 1 + sum(widget.height for widget in self.children)
 
 	@property
 	def style(self):
@@ -46,38 +79,22 @@ class FolderHeader(Widget):
 
 	@property
 	def icon(self):
-		if self.parent.opened:
+		if self.opened:
 			return 'v'
 		return '>'
 
-	@property
-	def width(self):
-		return self.padding + 2 + len(self.parent.folder.name)
-
-	@property
-	def height(self):
-		return 1
-
-	def _render(self, canvas):
+	def render_header(self, canvas):
 		canvas.set_style(self.style)
 		icon_canvas, name_canvas = canvas.padding(left=self.parent.padding).horz[2, ...]
 		icon_canvas.set_style(self.icon_style).draw_text(self.icon)
 		name_canvas.draw_text(self.parent.folder.name)
 
-
-class FolderWidget(HorzFlowContainer):
-
-	def __init__(self, parent, folder):
-		if parent:
-			self.parent = parent
-			self.padding = parent.padding + 2
-		else:
-			self.padding = 0
-		self.folder = folder
-		self.header = FolderHeader(parent)
-		self.widgets = ListWalker(folder.content, self.create_file_widget)
-
-	def create_file_widget(self, file):
-		if hasattr(file, 'content'):
-			return FolderHeader(self, file)
-		return FileWidget(self, file)
+	def render(self, canvas):
+		if not self.opened:
+			return self.render_header(canvas)
+		header_canvas, content_canvas = canvas.vert[1, ...]
+		self.render_header(header_canvas)
+		children_heights = (widget.height for widget in self.children)
+		children_canvases = content_canvas.vert[children_heights]
+		for widget, widget_canvas in zip(self.children, children_canvases):
+			widget.render(widget_canvas)

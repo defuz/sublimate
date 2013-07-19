@@ -1,49 +1,54 @@
 # -*- coding: utf-8 -*-
-from sublimate.rendering import (FixedButtonWidget, 
-                                 HorzFlowContainer, VertFlowContainer, HorzAligmentContainer, 
-                                 ModalDecorator, 
-                                 SolidWidget, TextWidget)
+from sublimate.rendering import (Widget,
+                                 HorzRenderingMixin, VertRenderingMixin,
+                                 SelectedMixin, ControlListMixin,
+                                 ModalMixin)
 
 
 def get_menubar(app):
     pass
 
+
 def get_menu_item(app, settings):
     if settings.caption == "-":
-        return GroupDivider()
-    if settings.children:
-        return GroupMenu(**settings)
-    return GroupButton(**settings)
- 
+        return MenuDivider()
+    # if settings.children:
+        # return MenuModal(...)
+    return MenuButton()
 
-class MenuBar(HorzFlowContainer):
+
+class Menubar(Widget,
+              HorzRenderingMixin,
+              ControlListMixin):
+
+    @classmethod
+    def from_settings(cls, settings):
+        return cls([MenuGroup.from_settings(self, group_settings) 
+                    for group_settings in settings])        
 
     @property
     def style(self):
         return "menubar"
 
     def on_left(self):
-        index = self.get_focused_index()
-        if index is None:
-            return False
-        index = (index - 1) % len(self.widgets)
-        self.widgets[index].set_focus() 
-        return True
+        return self.focus_next()
 
     def on_right(self):
-        index = self.get_focused_index()
-        if index is None:
-            return False
-        index = (index + 1) % len(self.widgets)
-        self.widgets[index].set_focus() 
-        return True
+        return self.focus_prev()
 
 
-class MenuButton(FixedButtonWidget):
+class GroupButton(Widget,
+                  SelectedMixin):
 
-    def __init__(self, caption, submenu): # fixme: remove "=None"
+    def __init__(self, parent, caption, submenu):
+        self.parent = parent
         self.caption = caption
         self.submenu = submenu
+
+    @classmethod
+    def from_settings(cls, parent, settings):
+        return cls(parent, settings.caption,
+                   MenuGroupBox.from_settings(self, settings.children))
 
     @property
     def style(self):
@@ -58,115 +63,43 @@ class MenuButton(FixedButtonWidget):
     def height(self):
         return 1
 
-    def on_mouse(self, event):
-        self.set_focus()
-
     def on_up(self):
-        for widget in reversed(self.submenu.inner.widgets):
-            if not widget.disabled:
-                widget.set_focus()
-                return True
-        return False
+        return self.submenu.select_first()
 
     def on_down(self):
-        for widget in self.submenu.inner.widgets:
-            if not widget.disabled:
-                widget.set_focus()
-                return True
-        return False
+        return self.submenu.select_last()
 
     def render(self, canvas):
-        canvas.set_mouse_target(self).set_style(self.style).draw_text(" %s " % self.caption)
+        canvas.set_mouse_target(self)
+        canvas.set_style(self.style)
+        canvas.draw_text(" %s " % self.caption)
+        self.submenu.set_position(canvas, 'left', 'bottom')
 
 
-class MenuModal(ModalDecorator):
+class GroupBox(Widget,
+               VertRenderingMixin,
+               ModalMixin,
+               ControlListMixin):
 
-    def __init__(self, parent, overlay, items):
-        ModalDecorator.__init__(self, parent, overlay, MenuBox(items))
-
-    @property
-    def x(self):
-        return self.parent.x
-
-    @property
-    def y(self):
-        return self.parent.y + 1
-
-    @property
-    def opened(self):
-        return self.parent.focused
-
-
-class MenuBox(VertFlowContainer):
+    @classmethod
+    def from_settings(cls, parent, children):
+        return cls(parent, [get_menu_item(self, item_settings)
+                            for item_settings in children])
 
     @property
     def style(self):
         return 'modal'
 
     def on_down(self):
-        prev_index = index = self.get_focused_index()
-        if index is None:
-            return False
-        while True:
-            index = (index + 1) % len(self.widgets)
-            if not self.widgets[index].disabled:
-                break
-            if index == prev_index:
-                return False
-        self.widgets[index].set_focus() 
-        return True
+        return self.focus_next()
 
     def on_up(self):
-        prev_index = index = self.get_focused_index()
-        if index is None:
-            return False
-        while True:
-            index = (index - 1) % len(self.widgets)
-            if not self.widgets[index].disabled:
-                break
-            if index == prev_index:
-                return False
-        self.widgets[index].set_focus() 
-        return True
+        return self.focus_prev()
 
 
-class GroupButton(HorzAligmentContainer):
+class Divider(Widget):
 
-    def __init__(self, label, hotkey=None, disabled=False):
-        HorzAligmentContainer.__init__(self, FixedButtonWidget(label), GroupButtonHotkey(hotkey) if hotkey else None, 0)
-        self.disabled = disabled
-
-    @property
-    def width(self):
-        return len(self.caption) + len(self.hotkey) + 5
-
-    @property
-    def height(self):
-        return 1
-
-    @property
-    def style(self):
-        if self.disabled:
-            return 'modal-low'
-        if self.focused:
-            return 'modal-selected'
-
-    @property
-    def hotkey_style(self):
-        if self.focused:
-            return 'modal-low-selected'
-        return 'modal-low'
-
-    def render(self, canvas):
-        canvas.set_mouse_target(self).set_style(self.style)
-        caption_canvas, hotkey_canvas = canvas.alignment(len(self.caption)+1, len(self.hotkey)+1)
-        caption_canvas.draw_text(" %s" % self.caption)
-        hotkey_canvas.set_style(self.hotkey_style).draw_text("%s " % self.hotkey)
-
-
-class GroupDivider(Widget):
-
-    disabled = True
+    enabled = False
 
     @property
     def width(self):
@@ -184,12 +117,38 @@ class GroupDivider(Widget):
         canvas.set_style(self.style).draw_fill("─")
 
 
-class GroupMenu(HorzAligmentContainer):
+class Button(Widget, SelectedMixin):
 
-    def __init__(self, label, overlay, items, disabled=False):
-        HorzAligmentContainer.__init__(self, FixedButtonWidget(label), GroupButtonHotkey(u'▸ '))
-        self.submenu = GroupModal(self, overlay, items)
-        self.disabled = disabled
+    def __init__(self, parent, command, caption):
+        self.parent = parent
+        self.command = command
+        self._caption = caption
+
+    @property
+    def width(self):
+        return len(self.caption) + len(self.hotkey) + 5
+
+    @property
+    def height(self):
+        return 1
+
+    @property
+    def caption(self):
+        if self._caption:
+            return self._caption
+        return self.command.description
+
+    @property
+    def hotkey(self):
+        return self.command.hotkey
+
+    @property
+    def enabled(self):
+        return self.command.enabled
+
+    @property
+    def visible(self):
+        return self.command.visible
 
     @property
     def style(self):
@@ -198,64 +157,86 @@ class GroupMenu(HorzAligmentContainer):
         if self.focused:
             return 'modal-selected'
 
+    @property
+    def hotkey_style(self):
+        if self.focused:
+            return 'modal-low-selected'
+        return 'modal-low'
+
+    def on_select(self):
+        self.command.run()
+
+    def render(self, canvas):
+        canvas.set_mouse_target(self).set_style(self.style)
+        caption_canvas, hotkey_canvas = canvas.alignment(len(self.caption)+1, len(self.hotkey)+1)
+        caption_canvas.draw_text(" %s" % self.caption)
+        hotkey_canvas.set_style(self.hotkey_style).draw_text("%s " % self.hotkey)
+
+
+class Checkbox(Button):
+
+    @property
+    def checked(self):
+        return self.command.checked
+
+    @property
+    def checkbox(self):
+        if self.checked:
+            return u'✔'
+        return ' '
+
+    def render(self, canvas):
+        canvas.set_mouse_target(self).set_style(self.style)
+        caption_canvas, hotkey_canvas = canvas.alignment(len(self.caption)+1, len(self.hotkey)+1)
+        caption_canvas.draw_text("%s%s" % (self.checkbox, self.caption))
+        hotkey_canvas.set_style(self.hotkey_style).draw_text("%s " % self.hotkey)
+
+
+class Submenu(Widget, SelectedMixin):
+
+    def __init__(self, parent, capture, submenu):
+        self.parent = parent
+        self.capture = capture
+        self.submenu = submenu
+
+    @property
+    def style(self):
+        if self.focused:
+            return 'modal-selected'
+
+    @property
+    def arrow_style(self):
+        if self.focused:
+            return 'modal-low-selected'
+        return 'modal-low'
+
     def on_right(self):
-        for widget in self.submenu.inner.widgets:
-            if not widget.disabled:
-                widget.set_focus()
-                return True
-        return False        
+        self.submenu.select_first()
+
+    def render(self, canvas):
+        canvas.set_mouse_target(self).set_style(self.style)
+        caption_canvas, arrow_canvas = canvas.alignment(len(self.caption)+1, 2)
+        caption_canvas.draw_text(" %s" % self.caption)
+        arrow_canvas.set_style(self.arrow_style).draw_text(u'▸ ')
+        self.submenu.set_position(canvas, 'right', 'top')
 
 
-class GroupModal(ModalDecorator):
+class SubmenuBox(Widget,
+                 VertRenderingMixin,
+                 ModalMixin,
+                 ControlListMixin):
 
-    def __init__(self, parent, overlay, items):
-        ModalDecorator.__init__(self, parent, overlay, GroupBox(items))
-
-    @property
-    def x(self):
-        return self.parent.x + self.parent.parent.width
-
-    @property
-    def y(self):
-        return self.parent.y
-
-    @property
-    def opened(self):
-        return self.parent.focused
-
-        
-class GroupBox(VertFlowContainer):
+    @classmethod
+    def from_settings(cls, parent, children):
+        return cls(parent, [get_menu_item(self, item_settings)
+                            for item_settings in children])
 
     @property
     def style(self):
         return 'modal'
 
-    def on_left(self):
-        self.set_focus(self.parent)
-        return True
-
     def on_down(self):
-        prev_index = index = self.get_focused_index()
-        if index is None:
-            return False
-        while True:
-            index = (index + 1) % len(self.widgets)
-            if not self.widgets[index].disabled:
-                break
-            if index == prev_index:
-                return False
-        self.widgets[index].set_focus() 
-        return True
+        return self.focus_next()
 
     def on_up(self):
-        prev_index = index = self.get_focused_index()
-        if index is None:
-            return False
-        while True:
-            index = (index - 1) % len(self.widgets)
-            if not self.widgets[index].disabled:
-                break
-            if index == prev_index:
-                return False
-        self.widgets[index].set_focus() 
-        return True
+        return self.focus_prev()

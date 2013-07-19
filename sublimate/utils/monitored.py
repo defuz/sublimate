@@ -1,32 +1,24 @@
 # -*- coding: utf-8 -*-
 from collections import OrderedDict
 
-class MonitoredList(object):
+class Monitored(object):
 
-	def __init__(self, lst, walkers=None):
-		self.lst = lst
-		self.walkers = walkers or []
+	def __init__(self):
+		self.listeners = []
 
-	def __len__(self):
-		return len(self.lst)
+	def _changed(self):
+		for listener in self.listeners:
+			listener._changed(self)
 
-	def __iter__(self):
-		return iter(self.lst)
-
-	def __getitem__(self, index):
-		return self.lst[index]
+	def _add_listeners(self, *listeners):
+		self.listeners.extend(listeners)
 
 
-	def append(self, item):
-		self.lst.append(item)
-		for walker in self.walkers:
-			walker._append(item)
+class MonitoredList(list, Monitored):
 
-	def remove(self, item):
-		self.lst.remove(item):
-		for walker in self.walkers:
-			walker._remove(item)
-
+	def __init__(self, *args, **kwargs):
+		list.__init__(self, *args, **kwargs)
+		Monitored.__init__(self)
 
 
 class ListWalker(object):
@@ -50,3 +42,24 @@ class ListWalker(object):
 
 	def _remove(self, item):
 		del self.data[item]
+
+
+class MonitoredProperty(object):
+
+	def __init__(self, name):
+		self.name = "__%s" % name
+
+	def __get__(self, obj, cls):
+		if obj is None:
+			return self
+		return getattr(obj, self.name)
+
+	def __set__(self, obj, new_value):
+		old_value = getattr(obj, self.name, None)
+		if old_value is not None:
+			for name, old_attr in dir(old_value).items():
+				if isinstance(old_attr, Monitored):
+					new_attr = getattr(new_value, name)
+					new_attr._add_listeners(*attr._listeners)
+					new_attr._changed(new_attr)
+		setattr(obj, self.name, new_value)
