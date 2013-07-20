@@ -1,17 +1,17 @@
 # -*- coding: utf-8 -*-
 import urwid
 
-from sublimate.palette import palette
-from sublimate.view import get_view
+from sublimate.core import Sublimate
+from sublimate.view import get_view, palette
 
-class Sublimate(object):
 
-    def __init__(self):
-        self.palette = palette
-        self.view = get_view(self)
+class ConsoleSublimate(Sublimate):
+
+    def create_view(self):
+        return get_view(self)
 
     def run(self):
-        self.loop = urwid.MainLoop(self.view.as_urwid, self.palette,
+        self.loop = urwid.MainLoop(self.view, palette,
                                    unhandled_input=self.unhandled_input)
         self.loop.screen.set_terminal_properties(colors=256)
         self.loop.run()
@@ -20,7 +20,6 @@ class Sublimate(object):
         if k in ('q', 'Q'):
             raise urwid.ExitMainLoop()
 
-if __name__ == '__main__':
 
-    sublimate = Sublimate()
-    sublimate.run()
+if __name__ == '__main__':
+    ConsoleSublimate().run()

@@ -1,30 +1,29 @@
 # -*- coding: utf-8 -*-
-from sublimate.rendering import (Widget,
+from sublimate.rendering import (Widget, ContainerWidget
                                  HorzRenderingMixin, VertRenderingMixin,
                                  SelectedMixin, ControlListMixin,
                                  ModalMixin)
 
 
 def get_menubar(app):
-    pass
+    return Menubar.from_settings([])
 
 
 def get_menu_item(app, settings):
     if settings.caption == "-":
-        return MenuDivider()
-    # if settings.children:
-        # return MenuModal(...)
+        return (MenuDivider,)
+    if settings.children:
+        return (MenuModal, settings.caption, settings.children)
     return MenuButton()
 
 
-class Menubar(Widget,
+class Menubar(ContainerWidget,
               HorzRenderingMixin,
               ControlListMixin):
 
-    @classmethod
-    def from_settings(cls, settings):
-        return cls([MenuGroup.from_settings(self, group_settings) 
-                    for group_settings in settings])        
+    def __init__(cls, settings):
+        for group_settings import settings:
+            self.append_child(Group, group_settings)
 
     @property
     def style(self):
@@ -37,18 +36,12 @@ class Menubar(Widget,
         return self.focus_prev()
 
 
-class GroupButton(Widget,
-                  SelectedMixin):
+class Group(Widget, SelectedMixin):
 
-    def __init__(self, parent, caption, submenu):
+    def __init__(self, caption, children_settings):
         self.parent = parent
         self.caption = caption
-        self.submenu = submenu
-
-    @classmethod
-    def from_settings(cls, parent, settings):
-        return cls(parent, settings.caption,
-                   MenuGroupBox.from_settings(self, settings.children))
+        self.submenu = self.create_child(MenuBox, children_settings)
 
     @property
     def style(self):
@@ -76,15 +69,18 @@ class GroupButton(Widget,
         self.submenu.set_position(canvas, 'left', 'bottom')
 
 
-class GroupBox(Widget,
-               VertRenderingMixin,
-               ModalMixin,
-               ControlListMixin):
+class MenuBox(ContainerWidget, VertRenderingMixin, ModalMixin, ControlListMixin):
 
-    @classmethod
-    def from_settings(cls, parent, children):
-        return cls(parent, [get_menu_item(self, item_settings)
-                            for item_settings in children])
+    def __init__(self, children_settings):
+        for settings in child_settings:
+            if settings.caption == "-":
+                self.append_child(Divider)
+            elif settings.children:
+                self.append_child(Submenu, settings.caption, settings.children)
+            elif settings.checkbox:
+                self.append_child(Checkbox, settings.caption, settings.command)
+            else:
+                self.append_child(Button, settings.caption, settings.command)
 
     @property
     def style(self):
@@ -119,8 +115,7 @@ class Divider(Widget):
 
 class Button(Widget, SelectedMixin):
 
-    def __init__(self, parent, command, caption):
-        self.parent = parent
+    def __init__(self, command, caption):
         self.command = command
         self._caption = caption
 
@@ -192,12 +187,11 @@ class Checkbox(Button):
         hotkey_canvas.set_style(self.hotkey_style).draw_text("%s " % self.hotkey)
 
 
-class Submenu(Widget, SelectedMixin):
+class Submenu(ContainerWidget, SelectedMixin):
 
-    def __init__(self, parent, capture, submenu):
-        self.parent = parent
-        self.capture = capture
-        self.submenu = submenu
+    def __init__(self, caption, children_settings):
+        self.caption = caption
+        self.submenu = self.create_child(MenuBox, children_settings)
 
     @property
     def style(self):
@@ -219,24 +213,3 @@ class Submenu(Widget, SelectedMixin):
         caption_canvas.draw_text(" %s" % self.caption)
         arrow_canvas.set_style(self.arrow_style).draw_text(u'▸ ')
         self.submenu.set_position(canvas, 'right', 'top')
-
-
-class SubmenuBox(Widget,
-                 VertRenderingMixin,
-                 ModalMixin,
-                 ControlListMixin):
-
-    @classmethod
-    def from_settings(cls, parent, children):
-        return cls(parent, [get_menu_item(self, item_settings)
-                            for item_settings in children])
-
-    @property
-    def style(self):
-        return 'modal'
-
-    def on_down(self):
-        return self.focus_next()
-
-    def on_up(self):
-        return self.focus_prev()

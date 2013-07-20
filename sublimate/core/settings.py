@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from os import path
+import logging
 from json import load, dump
 
 
@@ -13,11 +13,13 @@ class SettingsFile(SettingsObject):
 
     def __init__(self, path):
         self.path = path
-        settings = load(open(path), object_hook=SettingsObject)
-        SettingsObject.__init__(self, settings)
+        logging.info("Open settings file %s", self.path)
+        # settings = load(open(path), object_hook=SettingsObject)
+        # SettingsObject.__init__(self, settings)
 
     def save(self, path=None):
         path = path or self.path
+        logging.info("Save settings file %s", path)
         dump(open(path, 'w'), self, indent=4)
         self.path = path
 

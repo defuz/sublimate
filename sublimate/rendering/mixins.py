@@ -1,13 +1,7 @@
 # -*- coding: utf-8 -*-
+from .widget import ContainerWidget
 
-class ContainerMixin(object):
-
-    def __init__(self, parent, childern):
-        self.parent = parent
-        self.childern = childern
-
-
-class HorzRenderingMixin(ContainerMixin):
+class HorzRenderingMixin(object):
 
     @property
     def width(self):
@@ -33,7 +27,7 @@ class HorzRenderingMixin(ContainerMixin):
         canvas.draw_fill()
 
 
-class VertRenderingMixin(ContainerMixin):
+class VertRenderingMixin(object):
 
     @property
     def width(self):
@@ -60,7 +54,7 @@ class VertRenderingMixin(ContainerMixin):
 
 
 
-class ControlListMixin(ContainerMixin):
+class ControlListMixin(object):
 
     def get_focused_index(self):
         for i, widget in enumerate(self.childern):
@@ -142,6 +136,10 @@ class OverlayMixin(object):
     @property
     def opened_modals(self):
         return filter(lambda modal: modal.opened, self.modals)
+
+    def render_modals(self):
+        modals = self.opened_modals
+        
 
 
 class ModalMixin(object):

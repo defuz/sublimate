@@ -4,8 +4,14 @@ from .events import MouseEvent, KeyboardEvent
 
 
 class Widget(object):
-    parent, focus, style = None, None, None
-    width, height = (0, 0)
+
+    def __new__(cls, parent, *args, **kwargs):
+        widget = cls.__new__(cls, *args, **kwargs)
+        widget.parent = parent
+        widget.focus = None
+
+    def create_child(self, cls, *args, **kwargs):
+        return cls(parent=self, *args, **kwargs)
 
     def get_height(self, width):
         return self.height
@@ -26,6 +32,9 @@ class Widget(object):
             parent.focus = focus
             parent = parent.parent
 
+    def take_focus(self):
+        self.capture_focus(self)
+
     def on_keyboard(self, event):
         name = 'on_%s' % event.replace(' ', '_')
         method = getattr(self, name, None)
@@ -44,6 +53,18 @@ class Widget(object):
 
     def render(self, canvas):
         raise NotImplementedError("%s._render" % type(self))
+
+
+class ContainerWidget(Widget):
+
+    def __new__(cls, parent, *args, **kwargs):
+        widget = cls.__new__(cls, *args, **kwargs)
+        widget.parent = parent
+        widget.focus = None
+        widget.children = []
+
+    def append_child(self, cls, *args, **kwargs):
+        self.children.append(self.create_child(cls, *args, **kwargs))
 
 
 class UrwidWidgetAdapter(object):

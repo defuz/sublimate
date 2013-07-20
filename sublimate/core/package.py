@@ -1,4 +1,9 @@
 # -*- coding: utf-8 -*-
+import os
+from fnmatch import fnmatch
+
+from .settings import SettingsFile
+
 from sublimate.utils import packages_compare_key
 
 

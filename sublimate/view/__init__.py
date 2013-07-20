@@ -1,17 +1,18 @@
 # -*- coding: utf-8 -*-
-from sublimate.rendering import Widget, OverlayMixin
+from sublimate.rendering import Widget, UrwidWidgetAdapter, OverlayMixin
 
 from .menubar import get_menubar
 from .sidebar import get_sidebar
 from .editor import get_editor
 from .statusbar import get_statusbar
+from .palette import palette
 
 def get_view(app):
     menubar = get_menubar(app)
     sidebar = get_sidebar(app)
     editor = get_editor(app)
     statusbar = get_statusbar(app)
-    return View(menubar, sidebar, editor, statusbar)
+    return UrwidWidgetAdapter(View(menubar, sidebar, editor, statusbar))
 
 
 class View(Widget, OverlayMixin):
@@ -20,7 +21,7 @@ class View(Widget, OverlayMixin):
         self.menubar = menubar
         self.sidebar = sidebar
         self.editor = editor
-        self.statusbar
+        self.statusbar = statusbar
 
     def on_mouse(self):
         self.frame.editor.capture_focus()

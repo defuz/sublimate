@@ -1,15 +1,14 @@
 # -*- coding: utf-8 -*-
-from sublimate.rendering import Widget, ControlListMixin
-from sublimate.utils.monitored import ListWalker
+from sublimate.rendering import Widget, HorzRenderingMixin, ControlListMixin
 
 def get_sidebar(app):
-	folders = PropertyWalker(app, "project", "folders")
-	return Sidebar(folders)
+	return Sidebar(app.project.folders)
 
-class Sidebar(Widget):
+class Sidebar(Widget, HorzRenderingMixin):
 
 	def __init__(self, folders):
-		self.children = ListWalker(folders, self.create_child)
+		self.padding = 0
+		self.children = map(self.create_child, folders)		
 
 	def create_child(self, folder):
 		return FolderWidget(self, folder)
@@ -47,11 +46,11 @@ class FolderWidget(Widget, ControlListMixin):
 		self.padding = parent.padding + 2
 		self.folder = folder
 		self.opened = False
-		self.widgets = ListWalker(folder.content, self.create_child)
+		self.widgets = map(self.create_child, folder.content)
 
 	def create_child(self, file):
 		if hasattr(file, 'content'):
-			return FolderHeader(self, file)
+			return FolderWidget(self, file)
 		return FileWidget(self, file)
 
 	@property

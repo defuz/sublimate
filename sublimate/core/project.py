@@ -1,16 +1,17 @@
 # -*- coding: utf-8 -*-
-import os, fnmatch
+import os
+from fnmatch import fnmatch
 
-from settings import SettingsFile, SettingsObject
+from .settings import load_settings, SettingsFile, SettingsObject
 from sublimate.utils.monitored import MonitoredList
-from sublimate.utils import filename_compare_key
+from sublimate.utils import files_compare_key
 
 class Project(object):
 
     def __init__(self, path=None):
         self.path = path
-        self.folders = MonitoredList()
-        self.reload()
+        if self.path:
+            self.reload()
 
     @property
     def settings(self):
@@ -21,10 +22,10 @@ class Project(object):
         return bool(self.path)
 
     def reload(self):
-        if self.path:
-            settings = load_settings(self.path)
-            self.folders[:] = (ProjectFolder.from_settings(folder_settings) 
-                               for folder_settings in settings.folders or [])
+        settings = load_settings(self.path)
+        if settings.folders:
+            self.folders = (ProjectFolder.from_settings(self, folder_settings) 
+                            for folder_settings in settings.folders or [])
 
     def save(self, path=None):
         path = path or self.path
@@ -95,8 +96,12 @@ class ProjectFolder(Folder):
         self.reload()
 
     @classmethod
-    def from_settings(cls, settings):
-        return cls(settings.path, settings.name
+    def from_settings(cls, project, settings):
+        if os.path.isabs(settings.path):
+            path = settings.path
+        else:
+            path = os.path.join(os.path.dirname(project.path), settings.path)
+        return cls(path, os.path.basename(path),
                    settings.folder_exclude_patterns,
                    settings.file_exclude_patterns,
                    settings.follow_symlinks or False)
@@ -108,12 +113,12 @@ class ProjectFolder(Folder):
                     file_exclude_patterns=file_exclude_patterns,
                     follow_symlinks=follow_symlinks)
 
-    def is_folder_included(name):
+    def is_folder_included(self, name):
         if not self.folder_exclude_patterns:
             return False
         return not any(fnmatch(name, pattern) for pattern in self.folder_exclude_patterns)
 
-    def is_file_included(name):
+    def is_file_included(self, name):
         if not self.file_exclude_patterns:
             return False
         return not any(fnmatch(name, pattern) for pattern in self.file_exclude_patterns)
