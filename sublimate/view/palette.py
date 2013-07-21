@@ -28,6 +28,7 @@ palette = (
 	create_set('sidebar', 1) +
 	create_set('tabs', 2) +
 	create_set('menubar', 3) +
+	create_set('statusbar', 1) +
 	create_set('modal', 4) +
 	create_set('inputs', 3)
 )

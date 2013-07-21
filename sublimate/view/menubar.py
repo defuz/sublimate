@@ -1,29 +1,19 @@
 # -*- coding: utf-8 -*-
-from sublimate.rendering import (Widget, ContainerWidget
+from sublimate.rendering import (Widget, ContainerWidget,
                                  HorzRenderingMixin, VertRenderingMixin,
                                  SelectedMixin, ControlListMixin,
                                  ModalMixin)
 
-
-def get_menubar(app):
-    return Menubar.from_settings([])
-
-
-def get_menu_item(app, settings):
-    if settings.caption == "-":
-        return (MenuDivider,)
-    if settings.children:
-        return (MenuModal, settings.caption, settings.children)
-    return MenuButton()
+from sublimate.core import menu
 
 
 class Menubar(ContainerWidget,
               HorzRenderingMixin,
               ControlListMixin):
 
-    def __init__(cls, settings):
-        for group_settings import settings:
-            self.append_child(Group, group_settings)
+    def __init__(self, items):
+        self.children = [self.create_widget(Group, group.caption, group.items)
+                         for group in items]
 
     @property
     def style(self):
@@ -38,10 +28,9 @@ class Menubar(ContainerWidget,
 
 class Group(Widget, SelectedMixin):
 
-    def __init__(self, caption, children_settings):
-        self.parent = parent
+    def __init__(self, caption, items):
         self.caption = caption
-        self.submenu = self.create_child(MenuBox, children_settings)
+        self.submenu = self.create_widget(MenuBox, items)
 
     @property
     def style(self):
@@ -71,26 +60,25 @@ class Group(Widget, SelectedMixin):
 
 class MenuBox(ContainerWidget, VertRenderingMixin, ModalMixin, ControlListMixin):
 
-    def __init__(self, children_settings):
-        for settings in child_settings:
-            if settings.caption == "-":
-                self.append_child(Divider)
-            elif settings.children:
-                self.append_child(Submenu, settings.caption, settings.children)
-            elif settings.checkbox:
-                self.append_child(Checkbox, settings.caption, settings.command)
+    def __init__(self, items):
+        self.children = []
+        for item in items:            
+            if isinstance(item, menu.Button):
+                self.add_widget(Button(item.caption, item.action, item.is_checkbox))
+            elif isinstance(item, menu.Group):
+                self.add_widget(InnerGroup(item.caption, item.items))
             else:
-                self.append_child(Button, settings.caption, settings.command)
+                self.add_widget(Divider())
 
     @property
     def style(self):
         return 'modal'
 
     def on_down(self):
-        return self.focus_next()
+        self.focus_next()
 
     def on_up(self):
-        return self.focus_prev()
+        self.focus_prev()
 
 
 class Divider(Widget):
@@ -115,9 +103,10 @@ class Divider(Widget):
 
 class Button(Widget, SelectedMixin):
 
-    def __init__(self, command, caption):
-        self.command = command
+    def __init__(self, caption, action, is_checkbox):
         self._caption = caption
+        self.action = action
+        self.is_checkbox = is_checkbox
 
     @property
     def width(self):
@@ -125,29 +114,31 @@ class Button(Widget, SelectedMixin):
 
     @property
     def height(self):
-        return 1
+        if self.action.visible:
+            return 1
+        return 0
 
     @property
     def caption(self):
         if self._caption:
             return self._caption
-        return self.command.description
+        return self.action.description
 
     @property
     def hotkey(self):
-        return self.command.hotkey
+        return self.action.hotkey
 
     @property
     def enabled(self):
-        return self.command.enabled
+        return self.action.enabled
 
     @property
-    def visible(self):
-        return self.command.visible
+    def checked(self):
+        return self.action.checked
 
     @property
     def style(self):
-        if self.disabled:
+        if not self.enabled:
             return 'modal-low'
         if self.focused:
             return 'modal-selected'
@@ -159,24 +150,11 @@ class Button(Widget, SelectedMixin):
         return 'modal-low'
 
     def on_select(self):
-        self.command.run()
-
-    def render(self, canvas):
-        canvas.set_mouse_target(self).set_style(self.style)
-        caption_canvas, hotkey_canvas = canvas.alignment(len(self.caption)+1, len(self.hotkey)+1)
-        caption_canvas.draw_text(" %s" % self.caption)
-        hotkey_canvas.set_style(self.hotkey_style).draw_text("%s " % self.hotkey)
-
-
-class Checkbox(Button):
-
-    @property
-    def checked(self):
-        return self.command.checked
+        self.action.run()
 
     @property
     def checkbox(self):
-        if self.checked:
+        if self.is_checkbox and self.checked:
             return u'✔'
         return ' '
 
@@ -187,11 +165,11 @@ class Checkbox(Button):
         hotkey_canvas.set_style(self.hotkey_style).draw_text("%s " % self.hotkey)
 
 
-class Submenu(ContainerWidget, SelectedMixin):
+class InnerGroup(ContainerWidget, SelectedMixin):
 
-    def __init__(self, caption, children_settings):
+    def __init__(self, caption, items):
         self.caption = caption
-        self.submenu = self.create_child(MenuBox, children_settings)
+        self.submenu = self.create_widget(MenuBox, items)
 
     @property
     def style(self):

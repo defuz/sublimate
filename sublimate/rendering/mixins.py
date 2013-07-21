@@ -1,23 +1,22 @@
 # -*- coding: utf-8 -*-
-from .widget import ContainerWidget
 
 class HorzRenderingMixin(object):
 
     @property
     def width(self):
         return sum(widget.width 
-                   for widget in self.childern
+                   for widget in self.children
                    if getattr(widget, 'visible', True))
 
     @property
     def height(self):
         return max(widget.height
-                   for widget in self.childern
+                   for widget in self.children
                    if getattr(widget, 'visible', True))
 
     def render(self, canvas):
         canvas.set_style(self.style)
-        for widget in self.childern:
+        for widget in self.children:
             if not getattr(widget, 'visible', True):
                 continue
             if widget.width > canvas.width:
@@ -32,18 +31,18 @@ class VertRenderingMixin(object):
     @property
     def width(self):
         return max(widget.width
-                   for widget in self.childern
+                   for widget in self.children
                    if getattr(widget, 'visible', True))
 
     @property
     def height(self):
         return sum(widget.height
-                   for widget in self.childern
+                   for widget in self.children
                    if getattr(widget, 'visible', True))
 
     def render(self, canvas):
         canvas.set_style(self.style)
-        for widget in self.childern:
+        for widget in self.children:
             if not getattr(widget, 'visible', True):
                 continue
             if widget.get_height(canvas.width) > canvas.height:
@@ -57,24 +56,24 @@ class VertRenderingMixin(object):
 class ControlListMixin(object):
 
     def get_focused_index(self):
-        for i, widget in enumerate(self.childern):
+        for i, widget in enumerate(self.children):
             if widget.focus == self.focus:
                 return i
 
     def get_focused_widget(self):
-        for widget in self.childern:
+        for widget in self.children:
             if widget.focus == self.focus:
                 return widget
 
     def focus_first(self):
-        for widget in self.childern:
+        for widget in self.children:
             if getattr(widget, 'enabled', True):
                 widget.capture_focus()
                 return True
         return False
 
     def focus_last(self):
-        for widget in reversed(self.childern):
+        for widget in reversed(self.children):
             if getattr(widget, 'enabled', True):
                 widget.capture_focus()
                 return True
@@ -85,12 +84,12 @@ class ControlListMixin(object):
         if index is None:
             return False
         while True:
-            index = (index + 1) % len(self.childern)
-            if getattr(self.childern[index], 'enabled', True):
+            index = (index + 1) % len(self.children)
+            if getattr(self.children[index], 'enabled', True):
                 break
             if index == prev_index:
                 return False
-        self.childern[index].capture_focus() 
+        self.children[index].capture_focus() 
         return True
 
     def focus_prev(self):
@@ -98,12 +97,12 @@ class ControlListMixin(object):
         if index is None:
             return False
         while True:
-            index = (index - 1) % len(self.childern)
-            if getattr(self.childern[index], 'enabled', True):
+            index = (index - 1) % len(self.children)
+            if getattr(self.children[index], 'enabled', True):
                 break
             if index == prev_index:
                 return False
-        self.childern[index].capture_focus() 
+        self.children[index].capture_focus() 
         return True
 
 
@@ -131,7 +130,7 @@ class OverlayMixin(object):
             if isinstance(curr, ModalMixin):
                 modals.append(curr)
             curr = curr.parent
-        return reversed(curr)
+        return reversed(modals)
 
     @property
     def opened_modals(self):

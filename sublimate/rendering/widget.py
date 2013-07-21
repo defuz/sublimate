@@ -5,13 +5,12 @@ from .events import MouseEvent, KeyboardEvent
 
 class Widget(object):
 
-    def __new__(cls, parent, *args, **kwargs):
-        widget = cls.__new__(cls, *args, **kwargs)
-        widget.parent = parent
-        widget.focus = None
+    parent, focus = None, None
 
-    def create_child(self, cls, *args, **kwargs):
-        return cls(parent=self, *args, **kwargs)
+    def create_widget(self, cls, *args, **kwargs):
+        widget = cls(*args, **kwargs)
+        widget.parent = self
+        return widget
 
     def get_height(self, width):
         return self.height
@@ -38,33 +37,33 @@ class Widget(object):
     def on_keyboard(self, event):
         name = 'on_%s' % event.replace(' ', '_')
         method = getattr(self, name, None)
-        if method:
-            return method()
+        if method and method():
+            return True
         if self.parent:
             return self.parent.on_keyboard(event)
 
     def on_mouse(self, event):
         name = 'on_%s' % event.replace(' ', '_')
         method = getattr(self, name, None)
-        if method:
-            return method()
+        if method and method():
+            return True
         if self.parent:
             return self.parent.on_mouse(event)
 
-    def render(self, canvas):
-        raise NotImplementedError("%s._render" % type(self))
+    # def render(self, canvas):
+        # raise NotImplementedError("%s.render" % type(self))
 
 
 class ContainerWidget(Widget):
 
-    def __new__(cls, parent, *args, **kwargs):
-        widget = cls.__new__(cls, *args, **kwargs)
-        widget.parent = parent
-        widget.focus = None
-        widget.children = []
+    def __init__(cls, children):
+        self.children = children
+        for child in self.children:
+            child.parent = self
 
-    def append_child(self, cls, *args, **kwargs):
-        self.children.append(self.create_child(cls, *args, **kwargs))
+    def add_widget(self, widget):
+        widget.parent = self
+        self.children.append(widget)
 
 
 class UrwidWidgetAdapter(object):
@@ -82,7 +81,7 @@ class UrwidWidgetAdapter(object):
 
     def mouse_event(self, size, event, button, x, y, focus):
         if self.canvas:
-            target = self.canvas.get_zone(x, y)
+            target = self.canvas.get_mouse_target(x, y)
             if target:
                 return target.on_mouse(MouseEvent(event, button))
         return False

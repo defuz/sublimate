@@ -571,7 +571,6 @@
             { "command": "show_overlay", "args": {"overlay": "goto", "show_files": true}, "caption": "Goto Anything…", "mnemonic": "A" },
             { "caption": "-" },
             { "command": "show_overlay", "args": {"overlay": "goto", "text": "@"}, "caption": "Goto Symbol…" },
-            // { "command": "show_overlay", "args": {"overlay": "goto", "text": "#"}, "caption": "Goto Word…" },
             { "command": "show_overlay", "args": {"overlay": "goto", "text": ":"}, "caption": "Goto Line…" },
             { "caption": "-" },
             {

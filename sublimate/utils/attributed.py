@@ -95,7 +95,7 @@ class AttrString(object):
 
 	def __setitem__(self, s, data):
 		assert isinstance(s, slice), not s.step
-		self.str[s] = data.str
+		self.str = self.str[:s.start] + data.str + self.str[s.stop:]
 		self.flow[s] = data.flow
 
 	def __add__(self, other):

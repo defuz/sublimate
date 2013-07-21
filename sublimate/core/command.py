@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from sublimate.utils import camelcase2underscore
 
 class Command(object):
 
@@ -74,14 +75,19 @@ def bind_commands(instance, base_command_class):
         setattr(instance, cls.__name__, cls(instance))
 
 
+class NoopCommand(ApplicationCommand):
+    pass
+
+
 class CommandPerformer(object):
 
     def bind_commands(self, base_command_class):
         self.commands = {camelcase2underscore(cls.__name__): cls 
                          for cls in find_command_classes(base_command_class)}
+        print self.commands
 
-    def get_command(self, name, args=None):
-        command = self.commands[name]
+    def get_action(self, name, args=None):
+        command = self.commands.get(name)
         if args:
             return BoundCommand(command, args)
         return command

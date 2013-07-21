@@ -85,6 +85,7 @@ class BaseCanvas(object):
     def set_style(self, style):
         if style:
             self.style = style
+        return self
 
     def draw(self, attrstr, x=0, y=0):
         raise NotImplementedError()
@@ -117,14 +118,20 @@ class BaseCanvas(object):
         return self.create_attrstr(char * size)
 
     def draw_text(self, text, x=0, y=0):
-        return self.draw(self.create_attrstr(text), x, y)
+        self.draw(self.create_attrstr(text), x, y)
+        return self
 
     def draw_solid(self, size, char=' ', x=0, y=0):
-        return self.draw(self.create_solid(size, char), x, y)
+        self.draw(self.create_solid(size, char), x, y)
+        return self
 
     def draw_fill(self, char=' '):
         for i in range(self.height):
             self.draw_solid(self.width, char, y=i)
+        return self
+
+    def __str__(self):
+        return 'Canvas(%s, %s, %s, %s)' % (self.x, self.y, self.width, self.height)
 
 
 class Canvas(BaseCanvas):

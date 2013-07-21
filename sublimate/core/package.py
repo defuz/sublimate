@@ -2,7 +2,7 @@
 import os
 from fnmatch import fnmatch
 
-from .settings import SettingsFile
+from .settings import load_settings
 
 from sublimate.utils import packages_compare_key
 
@@ -19,10 +19,10 @@ class Package(object):
         for name in os.listdir(self.path):
             path = os.path.join(self.path, name)
             if fnmatch(name, '*.sublime-menu'):
-                self.settings[name] = SettingsFile(path)
+                self.settings[name] = load_settings(path)
 
 
-class PackageRepository(object):
+class PackageStorage(object):
 
     def __init__(self, path):
         self.path = path
@@ -35,10 +35,17 @@ class PackageRepository(object):
             path = os.path.join(self.path, name)
             if os.path.isdir(path):
                 packages.append(Package(path, name))
-        self.packages[:] = sorted(packages, key=packages_compare_key)
+        self.packages[:] = sorted(packages, key=packages_compare_key)        
 
     def get_settings(self, name):
-        settings = SettingsObject()
+        merged = None
         for package in self.packages:
-            settings.extend(package.settings.get(name))
-        return settings
+            settings = package.settings.get(name)
+            if merged:
+                merged.extend(settings)
+            else:
+                merged = settings
+        return merged
+
+    def get_menu(self, name, get_action):
+        return 

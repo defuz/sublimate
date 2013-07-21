@@ -1,25 +1,26 @@
 # -*- coding: utf-8 -*-
-import logging
 from json import load, dump
-
 
 class SettingsObject(dict):
     __getattr__ = dict.get
     __setattr__ = dict.__setitem__
     __delattr__ = dict.__delitem__
 
+    def extend(self, settings):
+        # todo: make it recursive
+        if settings:
+            self.update(settings)
 
 class SettingsFile(SettingsObject):
 
     def __init__(self, path):
         self.path = path
-        logging.info("Open settings file %s", self.path)
-        # settings = load(open(path), object_hook=SettingsObject)
-        # SettingsObject.__init__(self, settings)
+        print '!!!!!!!!!!', path
+        settings = load(open(path), object_hook=SettingsObject)
+        SettingsObject.__init__(self, settings)
 
     def save(self, path=None):
         path = path or self.path
-        logging.info("Save settings file %s", path)
         dump(open(path, 'w'), self, indent=4)
         self.path = path
 

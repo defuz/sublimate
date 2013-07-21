@@ -1,31 +1,33 @@
 # -*- coding: utf-8 -*-
-from sublimate.rendering import Widget, HorzRenderingMixin, ControlListMixin
+from sublimate.rendering import Widget, ContainerWidget, VertRenderingMixin, ControlListMixin
 
-def get_sidebar(app):
-	return Sidebar(app.project.folders)
 
-class Sidebar(Widget, HorzRenderingMixin):
+class Sidebar(ContainerWidget, VertRenderingMixin):
 
-	def __init__(self, folders):
+	def __init__(self, project):
 		self.padding = 0
-		self.children = map(self.create_child, folders)		
+		self.children = [self.create_widget(FolderWidget, folder)
+		                 for folder in project.folders]
 
-	def create_child(self, folder):
-		return FolderWidget(self, folder)
+ 	@property
+ 	def style(self):
+ 		return 'sidebar'
 
 
 class FileWidget(Widget):
 
-	def __init__(self, parent, file):
+	def __init__(self, file):
 		self.file = file
-		self.parent = parent
-		self.padding = parent.padding + 2
 
 	@property
 	def style(self):
 		if self.focused:
 			return 'sidebar-sub-focused'
 		return 'sidebar-sub'
+
+	@property
+	def padding(self):
+		return self.parent.padding + 2
 
 	@property
 	def width(self):
@@ -41,23 +43,25 @@ class FileWidget(Widget):
 
 class FolderWidget(Widget, ControlListMixin):
 
-	def __init__(self, parent, folder):
-		self.parent = parent
-		self.padding = parent.padding + 2
+	def __init__(self, folder):
 		self.folder = folder
 		self.opened = False
-		self.widgets = map(self.create_child, folder.content)
+		self.children = map(self.create_child, folder.content)
 
 	def create_child(self, file):
 		if hasattr(file, 'content'):
-			return FolderWidget(self, file)
-		return FileWidget(self, file)
+			return self.create_widget(FolderWidget, file)
+		return self.create_widget(FileWidget, file)
+
+	@property
+	def padding(self):
+		return self.parent.padding + 2
 
 	@property
 	def width(self):
 		max_children_width = max(widget.width for widget in self.children) \
 							 if self.children else 0
-		return max(max_children_width, self.folder.name) + 2
+		return max(max_children_width, len(self.folder.name)) + 2
 
 	@property
 	def height(self):
@@ -86,7 +90,7 @@ class FolderWidget(Widget, ControlListMixin):
 		canvas.set_style(self.style)
 		icon_canvas, name_canvas = canvas.padding(left=self.parent.padding).horz[2, ...]
 		icon_canvas.set_style(self.icon_style).draw_text(self.icon)
-		name_canvas.draw_text(self.parent.folder.name)
+		name_canvas.draw_text(self.folder.name)
 
 	def render(self, canvas):
 		if not self.opened:
