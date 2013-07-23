@@ -3,7 +3,6 @@ import os
 from fnmatch import fnmatch
 
 from .settings import load_settings, SettingsFile, SettingsObject
-from sublimate.utils.monitored import MonitoredList
 from sublimate.utils import files_compare_key
 
 class Project(object):
@@ -62,7 +61,7 @@ class Folder(File):
 
     def __init__(self, path, name=None):
         File.__init__(self, path, name)
-        self.content = MonitoredList()
+        self.content = []
 
     def reload(self, folder_filter, file_filter, follow_symlinks):
         content = []
@@ -74,7 +73,7 @@ class Folder(File):
                 if not follow_symlinks and os.path.islink(path):
                     continue
                 folder = Folder(path)
-                folder.load(folder_filter, file_filter)
+                folder.reload(folder_filter, file_filter, follow_symlinks)
                 content.append(folder)
             else:
                 if not file_filter(name):
@@ -115,12 +114,12 @@ class ProjectFolder(Folder):
 
     def is_folder_included(self, name):
         if not self.folder_exclude_patterns:
-            return False
+            return True
         return not any(fnmatch(name, pattern) for pattern in self.folder_exclude_patterns)
 
     def is_file_included(self, name):
         if not self.file_exclude_patterns:
-            return False
+            return True
         return not any(fnmatch(name, pattern) for pattern in self.file_exclude_patterns)
 
     def reload(self):

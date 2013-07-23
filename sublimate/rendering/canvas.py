@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from sublimate.utils.attributed import AttrFlow, AttrString
+from .attributed import AttrFlow, AttrString
 
 
 class VerticalSplitter(object):
@@ -7,7 +7,6 @@ class VerticalSplitter(object):
         self.canvas = canvas
 
     def __getitem__(self, s):
-        assert type(s) == tuple
         free_height, ellipsis_count = self.canvas.height, 0
         for i in s:
             if i == Ellipsis:
@@ -27,7 +26,6 @@ class HorizontalSplitter(object):
         self.canvas = canvas
 
     def __getitem__(self, s):
-        assert type(s) == tuple
         free_width, ellipsis_count = self.canvas.width, 0
         for i in s:
             if i == Ellipsis:
@@ -106,7 +104,7 @@ class BaseCanvas(object):
         height = self.height - top - bottom
         return SubCanvas(self, left, top, width, height)
 
-    def aligment(self, left_width, right_width):
+    def alignment(self, left_width, right_width):
         assert left_width + right_width <= self.width
         return (SubCanvas(self, 0, 0, left_width, self.height),
                 SubCanvas(self, self.width - right_width, 0, right_width, self.height))
@@ -114,7 +112,7 @@ class BaseCanvas(object):
     def create_attrstr(self, text):
         return AttrString(text, attr=self.style)
 
-    def create_solid(self, size, char=' '):
+    def create_solid(self, size, char=u' '):
         return self.create_attrstr(char * size)
 
     def draw_text(self, text, x=0, y=0):
@@ -161,6 +159,7 @@ class Canvas(BaseCanvas):
         assert x + width <= self.width, y + height <= self.height
         for i in range(height):
             self.mouse_target[y+i][x:x+width] = AttrFlow.fill(width, target)
+        return self
 
 class SubCanvas(BaseCanvas):
     def __init__(self, base_canvas, x, y, width, height):
@@ -193,3 +192,4 @@ class SubCanvas(BaseCanvas):
         height = self.height if height is None else height
         assert x + width <= self.width, y + height <= self.height
         self.base_canvas.set_mouse_target(target, self.x+x, self.y+y, width, height)
+        return self

@@ -15,8 +15,8 @@ class Window(Widget, OverlayMixin):
         self.editor = self.create_widget(Editor)
         self.statusbar = self.create_widget(Statusbar)
 
-    def on_mouse(self, event): # todo: not just on_mouse
-        self.editor.capture_focus()
+    # def on_mouse(self, event): # todo: not just on_mouse
+        # self.editor.capture_focus()
 
     def render(self, canvas):
         menubar_canvas, frame_canvas, statusbar_canvas = \
@@ -28,4 +28,4 @@ class Window(Widget, OverlayMixin):
         self.sidebar.render(sidebar_canvas)
         self.editor.render(editor_canvas)
         self.statusbar.render(statusbar_canvas)
-        self.render_modals()
+        self.render_modals(canvas)

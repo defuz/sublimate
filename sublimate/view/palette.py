@@ -1,34 +1,27 @@
 # -*- coding: utf-8 -*-
-lightness, brightness, contrast = 0, 10, 40
-
-backgrounds = range(lightness, 101-contrast, brightness)
-foregrounds = [i+contrast for i in backgrounds]
-
-def create_style(name, subname, index, offset=0):
-	if not (0 <= index <= len(backgrounds) and 0 <= index+offset <= len(foregrounds)):
-		return None
-	if subname:
-		name = '%s-%s' % (name, subname)
-	background = 'g%s' % backgrounds[index]
-	foreground = 'g%s' % foregrounds[index+offset]
-	return (name, 'light gray', 'black', '', foreground, background)
-
-def create_set(name, index):
-	return filter(None, [
-		create_style(name, None, index),
-		create_style(name, "low", index, -1),
-		create_style(name, "high", index, 1),
-		create_style(name, "selected", index+1),
-		create_style(name, "low-selected", index+1, -1),
-		create_style(name, "high-selected", index+1, 1),
-	])
+from .colors import style
 
 palette = (
-	create_set('editor', 0) + 
-	create_set('sidebar', 1) +
-	create_set('tabs', 2) +
-	create_set('menubar', 3) +
-	create_set('statusbar', 1) +
-	create_set('modal', 4) +
-	create_set('inputs', 3)
+	# editor
+	style('editor', 0),
+	style('editor-selected', 1),
+	# sidebar
+	style('sidebar', 1),
+	style('sidebar-selected', 2),
+	style('sidebar-low', 1, -1),	
+	style('sidebar-low-selected', 2, -1),
+	# tabs
+	style('tabs', 2),
+	# menubar
+	style('menubar', 3, -1),
+	style('menubar-selected', 4),
+	# statusbar
+	style('statusbar', 3, -1),
+	# modal
+	style('modal', 4),
+	style('modal-selected', 5),
+	style('modal-low', 4, -1),
+	style('modal-low-selected', 5, -1),
+	style('modal-disabled', 4, -1),
+	style('modal-disabled-low', 4, -2),
 )

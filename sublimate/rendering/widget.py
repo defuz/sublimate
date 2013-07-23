@@ -24,6 +24,10 @@ class Widget(object):
             parent = parent.parent
         return True
 
+    @property
+    def has_focus(self):
+        return (self.focus == self) and self.focused
+
     def capture_focus(self, widget=None):
         parent = self
         focus = widget if widget else (self.focus or self)
@@ -49,9 +53,6 @@ class Widget(object):
             return True
         if self.parent:
             return self.parent.on_mouse(event)
-
-    # def render(self, canvas):
-        # raise NotImplementedError("%s.render" % type(self))
 
 
 class ContainerWidget(Widget):

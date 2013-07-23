@@ -20,10 +20,10 @@ class Menubar(ContainerWidget,
         return "menubar"
 
     def on_left(self):
-        return self.focus_next()
+        return self.get_prev().submenu.capture_focus()
 
     def on_right(self):
-        return self.focus_prev()
+        return self.get_next().submenu.capture_focus()
 
 
 class Group(Widget, SelectedMixin):
@@ -45,12 +45,9 @@ class Group(Widget, SelectedMixin):
     def height(self):
         return 1
 
-    def on_up(self):
-        return self.submenu.select_first()
-
-    def on_down(self):
-        return self.submenu.select_last()
-
+    def on_select(self):
+        self.submenu.capture_focus()
+        
     def render(self, canvas):
         canvas.set_mouse_target(self)
         canvas.set_style(self.style)
@@ -95,22 +92,24 @@ class Divider(Widget):
 
     @property
     def style(self):
-        return 'modal-low'
+        return 'modal-disabled-low'
 
     def render(self, canvas):
-        canvas.set_style(self.style).draw_fill("─")
+        canvas.set_style(self.style).draw_fill(u"─")
 
 
 class Button(Widget, SelectedMixin):
 
     def __init__(self, caption, action, is_checkbox):
+        if action == None:
+            raise Exception(caption)
         self._caption = caption
         self.action = action
         self.is_checkbox = is_checkbox
 
     @property
     def width(self):
-        return len(self.caption) + len(self.hotkey) + 5
+        return len(self.checkbox) + len(self.caption) + len(self.hotkey) + 4
 
     @property
     def height(self):
@@ -155,14 +154,14 @@ class Button(Widget, SelectedMixin):
     @property
     def checkbox(self):
         if self.is_checkbox and self.checked:
-            return u'✔'
-        return ' '
+            return u' ✓ '
+        return u' '
 
     def render(self, canvas):
-        canvas.set_mouse_target(self).set_style(self.style)
+        canvas.set_mouse_target(self).set_style(self.style).draw_fill()
         caption_canvas, hotkey_canvas = canvas.alignment(len(self.caption)+1, len(self.hotkey)+1)
         caption_canvas.draw_text("%s%s" % (self.checkbox, self.caption))
-        hotkey_canvas.set_style(self.hotkey_style).draw_text("%s " % self.hotkey)
+        hotkey_canvas.set_style(self.hotkey_style).draw_text(u"%s " % self.hotkey)
 
 
 class InnerGroup(ContainerWidget, SelectedMixin):
@@ -170,6 +169,14 @@ class InnerGroup(ContainerWidget, SelectedMixin):
     def __init__(self, caption, items):
         self.caption = caption
         self.submenu = self.create_widget(MenuBox, items)
+
+    @property
+    def width(self):
+        return len(self.caption) + 3
+
+    @property
+    def height(self):
+        return 1
 
     @property
     def style(self):
@@ -186,7 +193,7 @@ class InnerGroup(ContainerWidget, SelectedMixin):
         self.submenu.select_first()
 
     def render(self, canvas):
-        canvas.set_mouse_target(self).set_style(self.style)
+        canvas.set_mouse_target(self).set_style(self.style).draw_fill()
         caption_canvas, arrow_canvas = canvas.alignment(len(self.caption)+1, 2)
         caption_canvas.draw_text(" %s" % self.caption)
         arrow_canvas.set_style(self.arrow_style).draw_text(u'▸ ')

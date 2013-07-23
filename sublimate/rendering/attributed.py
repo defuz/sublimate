@@ -73,7 +73,7 @@ class AttrString(object):
 			self.str = str
 			self.flow = flow or AttrFlow.fill(len(self.str), attr)
 		else:
-			self.str, self.flow = "", AttrFlow()
+			self.str, self.flow = u"", AttrFlow()
 		assert len(self.str) == len(self.flow)
 
 	def __len__(self):

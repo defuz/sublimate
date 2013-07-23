@@ -11,9 +11,8 @@ class Command(object):
 
     def description(self, *args):
         name = type(self).__name__
-        arguments = args + kwargs.values()
-        if arguments:
-            return "%s: %s" % (name, ', '.join(map(str, arguments)))
+        if args:
+            return "%s: %s" % (name, ', '.join(map(str, args)))
         return name
 
     def is_enabled(self, *args):
@@ -52,12 +51,20 @@ class BoundCommand(object):
         return self.command.description(*self.args)
 
     @property
+    def checked(self):
+        return False#True
+
+    @property
     def enabled(self):
         return self.command.is_enabled(*self.args)
 
     @property
     def visible(self):
         return self.command.is_visible(*self.args)
+
+    @property
+    def hotkey(self):
+        return u'⌥ N'
 
 
 def find_command_classes(base_class):
@@ -76,7 +83,11 @@ def bind_commands(instance, base_command_class):
 
 
 class NoopCommand(ApplicationCommand):
-    pass
+
+    @property
+    def hotkey(self):
+        return u'⌥ N'
+
 
 
 class CommandPerformer(object):
@@ -87,10 +98,8 @@ class CommandPerformer(object):
         print self.commands
 
     def get_action(self, name, args=None):
-        command = self.commands.get(name)
-        if args:
-            return BoundCommand(command, args)
-        return command
+        command = self.commands.get(name, self.commands['noop_command'])(self)
+        return BoundCommand(command, args or ())
 
     def run_command(self, name, *args):
         return self.commands[name].run(*args)

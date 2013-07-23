@@ -65,45 +65,67 @@ class ControlListMixin(object):
             if widget.focus == self.focus:
                 return widget
 
-    def focus_first(self):
+    def get_first(self):
         for widget in self.children:
             if getattr(widget, 'enabled', True):
-                widget.capture_focus()
-                return True
+                return widget
+
+    def focus_first(self):
+        widget = self.get_first()
+        if widget:
+            widget.capture_focus()
+            return True
         return False
 
-    def focus_last(self):
+    def get_last(self):
         for widget in reversed(self.children):
             if getattr(widget, 'enabled', True):
-                widget.capture_focus()
-                return True
+                return widget
+
+    def focus_last(self):
+        widget = self.get_last()
+        if widget:
+            widget.capture_focus()
+            return True
         return False
 
-    def focus_next(self):
+    def get_next(self):
         prev_index = index = self.get_focused_index()
         if index is None:
-            return False
+            return self.get_first()
         while True:
             index = (index + 1) % len(self.children)
             if getattr(self.children[index], 'enabled', True):
                 break
             if index == prev_index:
-                return False
-        self.children[index].capture_focus() 
-        return True
+                return None        
+        return self.children[index]
 
-    def focus_prev(self):
+    def focus_next(self):
+        widget = self.get_next()
+        if widget:
+            widget.capture_focus()
+            return True
+        return False
+
+    def get_prev(self):
         prev_index = index = self.get_focused_index()
         if index is None:
-            return False
+            return self.get_last()
         while True:
             index = (index - 1) % len(self.children)
             if getattr(self.children[index], 'enabled', True):
                 break
             if index == prev_index:
-                return False
-        self.children[index].capture_focus() 
-        return True
+                return None
+        return self.children[index]
+
+    def focus_prev(self):
+        widget = self.get_prev()
+        if widget:
+            widget.capture_focus()
+            return True
+        return False
 
 
 class SelectedMixin(object):
@@ -113,12 +135,10 @@ class SelectedMixin(object):
         return True
     
     def on_enter(self):
-        self.on_select()
+        return self.on_select()
 
-    on_left_up = \
-    on_left_down = \
-    on_right_up = \
-    on_right_down = on_enter
+    on_left_press = \
+    on_right_press = on_enter
 
 
 class OverlayMixin(object):
@@ -136,16 +156,22 @@ class OverlayMixin(object):
     def opened_modals(self):
         return filter(lambda modal: modal.opened, self.modals)
 
-    def render_modals(self):
+    def render_modals(self, canvas):
         modals = self.opened_modals
+        for modal in modals:
+            modal.render_modal(canvas)
         
 
 
 class ModalMixin(object):
-    
+
     @property
     def opened(self):
         return self.focused
-
+    
     def set_position(self, canvas, horz, vert):
-        pass
+        self.x = canvas.x
+        self.y = canvas.y + canvas.height
+
+    def render_modal(self, canvas):
+        self.render(canvas.overlay(self.x, self.y, self.width, self.height))
