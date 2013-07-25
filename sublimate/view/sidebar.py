@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
-from sublimate.rendering import Widget, ContainerWidget, VertRenderingMixin, ControlListMixin
+from sublimate.toolkit import Widget, ContainerWidget, VertRenderingMixin, TreeMixin, TreeListMixin, TreeNodeMixin
 
 
-class Sidebar(ContainerWidget, VertRenderingMixin, ControlListMixin):
+class Sidebar(ContainerWidget, VertRenderingMixin, TreeListMixin):
 
 	def __init__(self, project):
 		self.padding = 0
@@ -13,13 +13,8 @@ class Sidebar(ContainerWidget, VertRenderingMixin, ControlListMixin):
  	def style(self):
  		return 'sidebar'
 
-	def on_up(self):
-		return self.focus_prev()
 
-	def on_down(self):
-		return self.focus_next()
-
-class FileWidget(Widget):
+class FileWidget(Widget, TreeNodeMixin):
 
 	def __init__(self, file):
 		self.file = file
@@ -42,15 +37,11 @@ class FileWidget(Widget):
 	def height(self):
 		return 1
 
-	def on_left(self):
-		self.parent.take_focus()
-		return True
-
 	def render(self, canvas):
 		canvas.set_style(self.style).draw_fill().padding(left=self.padding).draw_text(self.file.name)
 
 
-class FolderWidget(Widget, ControlListMixin):
+class FolderWidget(Widget, TreeMixin):
 
 	def __init__(self, folder):
 		self.folder = folder
@@ -98,29 +89,6 @@ class FolderWidget(Widget, ControlListMixin):
 		if self.opened:
 			return u'▾'
 		return u'▸'
-
-	def on_left(self):
-		if self.opened:
-			self.opened = False
-			return True
-		else:
-			if isinstance(self.parent, FolderWidget):
-				self.parent.take_focus()
-				return True
-
-	def on_right(self):
-		self.opened = True
-		return True
-
-	def on_up(self):
-		return self.focus_prev()
-
-	def on_down(self):
-		if self.has_focus:
-			if self.opened:
-				return self.focus_first()				
-		else:
-			return self.focus_next()
 
 	def render_header(self, canvas):
 		canvas.set_style(self.style).draw_fill()

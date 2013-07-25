@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import urwid
 
-from sublimate.rendering import UrwidWidgetAdapter
+from sublimate.toolkit import UrwidWidgetAdapter
 from .window import Window
 from .palette import palette
 

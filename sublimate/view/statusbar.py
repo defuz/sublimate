@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from sublimate.rendering import Widget
+from sublimate.toolkit import Widget
 
 
 def get_statusbar(app):

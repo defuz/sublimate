@@ -95,6 +95,15 @@ class BaseCanvas(object):
         raise NotImplementedError()
 
     def overlay(self, x, y, width, height):
+        assert width <= self.width, height <= self.height
+        if x < 0:
+            x = 0
+        elif x + width > self.width:
+            x -= (x + width - self.width)
+        if y < 0:
+            y = 0
+        elif y + height > self.height:
+            y -= (y + height - self.height)
         return SubCanvas(self, x, y, width, height)
 
     def padding(self, left=0, right=0, top=0, bottom=0):

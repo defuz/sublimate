@@ -294,8 +294,7 @@
                     { "command": "permute_selection", "args": {"operation": "unique"}, "caption": "Unique" },
                     { "command": "permute_selection", "args": {"operation": "shuffle"}, "caption": "Shuffle" }
                 ]
-            },
-            { "caption": "-", "id": "end" }
+            }
         ]
     },
     {
@@ -698,8 +697,7 @@
             },
             { "caption": "-" },
             { "command": "new_plugin", "caption": "New Plugin…" },
-            { "command": "new_snippet", "caption": "New Snippet…" },
-            { "caption": "-", "id": "end" }
+            { "command": "new_snippet", "caption": "New Snippet…" }
         ]
     },
     {
@@ -734,9 +732,7 @@
             { "caption": "-" },
             { "command": "prompt_add_folder", "caption": "Add Folder to Project…", "mnemonic": "d" },
             { "command": "close_folder_list", "caption": "Remove all Folders from Project", "mnemonic": "m" },
-            { "command": "refresh_folder_list", "caption": "Refresh Folders", "mnemonic": "e" },
-            { "caption": "-" },
-            { "caption": "-", "id": "end" }
+            { "command": "refresh_folder_list", "caption": "Refresh Folders", "mnemonic": "e" }
         ]
     },
     {

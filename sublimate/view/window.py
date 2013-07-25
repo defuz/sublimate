@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from sublimate.rendering import Widget, OverlayMixin
+from sublimate.toolkit import Widget, OverlayMixin
 
 from .menubar import Menubar
 from .sidebar import Sidebar

@@ -6,6 +6,9 @@
 		},
 		{
 			"path": "sublimate"
+		},
+		{
+			"path": "scripts"
 		}
 	]
 }

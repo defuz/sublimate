@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from sublimate.rendering import (Widget, ContainerWidget,
+from sublimate.toolkit import (Widget, ContainerWidget,
                                  HorzRenderingMixin, VertRenderingMixin,
                                  SelectedMixin, ControlListMixin,
                                  ModalMixin)
@@ -72,10 +72,10 @@ class MenuBox(ContainerWidget, VertRenderingMixin, ModalMixin, ControlListMixin)
         return 'modal'
 
     def on_down(self):
-        self.focus_next()
+        return self.focus_next()
 
     def on_up(self):
-        self.focus_prev()
+        return self.focus_prev()
 
 
 class Divider(Widget):
@@ -168,7 +168,7 @@ class InnerGroup(ContainerWidget, SelectedMixin):
 
     def __init__(self, caption, items):
         self.caption = caption
-        self.submenu = self.create_widget(MenuBox, items)
+        self.submenu = self.create_widget(InnerMenuBox, items)
 
     @property
     def width(self):
@@ -190,7 +190,9 @@ class InnerGroup(ContainerWidget, SelectedMixin):
         return 'modal-low'
 
     def on_right(self):
-        self.submenu.select_first()
+        if not self.submenu.focused:
+            return self.submenu.focus_first()
+        return False
 
     def render(self, canvas):
         canvas.set_mouse_target(self).set_style(self.style).draw_fill()
@@ -198,3 +200,10 @@ class InnerGroup(ContainerWidget, SelectedMixin):
         caption_canvas.draw_text(" %s" % self.caption)
         arrow_canvas.set_style(self.arrow_style).draw_text(u'▸ ')
         self.submenu.set_position(canvas, 'right', 'top')
+
+
+class InnerMenuBox(MenuBox):
+
+    def on_left(self):
+        self.parent.take_focus()
+        return True
