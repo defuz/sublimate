@@ -17,7 +17,7 @@ class BoundObservableList(object):
 		self.changed = Signal()
 		self.reseted = Signal()
 		self.inserted = Signal()
-		self.removed = Signal()
+		self.deleted = Signal()
 
 	def insert(self, value, index):
 		self.lst.insert(value, index)
@@ -31,7 +31,7 @@ class BoundObservableList(object):
 
 	def delete(self, index):
 		del self.lst[index]
-		self.removed.send(index)
+		self.deleted.send(index)
 		self.changed.send()
 
 
@@ -42,7 +42,7 @@ class ObservableListAdapter(object):
 		self.mapping = mapping
 		self.reset()
 		source.inserted.connect(self.insert)
-		source.removed.connect(self.delete)
+		source.deleted.connect(self.delete)
 		source.reseted.connect(self.reset)
 
 	def insert(self, value, index):

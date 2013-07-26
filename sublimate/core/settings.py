@@ -15,7 +15,6 @@ class SettingsFile(SettingsObject):
 
     def __init__(self, path):
         self.path = path
-        print '!!!!!!!!!!', path
         settings = load(open(path), object_hook=SettingsObject)
         SettingsObject.__init__(self, settings)
 
