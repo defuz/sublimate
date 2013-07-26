@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
-from sublimate.utils import camelcase2underscore
+from .utils import camelcase2underscore
+
 
 class Command(object):
 

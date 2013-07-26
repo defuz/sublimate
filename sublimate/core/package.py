@@ -3,8 +3,7 @@ import os
 from fnmatch import fnmatch
 
 from .settings import load_settings
-
-from sublimate.utils import packages_compare_key
+from .utils import packages_compare_key
 
 
 class Package(object):

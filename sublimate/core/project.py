@@ -3,7 +3,7 @@ import os
 from fnmatch import fnmatch
 
 from .settings import load_settings, SettingsFile, SettingsObject
-from sublimate.utils import files_compare_key
+from .utils import files_compare_key
 
 class Project(object):
 

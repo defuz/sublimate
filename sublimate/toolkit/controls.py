@@ -96,5 +96,5 @@ class SelectedMixin(object):
     def on_enter(self):
         return self.on_select()
 
-    on_left_press = \
-    on_right_press = on_enter
+    def on_left_press(self):
+        return self.on_select()

@@ -12,6 +12,9 @@ palette = (
 	style('sidebar-low-selected', 2, -1),
 	# tabs
 	style('tabs', 2),
+	style('tabs-selected', 0),
+	style('tabs-low', 2, -1),
+	style('tabs-low-selected', 0, -1),
 	# menubar
 	style('menubar', 3, -1),
 	style('menubar-selected', 4),

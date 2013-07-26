@@ -1,7 +1,22 @@
 # -*- coding: utf-8 -*-
-from .controls import ControlListMixin
+from .controls import ControlListMixin, SelectedMixin
+from .rendering import max_width, sum_height, vert_rendering
 
-class TreeMixin(ControlListMixin):
+class TreeMixin(ControlListMixin, SelectedMixin):
+
+    @property
+    def width(self):
+        return max_width(self.header, *self.children)
+
+    @property
+    def height(self):
+        if not self.opened:
+            return self.header.height
+        return sum_height(self.header, *self.children)
+
+    def on_select(self):
+        self.opened = not self.opened
+        return True
 
     def get_last_leaf(self):
         curr = self
@@ -42,8 +57,14 @@ class TreeMixin(ControlListMixin):
         self.get_next().take_focus()
         return True
 
+    def render(self, canvas, offset=0):        
+        if not self.opened:
+            assert offset == 0
+            return self.header.render(canvas)
+        vert_rendering(canvas, offset, self.header, *self.children)
 
-class TreeNodeMixin(object):
+
+class TreeNodeMixin(SelectedMixin):
 
     def on_left(self):
         self.parent.take_focus()
