@@ -1,14 +1,15 @@
 # -*- coding: utf-8 -*-
+from blinker import Signal
 from .base import ObservableObject, ObservableAttributeBase
 
-class ObservableProperty(ObservableAttributeBase):
+class ComputedProperty(ObservableAttributeBase):
 
 	def __init__(self, getter, modified=False):
 		self.getter = getter
 		self.modified = modified
 
 	def bound(self, obj):
-		return BoundObservableMethod(obj, self.getter)
+		return BoundComputedProperty(obj, self.getter)
 
 	def __set__(self, obj, value):
 		if not self.modified:
@@ -16,16 +17,16 @@ class ObservableProperty(ObservableAttributeBase):
 		return obj._observables[self].set(value)
 
 
-class ObservableMethod(ObservableAttributeBase):
+class ComputedMethod(ObservableAttributeBase):
 
 	def __init__(self, method):
 		self.method = method
 
 	def bound(self, obj):
-		return BoundObservableMethod(obj, self.method)
+		return BoundComputedMethod(obj, self.method)
 
 
-class BoundObservableMethod(object):
+class BoundComputedBase(object):
 
 	def __init__(self, instance, method):
 		self.instance = instance
@@ -35,15 +36,11 @@ class BoundObservableMethod(object):
 		self.initialized = False
 		self.changed = Signal()
 
-	def get(self):
-		if not self.initialized:
-			self.recalculate()
-		return self.value
-
-	def set(self, value):
-		self.value = value
-		self.disconnect_all_dependences()
-		self.changed.send(self.value)
+	def initialize(self):
+		if self.initialized:
+			return		
+		self.recalculate()
+		self.initialized = True
 
 	def connect_dependence(self, dependence):
 		if dependence == self.recalculate:
@@ -52,15 +49,35 @@ class BoundObservableMethod(object):
 		dependence.connect(self.recalculate)
 
 	def disconnect_all_dependences(self):
-		reciever = self.recalculate # just optimization
+		reciever = self.recalculate # just optimization		
 		for dependece in self.dependences:
 			dependece.disconnect(reciever)
-		self.dependences.clear()
+		self.dependences = []
 
-	def recalculate(self):
+
+class BoundComputedProperty(BoundComputedBase):
+
+	def get(self):
+		self.initialize()
+		return self.value
+
+	def recalculate(self, sender=None):
 		self.disconnect_all_dependences()
-		self.value = self.method(self.proxy)
-		self.changed.send(self.value)
+		value = self.method(self.proxy)
+		if not self.initialized or value != self.value:
+			self.value = value
+			self.changed.send()
+
+
+class BoundComputedMethod(BoundComputedBase):
+
+	def get(self):
+		return self.initialize
+
+	def recalculate(self, sender=None):
+		self.disconnect_all_dependences()
+		self.method(self.proxy)
+		self.changed.send()
 
 
 class DependenceLoggerProxy(object):
@@ -68,12 +85,21 @@ class DependenceLoggerProxy(object):
 	def __init__(self, instance, connect_dependence_callback):
 		self.__connect_dependence = connect_dependence_callback
 		self.__instance = instance
+		self.__type = type(instance)
 
-	def __getattr__(self, name):		
-		observable_prop = self.__instance._observables.get(name)
+	def __getattr__(self, name):
+		observable_prop = self.__type._observables_map.get(name)
 		if observable_prop:
-			self.__connect_dependence(observable_prop.changed)
-			if isinstance(observable_prop.value, ObservableObject):
-				return DependenceLoggerProxy(observables_prop.value, self.__connect_dependence)
-			return observables_prop.value
-		return type(self.__instance).__getattr__(self, name)
+			bound_prop = self.__instance._observables[observable_prop]
+			self.__connect_dependence(bound_prop.changed)
+			value = bound_prop.get()
+			if isinstance(value, ObservableObject):
+				return DependenceLoggerProxy(value, self.__connect_dependence)
+			return value
+		return getattr(self.__instance, name)
+
+	def __setattr__(self, name, value):
+		if name.startswith('_DependenceLoggerProxy__'):
+			object.__setattr__(self, name, value)
+			return
+		setattr(self.__instance, name, value)

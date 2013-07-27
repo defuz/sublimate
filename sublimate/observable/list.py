@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from blinker import Signal
 from .base import ObservableAttributeBase
 
 class ObservableList(ObservableAttributeBase):
@@ -10,7 +11,7 @@ class ObservableList(ObservableAttributeBase):
 		obj._observables[self][:] = value
 
 
-class BoundObservableList(object):
+class BoundObservableMapper(object):
 
 	def __init__(self):
 		self.lst = []
@@ -35,7 +36,7 @@ class BoundObservableList(object):
 		self.changed.send()
 
 
-class ObservableListAdapter(object):
+class ObservableListMapper(object):
 
 	def __init__(self, source, mapping):
 		self.source = source

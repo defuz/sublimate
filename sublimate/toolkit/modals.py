@@ -3,17 +3,13 @@
 class OverlayMixin(object):
 
     @property
-    def modals(self):
+    def opened_modals(self):
         curr, modals = self.focus, []
         while curr and curr != self:
-            if isinstance(curr, ModalMixin):
+            if isinstance(curr, ModalMixin) and curr.opened:
                 modals.append(curr)
             curr = curr.parent
         return reversed(modals)
-
-    @property
-    def opened_modals(self):
-        return filter(lambda modal: modal.opened, self.modals)
 
     def render_modals(self, canvas):
         modals = self.opened_modals
