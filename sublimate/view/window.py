@@ -24,7 +24,7 @@ class Window(Widget, OverlayMixin):
         menubar_canvas, frame_canvas, statusbar_canvas = \
             canvas.vert[self.menubar.height, ..., self.statusbar.height]
         sidebar_canvas, content_canvas = \
-            frame_canvas.horz[self.sidebar.width, ...]
+            frame_canvas.horz[20, ...]
 
         tabs_canvas, editor_canvas = \
             content_canvas.vert[self.tabs.height, ...]

@@ -81,3 +81,8 @@ class ObservableTestCase(TestCase):
         assert foo.calls == 2
         foo.a = 3
         assert foo.calls == 2
+
+    def test_list(self):
+        class Foo(observable.Object):
+            source = observable.List([1, 2, 3])
+            

@@ -2,7 +2,7 @@
 from sublimate.toolkit import Widget, ContainerWidget, VertScrolledMixin, TreeMixin, TreeListMixin, TreeNodeMixin
 
 
-class Sidebar(ContainerWidget, VertScrolledMixin, TreeListMixin):
+class Sidebar(TreeListMixin, VertScrolledMixin, ContainerWidget):
 
 	def __init__(self, project):
 		self.padding = -2

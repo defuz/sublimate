@@ -3,6 +3,7 @@ from .attributed import AttrFlow, AttrString
 
 
 class VerticalSplitter(object):
+
     def __init__(self, canvas):
         self.canvas = canvas
 
@@ -22,6 +23,7 @@ class VerticalSplitter(object):
 
 
 class HorizontalSplitter(object):
+
     def __init__(self, canvas):
         self.canvas = canvas
 
@@ -65,7 +67,8 @@ class UrwidCanvasAdapter(object):
 
 
 
-class BaseCanvas(object):
+class CanvasMixin(object):
+
     def __init__(self, width, height, style=None):
         self.width = width
         self.height = height
@@ -75,7 +78,8 @@ class BaseCanvas(object):
     horz = property(HorizontalSplitter)
 
     def __iter__(self):
-        raise NotImplementedError()
+        for i in range(self.height):
+            yield self[i]
 
     def __getitem__(self):
         raise NotImplementedError()
@@ -141,16 +145,14 @@ class BaseCanvas(object):
         return 'Canvas(%s, %s, %s, %s)' % (self.x, self.y, self.width, self.height)
 
 
-class Canvas(BaseCanvas):
+class Canvas(CanvasMixin):
+
     def __init__(self, width, height):
-        BaseCanvas.__init__(self, width, height)
+        CanvasMixin.__init__(self, width, height)
         self.y, self.x = 0, 0
         self.base_canvas = self
         self.data = [self.create_solid(self.width) for i in range(self.height)]
         self.mouse_target = [AttrFlow.fill(self.width) for i in range(self.height)]
-
-    def __iter__(self):
-        return iter(self.data)
 
     def __getitem__(self, index):
         return self.data[index]
@@ -163,28 +165,23 @@ class Canvas(BaseCanvas):
         return self.mouse_target[y][x]
 
     def set_mouse_target(self, target, x=0, y=0, width=None, height=None):
-        width = self.width if width is None else width
-        height = self.height if height is None else height
+        width, height = width or self.width, height or self.height
         assert x + width <= self.width, y + height <= self.height
         for i in range(height):
             self.mouse_target[y+i][x:x+width] = AttrFlow.fill(width, target)
         return self
 
-class SubCanvas(BaseCanvas):
+class SubCanvas(CanvasMixin):
+
     def __init__(self, base_canvas, x, y, width, height):
         assert x + width <= base_canvas.width, y + height <= base_canvas.height
-        BaseCanvas.__init__(self, width, height, base_canvas.style)
+        CanvasMixin.__init__(self, width, height, base_canvas.style)
         if isinstance(base_canvas, SubCanvas):
             x = base_canvas.x + x
             y = base_canvas.y + y
             base_canvas = base_canvas.base_canvas
         self.base_canvas = base_canvas
-        self.x = x
-        self.y = y
-
-    def __iter__(self):
-        for i in range(height):
-            yield self[i]
+        self.x, self.y = x, y
 
     def __getitem__(self, index):
         return self.base_canvas[self.y+index][self.x:self.x+height]
@@ -193,12 +190,41 @@ class SubCanvas(BaseCanvas):
         assert y < self.height, x + len(attrstr) < self.width
         self.base_canvas.draw(attrstr, x=self.x+x, y=self.y+y)
 
-    def get_mouse_target(self, x, y):
-        return self.base_canvas.get_mouse_target(self.x + x, self.y + y)
-
     def set_mouse_target(self, target, x=0, y=0, width=None, height=None):
-        width = self.width if width is None else width
-        height = self.height if height is None else height
+        width, height = width or self.width, height or self.height
         assert x + width <= self.width, y + height <= self.height
         self.base_canvas.set_mouse_target(target, self.x+x, self.y+y, width, height)
+        return self
+
+
+class SuperCanvas(CanvasMixin):
+
+    def __init__(self, base_canvas, x, y, width, height):
+        assert self is base_canvas
+        CanvasMixin.__init__(self, width, height, base_canvas.style)        
+        self.base_canvas = base_canvas
+        self.x, self.y = x, y
+
+    def draw(self, attrstr, x=0, y=0):
+        assert y < self.height, x + len(attrstr) < self.width
+        if y < self.y or y >= self.y + self.base_canvas.height:
+            return
+        if x < self.x:
+            attrstr = attrstr[x-self.x:]
+            x = self.x
+        if x + len(attrstr) > base_canvas.width:
+            attrstr = attrstr[:base_canvas.width-(x+len(attrstr))]
+        self.base_canvas.draw(attrstr, x=x-self.x, y=y-self.y)
+
+    def set_mouse_target(self, target, x=0, y=0, width=None, height=None):        
+        x, y = x - self.x, y - self.y
+        width, height = width or self.width, height or self.height
+        if x < 0:
+            x, width = 0, width + x
+        if y < 0:
+            y, height = 0, height + y
+        width = min(width, self.base_canvas.width)
+        height = min(height, self.base_canvas.height)        
+        if width > 0 and height > 0:
+            self.base_canvas.set_mouse_target(target, x, y, width, height)
         return self

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from .controls import ControlListMixin, SelectedMixin
-from .rendering import max_width, sum_height, vert_rendering
+from .rendering import max_width, sum_height, vert_rendering, vert_rendering_offset
 
 class TreeMixin(ControlListMixin, SelectedMixin):
 
@@ -57,11 +57,15 @@ class TreeMixin(ControlListMixin, SelectedMixin):
         self.get_next().take_focus()
         return True
 
-    def render(self, canvas, offset=0):        
+    def render(self, canvas):
+        vert_rendering(canvas, self.header, *self.children)
+
+    def render_offset(self, canvas, offset_x, offset_y):
+        assert offset_x == 0 # fixme: just not implemented
         if not self.opened:
-            assert offset == 0
+            assert offset_y == 0
             return self.header.render(canvas)
-        vert_rendering(canvas, offset, self.header, *self.children)
+        vert_rendering_offset(canvas, offset_y, self.header, *self.children)
 
 
 class TreeNodeMixin(SelectedMixin):

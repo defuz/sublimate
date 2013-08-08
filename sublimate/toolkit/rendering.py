@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from .widget import Widget
 
 def sum_width(*widgets):
     return sum(widget.width 
@@ -24,7 +25,7 @@ def max_height(*widgets):
                if getattr(widget, 'visible', True))
 
 
-def horz_rendering(canvas, offset, *widgets):
+def horz_rendering(canvas, *widgets):
     for widget in widgets:
         if not getattr(widget, 'visible', True):
             continue
@@ -32,10 +33,27 @@ def horz_rendering(canvas, offset, *widgets):
             break
         widget_canvas, canvas = canvas.horz[widget.width, ...]
         widget.render(widget_canvas)
-    canvas.draw_fill()
+    if canvas.width and canvas.height:
+        return canvas
 
 
-def vert_rendering(canvas, offset, *widgets):
+def vert_rendering(canvas, *widgets):
+    for widget in widgets:
+        if not getattr(widget, 'visible', True):
+            continue
+        if widget.height > canvas.height:
+            break
+        widget_canvas, canvas = canvas.vert[widget.height, ...]
+        widget.render(widget_canvas)
+    if canvas.width and canvas.height:
+        return canvas
+
+
+def horz_rendering_offset(canvas, offset, *widgets):
+    raise NotImplementedError() # todo: implement me
+
+
+def vert_rendering_offset(canvas, offset, *widgets):
     for widget in widgets:
         if not getattr(widget, 'visible', True):
             continue        
@@ -45,15 +63,14 @@ def vert_rendering(canvas, offset, *widgets):
             offset -= widget.height
             continue
         widget_height = min(canvas.height, widget.height - offset)
-        # if widget_height == 0:
-            # continue
         widget_canvas, canvas = canvas.vert[widget_height, ...]        
-        if offset == 0:
+        if offset == 0 and widget_height == widget.height:
             widget.render(widget_canvas)
-        else:            
-            widget.render(widget_canvas, offset)
+        else:
+            widget.render_offset(widget_canvas, 0, offset)
         offset = 0
-    canvas.draw_fill()
+    if canvas.width and canvas.height:
+        return canvas
 
 
 class HorzRenderingMixin(object):
@@ -68,7 +85,17 @@ class HorzRenderingMixin(object):
 
     def render(self, canvas, offset=0):
         canvas.set_style(self.style)
-        horz_rendering(canvas, offset, *self.children)
+        rest = horz_rendering(canvas, *self.children)
+        if rest:
+            rest.draw_fill()
+
+    def render_offset(self, canvas, offset_x, offset_y):
+        canvas.set_style(self.style)
+        if offset_y:
+            canvas = SuperCanvas(canvas, 0, offset_y, self.width, self.height)
+        rest = horz_rendering_offset(canvas, offset_x, *self.children)
+        if rest:
+            rest.draw_fill()
 
 
 class VertRenderingMixin(object):
@@ -81,8 +108,18 @@ class VertRenderingMixin(object):
     def height(self):
         return sum_height(*self.children)
 
-    def render(self, canvas, offset=0):
+    def render(self, canvas):        
         canvas.set_style(self.style)
-        vert_rendering(canvas, offset, *self.children)
+        rest = vert_rendering(canvas, *self.children)
+        if rest:
+            rest.draw_fill()
+
+    def render_offset(self, canvas, offset_x, offset_y):
+        canvas.set_style(self.style)
+        if offset_x:
+            canvas = SuperCanvas(canvas, offset_x, 0, self.width, self.height)
+        rest = vert_rendering_offset(canvas, offset_y, *self.children)
+        if rest:
+            rest.draw_fill()
 
 

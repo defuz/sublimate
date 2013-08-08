@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from .canvas import Canvas, UrwidCanvasAdapter
+from .canvas import Canvas, SuperCanvas, UrwidCanvasAdapter
 from .events import MouseEvent, KeyboardEvent
 
 
@@ -11,9 +11,6 @@ class Widget(object):
         widget = cls(*args, **kwargs)
         widget.parent = self
         return widget
-
-    def get_height(self, width):
-        return self.height
 
     @property
     def focused(self):
@@ -30,7 +27,7 @@ class Widget(object):
 
     def capture_focus(self, widget=None):
         parent = self
-        focus = widget if widget else (self.focus or self)
+        focus = widget or self.focus or self
         while parent:
             parent.focus = focus
             parent = parent.parent
@@ -53,6 +50,11 @@ class Widget(object):
             return True
         if self.parent:
             return self.parent.on_mouse(event)
+
+    # def render_offset(self, canvas, offset_x, offset_y):
+    #     self.render(SuperCanvas(canvas, 
+    #                             offset_x, offset_y,
+    #                             self.width, self.height))
 
 
 class ContainerWidget(Widget):

@@ -11,7 +11,7 @@ class ObservableList(ObservableAttributeBase):
 		obj._observables[self][:] = value
 
 
-class BoundObservableMapper(object):
+class BoundObservableList(object):
 
 	def __init__(self):
 		self.lst = []
