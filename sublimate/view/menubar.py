@@ -47,6 +47,7 @@ class Group(Widget, SelectedMixin):
 
     def on_select(self):
         self.submenu.capture_focus()
+        return True
         
     def render(self, canvas):
         canvas.set_mouse_target(self)
@@ -188,6 +189,10 @@ class InnerGroup(ContainerWidget, SelectedMixin):
         if self.focused:
             return 'modal-low-selected'
         return 'modal-low'
+
+    def on_select(self):
+        self.submenu.capture_focus()
+        return True
 
     def on_right(self):
         if not self.submenu.focused:

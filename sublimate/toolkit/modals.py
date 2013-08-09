@@ -9,10 +9,15 @@ class OverlayMixin(object):
             if isinstance(curr, ModalMixin) and curr.opened:
                 modals.append(curr)
             curr = curr.parent
-        return reversed(modals)
+        modals.reverse()
+        return modals
 
-    def render_modals(self, canvas):
+    def render_modals(self, canvas, overlay=None):
         modals = self.opened_modals
+        if not modals:
+            return
+        overlay = overlay or canvas
+        overlay.set_mouse_target(self) # fixme: self -> self.on_overlay_mouse
         for modal in modals:
             modal.render_modal(canvas)
         
