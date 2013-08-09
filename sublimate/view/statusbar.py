@@ -2,10 +2,6 @@
 from sublimate.toolkit import Widget
 
 
-def get_statusbar(app):
-	return Statusbar()
-
-
 class Statusbar(Widget):
 
 	@property

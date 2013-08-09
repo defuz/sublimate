@@ -91,8 +91,8 @@ class HorzRenderingMixin(object):
 
     def render_offset(self, canvas, offset_x, offset_y):
         canvas.set_style(self.style)
-        if offset_y:
-            canvas = SuperCanvas(canvas, 0, offset_y, self.width, self.height)
+        if offset_y or self.height > canvas.height:
+            canvas = canvas.super(0, offset_y, self.width, self.height)
         rest = horz_rendering_offset(canvas, offset_x, *self.children)
         if rest:
             rest.draw_fill()
@@ -114,10 +114,10 @@ class VertRenderingMixin(object):
         if rest:
             rest.draw_fill()
 
-    def render_offset(self, canvas, offset_x, offset_y):
+    def render_offset(self, canvas, offset_x, offset_y):        
         canvas.set_style(self.style)
-        if offset_x:
-            canvas = SuperCanvas(canvas, offset_x, 0, self.width, self.height)
+        if offset_x or self.width > canvas.width:
+            canvas = canvas.super(offset_x, 0, self.width, self.height)
         rest = vert_rendering_offset(canvas, offset_y, *self.children)
         if rest:
             rest.draw_fill()

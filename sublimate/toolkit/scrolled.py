@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
-from .rendering import VertRenderingMixin
 
-class VertScrolledMixin(VertRenderingMixin):
+class VertScrolledMixin(object):
 
 	offset_y, outer_height = 0, 0
 

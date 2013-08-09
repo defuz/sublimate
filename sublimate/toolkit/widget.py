@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from .canvas import Canvas, SuperCanvas, UrwidCanvasAdapter
+from .canvas import Canvas, UrwidCanvasAdapter
 from .events import MouseEvent, KeyboardEvent
 
 
@@ -52,10 +52,12 @@ class Widget(object):
             return self.parent.on_mouse(event)
 
     # def render_offset(self, canvas, offset_x, offset_y):
-    #     self.render(SuperCanvas(canvas, 
-    #                             offset_x, offset_y,
-    #                             self.width, self.height))
-
+    #     if offset_x or offset_y:
+    #         self.render(canvas.super(
+    #                                 offset_x, offset_y,
+    #                                 self.width, self.height))
+    #     else:
+    #         self.render(canvas)
 
 class ContainerWidget(Widget):
 

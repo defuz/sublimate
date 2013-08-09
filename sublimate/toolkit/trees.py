@@ -6,6 +6,8 @@ class TreeMixin(ControlListMixin, SelectedMixin):
 
     @property
     def width(self):
+        if not self.opened:
+            return self.header.width
         return max_width(self.header, *self.children)
 
     @property
@@ -61,14 +63,16 @@ class TreeMixin(ControlListMixin, SelectedMixin):
         vert_rendering(canvas, self.header, *self.children)
 
     def render_offset(self, canvas, offset_x, offset_y):
-        assert offset_x == 0 # fixme: just not implemented
-        if not self.opened:
-            assert offset_y == 0
-            return self.header.render(canvas)
-        vert_rendering_offset(canvas, offset_y, self.header, *self.children)
+        if offset_x or self.width > canvas.width:
+            canvas = canvas.super(offset_x, 0, self.width, self.height)
+        if self.opened:
+            vert_rendering_offset(canvas, offset_y, 
+                                  self.header, *self.children)
+        else:            
+            self.header.render(canvas)
 
 
-class TreeNodeMixin(SelectedMixin):
+class LeafMixin(SelectedMixin):
 
     def on_left(self):
         self.parent.take_focus()

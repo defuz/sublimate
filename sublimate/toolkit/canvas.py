@@ -110,6 +110,9 @@ class CanvasMixin(object):
             y -= (y + height - self.height)
         return SubCanvas(self, x, y, width, height)
 
+    def super(self, x, y, width, height):
+        return SuperCanvas(self, x, y, width, height)
+
     def padding(self, left=0, right=0, top=0, bottom=0):
         assert left + right <= self.width
         assert top + bottom <= self.height
@@ -200,21 +203,23 @@ class SubCanvas(CanvasMixin):
 class SuperCanvas(CanvasMixin):
 
     def __init__(self, base_canvas, x, y, width, height):
-        assert self is base_canvas
+        assert self is not base_canvas
+        # raise ValueError(base_canvas.width, base_canvas.height, x, y, width, height)
         CanvasMixin.__init__(self, width, height, base_canvas.style)        
         self.base_canvas = base_canvas
         self.x, self.y = x, y
 
     def draw(self, attrstr, x=0, y=0):
         assert y < self.height, x + len(attrstr) < self.width
-        if y < self.y or y >= self.y + self.base_canvas.height:
+        x, y = x - self.x, y - self.y
+        if y < 0 or y >= self.base_canvas.height:
             return
-        if x < self.x:
-            attrstr = attrstr[x-self.x:]
-            x = self.x
-        if x + len(attrstr) > base_canvas.width:
-            attrstr = attrstr[:base_canvas.width-(x+len(attrstr))]
-        self.base_canvas.draw(attrstr, x=x-self.x, y=y-self.y)
+        if x < 0:
+            attrstr = attrstr[abs(x):]
+            x = 0
+        if x + len(attrstr) >= self.base_canvas.width:
+            attrstr = attrstr[:self.base_canvas.width-x]
+        self.base_canvas.draw(attrstr, x, y)
 
     def set_mouse_target(self, target, x=0, y=0, width=None, height=None):        
         x, y = x - self.x, y - self.y
@@ -223,8 +228,8 @@ class SuperCanvas(CanvasMixin):
             x, width = 0, width + x
         if y < 0:
             y, height = 0, height + y
-        width = min(width, self.base_canvas.width)
-        height = min(height, self.base_canvas.height)        
+        width = min(width, self.base_canvas.width - x)
+        height = min(height, self.base_canvas.height - y)
         if width > 0 and height > 0:
             self.base_canvas.set_mouse_target(target, x, y, width, height)
         return self

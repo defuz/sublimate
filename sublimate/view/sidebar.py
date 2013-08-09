@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
-from sublimate.toolkit import Widget, ContainerWidget, VertScrolledMixin, TreeMixin, TreeListMixin, TreeNodeMixin
+from sublimate.toolkit import Widget, ContainerWidget, VertScrolledMixin, VertRenderingMixin, TreeMixin, TreeListMixin, LeafMixin
 
 
-class Sidebar(TreeListMixin, VertScrolledMixin, ContainerWidget):
+class Sidebar(VertScrolledMixin, VertRenderingMixin, TreeListMixin, ContainerWidget):
 
 	def __init__(self, project):
 		self.padding = -2
@@ -14,7 +14,7 @@ class Sidebar(TreeListMixin, VertScrolledMixin, ContainerWidget):
  		return 'sidebar'
 
 
-class FileWidget(Widget, TreeNodeMixin):
+class FileWidget(Widget, LeafMixin):
 
 	def __init__(self, file):
 		self.file = file
