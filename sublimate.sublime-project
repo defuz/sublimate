@@ -5,13 +5,10 @@
 			"path": "packages"
 		},
 		{
+			"path": "src"
+		},
+		{
 			"path": "sublimate"
-		},
-		{
-			"path": "scripts"
-		},
-		{
-			"path": "tests"
 		}
 	]
 }

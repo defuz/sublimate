@@ -97,7 +97,7 @@ class UrwidWidgetAdapter(object):
         return False
 
     def render(self, size, focus=False):
-        if len(size) == 2:  
+        if len(size) == 2:
             self.canvas = Canvas(size[0], size[1])
         elif len(size) == 1:
             self.canvas = Canvas(size[0], self.widget.get_height(size[0]))

@@ -66,9 +66,9 @@ class TreeMixin(ControlListMixin, SelectedMixin):
         if offset_x or self.width > canvas.width:
             canvas = canvas.super(offset_x, 0, self.width, self.height)
         if self.opened:
-            vert_rendering_offset(canvas, offset_y, 
+            vert_rendering_offset(canvas, offset_y,
                                   self.header, *self.children)
-        else:            
+        else:
             self.header.render(canvas)
 
 

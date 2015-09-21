@@ -1,0 +1,11 @@
+[package]
+
+name = "sublimate"
+version = "0.0.1"
+authors = ["Ivan Ivaschenko <defuz@me.com>"]
+
+[dependencies]
+ncurses = "5.73.0"
+bitflags = "0.3.2"
+weakjson = "0.0.7"
+rustc-serialize = "0.3.16"
