@@ -14,34 +14,36 @@ extern crate weakjson;
 use ncurses::*;
 
 use core::Core;
-use view::menubar::MenuBar;
+// use view::menubar::MenuBar;
 use toolkit::*;
 use view::theme::PALETTE;
 
 fn main()
 {
 
-  setlocale(LcCategory::all, "en_US.utf-8");
+  // setlocale(LcCategory::all, "en_US.utf-8");
 
-  initscr();
+  // initscr();
 
-  noecho();
-  keypad(stdscr, true);
-  curs_set(CURSOR_VISIBILITY::CURSOR_INVISIBLE);
-  raw();
+  // noecho();
+  // keypad(stdscr, true);
+  // curs_set(CURSOR_VISIBILITY::CURSOR_INVISIBLE);
+  // raw();
 
-  start_color();
-  use_default_colors();
+  // start_color();
+  // use_default_colors();
 
-  for (i, &(ref fg, ref bg)) in PALETTE.iter().enumerate() {
-    init_pair(i as i16, fg.to_term(), bg.to_term());
-  }
+  // for (i, &(ref fg, ref bg)) in PALETTE.iter().enumerate() {
+  //   init_pair(i as i16, fg.to_term(), bg.to_term());
+  // }
 
 
   let core = Core::load();
-  let menu = core.package_repository.get_menu::<MenuBar>("default/Main.sublime-menu");
+  let menu = core.package_repository.get_menu("default/Main.sublime-menu");
 
-  menu.render(Canvas { x1: 0, y1: 0, x2: 80, y2: 20});
+  println!("{:?}", menu);
+
+  // menu.render(Canvas { x1: 0, y1: 0, x2: 80, y2: 20});
 
 
   /* Start ncurses. */

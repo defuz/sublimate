@@ -1,60 +1,33 @@
+
 use std::cmp;
+use std::borrow::Borrow;
 use std::convert::AsRef;
 use std::iter::Iterator;
+use std::fmt::Debug;
 
-trait HasWidth<K: ?Sized> {
-    fn width(&self, context: K) -> usize;
+trait Test<C> {
+    fn test(&self, context: C);
 }
 
-struct Button;
-
-impl<K> HasWidth<K> for Button where K: AsRef<str> {
-    fn width(&self, context: K) -> usize {
-        context.as_ref().len()
-    }
+#[derive(Debug)]
+struct Item {
+    x: u64
 }
 
-struct Decorator<I>(u8, I);
+struct Smart;
 
-impl<K, I> HasWidth<K> for Decorator<I> where I: HasWidth<K> {
-    fn width(&self, context: K) -> usize {
-        match self {
-            &Decorator(_, ref item) => item.width(context)
+impl<I, C> Test<I> for Smart where I: Iterator<Item=C>, C: Debug {
+    fn test(&self, context: I) {
+        for c in context {
+            println!("{:?}", c);
+            println!("{:?}", c)
         }
     }
 }
 
-struct Selected<I>(u8, I);
-
-impl<K, I> HasWidth<(K, bool)> for Selected<I> where I: HasWidth<K> {
-    fn width(&self, (context, focused): (K, bool)) -> usize {
-        match self {
-            &Selected(_, ref item) => item.width(context)
-        }
-    }
-}
-
-struct VerticalRender<I>(I);
-
-impl<K, I, R> HasWidth<R> for VerticalRender<I> where I: HasWidth<K>, R: Iterator<Item=K> {
-    fn width(&self, context: R) -> usize {
-        match self {
-            &VerticalRender(ref item) => {
-                let mut w = 0;
-                for c in context {
-                    w = cmp::max(w, item.width(c));
-                }
-                w
-            }
-        }
-    }
-}
 
 fn main() {
-    let view = Decorator(6, VerticalRender(Selected(7, Button)));
-    let buttons = ["hello".to_string(), "world".to_string()];
-    let width = view.width(buttons.iter().map(|s| (s, true)));
-
-    println!("{}", width);
-
+    let x = vec![Item { x: 5 }];
+    let s = Smart;
+    s.test(x.iter().map(|i| i));
 }

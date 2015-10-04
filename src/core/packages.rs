@@ -12,13 +12,12 @@ pub struct PackageRepository {
 }
 
 impl PackageRepository {
-
     pub fn open(path: &str) -> PackageRepository {
         PackageRepository { path: PathBuf::from(path) }
     }
 
-    pub fn load_settings(&self, path: &Path) -> Option<Settings> {
-        let mut file = match File::open(path) {
+    pub fn load_settings(&self, filename: &str) -> Option<Settings> {
+        let mut file = match File::open(self.path.join(filename)) {
             Ok(file) => file,
             Err(_) => return None
         };
@@ -33,7 +32,7 @@ impl PackageRepository {
         }
     }
 
-    pub fn get_menu<M: Menu>(&self, filename: &str) -> M {
-        M::from_json(self.load_settings(self.path.join(filename).as_path()))
+    pub fn get_menu(&self, filename: &str) -> Menu {
+        self.load_settings(filename).map_or_else(Menu::new, Menu::from_json)
     }
 }

@@ -1,14 +1,18 @@
 use rustc_serialize::json::Json;
 use core::command::Command;
 
-pub trait MenuItem : Sized {
-    type M : Menu;
+#[derive(Debug)]
+pub struct Menu(Box<[MenuItem]>);
 
-    fn divider() -> Option<Self>;
-    fn button(caption: String, command: Command, is_checkbox: bool) -> Option<Self>;
-    fn group(caption: String, submenu: Self::M) -> Option<Self>;
+#[derive(Debug)]
+pub enum MenuItem {
+    Button(String, Command, bool),
+    Group(String, Menu),
+    Divider
+}
 
-    fn from_json(mut json: Json) -> Option<Self> {
+impl MenuItem {
+    pub fn from_json(mut json: Json) -> Option<MenuItem> {
         match json.as_object_mut() {
             Some(obj) => {
                 let caption = match obj.remove("caption") {
@@ -16,11 +20,12 @@ pub trait MenuItem : Sized {
                     _ => return None
                 };
                 if caption == "-" {
-                    return Self::divider();
+                    return Some(MenuItem::Divider);
                 }
                 match obj.remove("children") {
-                    menu_json @ Some(_) => {
-                        return Self::group(caption, Self::M::from_json(menu_json))
+                    Some(menu_json) => {
+                        let submenu = Menu::from_json(menu_json);
+                        return Some(MenuItem::Group(caption, submenu));
                     }
                     _ => {}
                 }
@@ -30,31 +35,28 @@ pub trait MenuItem : Sized {
                     _ => return None
                 };
                 let args = obj.remove("args");
-                Self::button(caption, Command { name: command, args: args}, is_checkbox)
+                Some(MenuItem::Button(caption, Command { name: command, args: args}, is_checkbox))
             },
             None => None
         }
     }
 }
 
-pub trait Menu : Sized {
-    type I : MenuItem;
+impl Menu {
+    pub fn new() -> Menu {
+        Menu(Vec::new().into_boxed_slice())
+    }
 
-    fn from_vec(items: Vec<Self::I>) -> Self;
-
-    fn from_json(json: Option<Json>) -> Self {
-        let mut items = Vec::<Self::I>::new();
-        match json {
-            Some(Json::Array(array)) => {
-                for item_json in array {
-                    match Self::I::from_json(item_json) {
-                        Some(item) => items.push(item),
-                        None => {}
-                    }
+    pub fn from_json(json: Json) -> Menu {
+        let mut items = Vec::<MenuItem>::new();
+        if let Json::Array(array) = json {
+            for item_json in array {
+                match MenuItem::from_json(item_json) {
+                    Some(item) => items.push(item),
+                    None => {}
                 }
             }
-            _ => {}
         }
-        return Self::from_vec(items);
+        Menu(items.into_boxed_slice())
     }
 }

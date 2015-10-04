@@ -8,20 +8,18 @@ use ncurses::{mvaddstr, mvaddch};
 
 #[derive(Debug)]
 pub struct Canvas {
-    pub x1: size,
-    pub y1: size,
-    pub x2: size,
-    pub y2: size
+    pub x1: usize,
+    pub y1: usize,
+    pub x2: usize,
+    pub y2: usize
 }
 
-impl HasWidth for Canvas {
-    fn width(&self) -> size {
+impl HasSize for Canvas {
+    fn width(&self) -> usize {
         self.x2 - self.x1 + 1
     }
-}
 
-impl HasHeight for Canvas {
-    fn height(&self) -> size {
+    fn height(&self) -> usize {
         self.y2 - self.y1 + 1
     }
 }
@@ -37,7 +35,7 @@ impl Canvas {
         }
     }
 
-    fn padding(&self, left: size, right: size, top: size, bottom: size) -> Canvas {
+    fn padding(&self, left: usize, right: usize, top: usize, bottom: usize) -> Canvas {
         assert!(left + right <= self.width());
         assert!(top + bottom <= self.height());
         Canvas {
@@ -46,41 +44,43 @@ impl Canvas {
         }
     }
 
-    fn left(&self, width: size) -> Canvas {
+    fn left(&self, width: usize) -> Canvas {
         Canvas {x1: self.x1, y1: self.y1, x2: self.x1 + width, y2: self.y2}
     }
 
-    fn right(&self, width: size) -> Canvas {
+    fn right(&self, width: usize) -> Canvas {
         Canvas {x1: self.x2 - width, y1: self.y1, x2: self.x2, y2: self.y2}
     }
 
-    fn top(&self, height: size) -> Canvas {
+    fn top(&self, height: usize) -> Canvas {
         Canvas {x1: self.x1, y1: self.y1, x2: self.x2, y2: self.y1 + height}
     }
 
-    fn bottom(&self, height: size) -> Canvas {
+    fn bottom(&self, height: usize) -> Canvas {
         Canvas {x1: self.x1, y1: self.y2 - height, x2: self.x2, y2: self.y2}
     }
 
-    pub fn split_horz(&self, mut width: size) -> (Canvas, Canvas) {
+    pub fn cut_left(&mut self, mut width: usize) -> Canvas {
         width = min(width, self.width());
-        (self.left(width), self.right(self.width() - width - 1))
+        self.x1 += width;
+        self.left(width)
     }
 
-    pub fn split_vert(&self, mut height: size) -> (Canvas, Canvas) {
+    pub fn cut_top(&mut self, mut height: usize) -> Canvas {
         height = min(height, self.height());
-        (self.top(height), self.bottom(self.height() - height - 1))
+        self.y1 += height;
+        self.top(height)
     }
 }
 
 impl Drawing for Canvas {
     fn fill(&self) {}
 
-    fn char(&self, c: char, x: size, y: size) {
+    fn char(&self, c: char, x: usize, y: usize) {
         mvaddch((self.y1 + y) as i32, (self.x1 + x) as i32, c as u64);
     }
 
-    fn text(&self, s: &str, x: size, y: size)  {
+    fn text(&self, s: &str, x: usize, y: usize)  {
         mvaddstr((self.y1 + y) as i32, (self.x1 + x) as i32, s);
     }
 }
