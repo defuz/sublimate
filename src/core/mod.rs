@@ -4,6 +4,7 @@ mod project;
 mod packages;
 mod build;
 pub mod command;
+pub mod keymap;
 
 use core::menu::Menu;
 use core::project::Project;

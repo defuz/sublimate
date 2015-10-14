@@ -3,7 +3,7 @@ use toolkit::draw::Drawing;
 use toolkit::core::*;
 use toolkit::style::Style;
 
-pub trait View {
+pub trait View<C> {
     fn width(&self, context: C) -> usize;
     fn height(&self, context: C) -> usize;
     fn render(&self, context: C, canvas: Canvas);

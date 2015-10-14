@@ -1,61 +1,42 @@
+use std::convert::From;
 use rustc_serialize::json::Json;
 use core::command::Command;
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct Menu(Box<[MenuItem]>);
 
 #[derive(Debug)]
 pub enum MenuItem {
-    Button(String, Command, bool),
+    Button(Option<String>, Command, bool),
     Group(String, Menu),
     Divider
 }
 
-impl MenuItem {
-    pub fn from_json(mut json: Json) -> Option<MenuItem> {
-        match json.as_object_mut() {
-            Some(obj) => {
-                let caption = match obj.remove("caption") {
-                    Some(Json::String(caption)) => caption,
-                    _ => return None
-                };
-                if caption == "-" {
-                    return Some(MenuItem::Divider);
-                }
-                match obj.remove("children") {
-                    Some(menu_json) => {
-                        let submenu = Menu::from_json(menu_json);
-                        return Some(MenuItem::Group(caption, submenu));
-                    }
-                    _ => {}
-                }
-                let is_checkbox = obj.remove("checkbox") == Some(Json::Boolean(true));
-                let command = match obj.remove("command") {
-                    Some(Json::String(command)) => command,
-                    _ => return None
-                };
-                let args = obj.remove("args");
-                Some(MenuItem::Button(caption, Command { name: command, args: args}, is_checkbox))
-            },
-            None => None
-        }
-    }
-}
-
-impl Menu {
-    pub fn new() -> Menu {
-        Menu(Vec::new().into_boxed_slice())
-    }
-
-    pub fn from_json(json: Json) -> Menu {
-        let mut items = Vec::<MenuItem>::new();
+impl From<Json> for Menu {
+    fn from(json: Json) -> Menu {
+        let mut items = Vec::new();
         if let Json::Array(array) = json {
-            for item_json in array {
-                match MenuItem::from_json(item_json) {
-                    Some(item) => items.push(item),
-                    None => {}
+            for mut item_json in array {
+                if let Some(obj) = item_json.as_object_mut() {
+                    let caption = match obj.remove("caption") {
+                        Some(Json::String(caption)) => Some(caption),
+                        _ => None
+                    };
+                    if caption == Some("-".to_string()) {
+                        items.push(MenuItem::Divider);
+                    } else if let Some(menu_json) = obj.remove("children") {
+                        items.push(MenuItem::Group(caption.unwrap_or_default(), Menu::from(menu_json)));
+                    } else if let Some(Json::String(command)) = obj.remove("command") {
+                        let is_checkbox = obj.remove("checkbox") == Some(Json::Boolean(true));
+                        let args = obj.remove("args");
+                        items.push(MenuItem::Button(caption, Command {
+                            name: command, args: args
+                        }, is_checkbox))
+                    } else {
+                        error!("Incorrect menu item: {:?}", obj)
+                    }
                 }
-            }
+            };
         }
         Menu(items.into_boxed_slice())
     }

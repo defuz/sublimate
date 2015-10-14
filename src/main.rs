@@ -1,4 +1,6 @@
 #![allow(dead_code)]
+#![feature(associated_consts)]
+
 
 mod core;
 mod toolkit;
@@ -6,6 +8,12 @@ mod view;
 
 #[macro_use]
 extern crate bitflags;
+
+#[macro_use]
+extern crate log;
+extern crate env_logger;
+
+
 extern crate ncurses;
 extern crate rustc_serialize;
 extern crate weakjson;
@@ -37,11 +45,15 @@ fn main()
   //   init_pair(i as i16, fg.to_term(), bg.to_term());
   // }
 
+  env_logger::init().unwrap();
 
   let core = Core::load();
-  let menu = core.package_repository.get_menu("default/Main.sublime-menu");
+  core.package_repository.get_keymap("default/Default (OSX).sublime-keymap");
+  core.package_repository.get_keymap("default/Default (Windows).sublime-keymap");
+  core.package_repository.get_keymap("default/Default (Linux).sublime-keymap");
 
-  println!("{:?}", menu);
+
+  info!("hello world!");
 
   // menu.render(Canvas { x1: 0, y1: 0, x2: 80, y2: 20});
 
@@ -76,13 +88,13 @@ fn main()
 
 
   /* Wait for a key press. */
-  loop {
-      let c = getch();
-      if c == 10 {
-        break;
-      }
-  }
+  // loop {
+  //     let c = getch();
+  //     if c == 10 {
+  //       break;
+  //     }
+  // }
 
   // /* Terminate ncurses. */
-  endwin();
+  // endwin();
 }

@@ -5,6 +5,7 @@ use std::path::{Path, PathBuf};
 
 use core::settings::Settings;
 use core::menu::Menu;
+use core::keymap::Keymap;
 
 #[derive(Debug)]
 pub struct PackageRepository {
@@ -33,6 +34,10 @@ impl PackageRepository {
     }
 
     pub fn get_menu(&self, filename: &str) -> Menu {
-        self.load_settings(filename).map_or_else(Menu::new, Menu::from_json)
+        self.load_settings(filename).map_or_else(Menu::default, Menu::from)
+    }
+
+    pub fn get_keymap(&self, filename: &str) -> Keymap {
+        self.load_settings(filename).map_or_else(Keymap::default, Keymap::from)
     }
 }

@@ -19,37 +19,48 @@ struct Menubar {
     items: Box<[MenubarItem]>
 }
 
-trait Control {
-    type C;
-    type V: View<Self::C>;
+// trait Control<'a> {
+//     type Context: ?Sized + 'a;
+//     type View: View<Self::Context>;
 
-    fn view(&self) -> Self::V;
-    fn context(&self) -> Self::C;
+//     fn view(&self) -> Self::View;
+//     fn context(&self) -> Self::Context;
 
-    fn render(&self, canvas: Canvas) {
-        self.view().render(self.context(), canvas);
-    }
-}
+//     fn render(&self, canvas: Canvas) {
+//         self.view().render(self.context(), canvas);
+//     }
+// }
 
 impl Menubar {
     fn new(items: Box<[MenubarItem]>) -> Menubar {
         Menubar { focused: None, items: items }
     }
 
+    // core::iter::Map<core::iter::Enumerate<core::slice::Iter<'_, view::menubar::MenubarItem>>, [closure@src/view/menubar.rs:40:43: 40:98 self:_]>
+    // fn context(&self) -> &Iterator<Item=(bool, &str)> {
+    //     self.items.iter().enumerate().map(move |(i, item)| (self.focused == Some(i), &*item.name))
+    // }
+
     fn render(&self, canvas: Canvas) {
-        let context = self.items.iter().enumerate().map(|(i, item)| (self.focused == Some(i), &*item.name));
-        view.render(context, canvas);
+        // let context = ;
+
+        // let view = Decorator(MENUBAR_STYLE, HorizontalList(
+        //     self.items.iter().enumerate().map(|(i, item)|
+        //         Selected(if self.focused == Some(i) { Some(MENUBAR_SELECTED_STYLE) } else { None }
+        //     , &*item.name))
+        // ));
+        // view.render(context, canvas);
     }
 }
 
-impl Control for Menubar {
-    type C = Iterator<Item=(bool, &str)>;
-    type V = Decorator<HorizontalList<Selected<Text>>>;
+// impl<'a> Control<'a> for Menubar {
+//     type Context = Iterator<Item=(bool, &'a str)>;
+//     type View = Decorator<HorizontalList<Selected<Text>>>;
 
-    fn view(&self) -> Decorator<HorizontalList<Selected<Text>>> {
-        view
-    }
-}
+//     fn view(&self) -> Decorator<HorizontalList<Selected<Text>>> {
+//         view
+//     }
+// }
 
 // pub type MenuBar = Decorator<HorizontalWidget<MenuGroup>>;
 // pub type MenuBox = VerticalWidget<MenuChild>;
