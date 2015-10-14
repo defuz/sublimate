@@ -9,6 +9,11 @@ pub trait View<C> {
     fn render(&self, context: C, canvas: Canvas);
 }
 
+pub fn sum_width<'c, C, V, I>(context: &'c C, views: I)
+    -> usize where V: View<&'c C>, I: Iterator<Item=&'c V> {
+    views.into_iter().fold(0, |acc, view| acc + view.width(context))
+}
+
 //////////////////////////////////// Text //////////////////////////////////////////////////////////
 
 pub struct Text;

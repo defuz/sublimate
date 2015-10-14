@@ -1,39 +1,39 @@
 use toolkit::{Color, ColorPair};
 
 const BRIDGEST : i8 = 1;
-const CONTRAST : i8 = 12;
+const CONTRAST : i8 = 17;
 const ACCENT   : i8 = 4;
 
 // editor
-pub const EDITOR               : ColorPair = ColorPair(0);
-pub const EDITOR_SELECTED      : ColorPair = ColorPair(1);
+pub const EDITOR_COLORS               : ColorPair = ColorPair(0);
+pub const EDITOR_SELECTED_COLORS      : ColorPair = ColorPair(1);
 
 // sidebar
-pub const SIDEBAR              : ColorPair = ColorPair(2);
-pub const SIDEBAR_SELECTED     : ColorPair = ColorPair(3);
-pub const SIDEBAR_LOW          : ColorPair = ColorPair(4);
-pub const SIDEBAR_LOW_SELECTED : ColorPair = ColorPair(5);
+pub const SIDEBAR_COLORS              : ColorPair = ColorPair(2);
+pub const SIDEBAR_SELECTED_COLORS     : ColorPair = ColorPair(3);
+pub const SIDEBAR_LOW_COLORS          : ColorPair = ColorPair(4);
+pub const SIDEBAR_LOW_SELECTED_COLORS : ColorPair = ColorPair(5);
 
 // tabs
-pub const TABS                 : ColorPair = ColorPair(6);
-pub const TABS_SELECTED        : ColorPair = ColorPair(7);
-pub const TABS_LOW             : ColorPair = ColorPair(8);
-pub const TABS_LOW_SELECTED    : ColorPair = ColorPair(9);
+pub const TABS_COLORS                 : ColorPair = ColorPair(6);
+pub const TABS_SELECTED_COLORS        : ColorPair = ColorPair(7);
+pub const TABS_LOW_COLORS             : ColorPair = ColorPair(8);
+pub const TABS_LOW_SELECTED_COLORS    : ColorPair = ColorPair(9);
 
 // menubar
-pub const MENUBAR              : ColorPair = ColorPair(10);
-pub const MENUBAR_SELECTED     : ColorPair = ColorPair(11);
+pub const MENUBAR_COLORS              : ColorPair = ColorPair(10);
+pub const MENUBAR_SELECTED_COLORS     : ColorPair = ColorPair(11);
 
 // statusbar
-pub const STATUSBAR            : ColorPair = ColorPair(12);
+pub const STATUSBAR_COLORS            : ColorPair = ColorPair(12);
 
 // modals
-pub const MODAL                : ColorPair = ColorPair(13);
-pub const MODAL_SELECTED       : ColorPair = ColorPair(14);
-pub const MODAL_LOW            : ColorPair = ColorPair(15);
-pub const MODAL_LOW_SELECTED   : ColorPair = ColorPair(16);
-pub const MODAL_DISABLED       : ColorPair = ColorPair(17);
-pub const MODAL_DISABLED_LOW   : ColorPair = ColorPair(18);
+pub const MODAL_COLORS                : ColorPair = ColorPair(13);
+pub const MODAL_SELECTED_COLORS       : ColorPair = ColorPair(14);
+pub const MODAL_LOW_COLORS            : ColorPair = ColorPair(15);
+pub const MODAL_LOW_SELECTED_COLORS   : ColorPair = ColorPair(16);
+pub const MODAL_DISABLED_COLORS       : ColorPair = ColorPair(17);
+pub const MODAL_DISABLED_LOW_COLORS   : ColorPair = ColorPair(18);
 
 macro_rules! create_color_pair {
     ($base:expr, $accent:expr) => ((

@@ -60,6 +60,10 @@ pub struct Style {
     pub attrs: Attr
 }
 
+struct StyleContext {
+    prev_style: Style
+}
+
 impl Style {
     fn normal(colors: ColorPair) -> Style {
         Style { colors: colors, attrs: NORMAL }
@@ -79,4 +83,15 @@ impl Style {
         attr_set(self.attrs.bits, self.colors.to_term());
     }
 
+    pub fn context(&self) -> StyleContext {
+        self.set();
+        StyleContext { prev_style: Style::current() }
+    }
+
+}
+
+impl Drop for StyleContext {
+    fn drop(&mut self) {
+        self.prev_style.set();
+    }
 }

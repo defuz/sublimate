@@ -62,25 +62,27 @@ impl Canvas {
 
     pub fn cut_left(&mut self, mut width: usize) -> Canvas {
         width = min(width, self.width());
+        let left = self.left(width);
         self.x1 += width;
-        self.left(width)
+        left
     }
 
     pub fn cut_top(&mut self, mut height: usize) -> Canvas {
         height = min(height, self.height());
+        let top = self.top(height);
         self.y1 += height;
-        self.top(height)
+        top
     }
 }
 
 impl Drawing for Canvas {
     fn fill(&self) {}
 
-    fn char(&self, c: char, x: usize, y: usize) {
+    fn char(&self, c: char, y: usize, x: usize) {
         mvaddch((self.y1 + y) as i32, (self.x1 + x) as i32, c as u64);
     }
 
-    fn text(&self, s: &str, x: usize, y: usize)  {
+    fn text(&self, s: &str, y: usize, x: usize)  {
         mvaddstr((self.y1 + y) as i32, (self.x1 + x) as i32, s);
     }
 }

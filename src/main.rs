@@ -22,38 +22,42 @@ extern crate weakjson;
 use ncurses::*;
 
 use core::Core;
-// use view::menubar::MenuBar;
+use view::window::Window;
 use toolkit::*;
 use view::theme::PALETTE;
 
 fn main()
 {
 
-  // setlocale(LcCategory::all, "en_US.utf-8");
+  setlocale(LcCategory::all, "en_US.utf-8");
 
-  // initscr();
+  initscr();
 
-  // noecho();
-  // keypad(stdscr, true);
-  // curs_set(CURSOR_VISIBILITY::CURSOR_INVISIBLE);
-  // raw();
+  noecho();
+  keypad(stdscr, true);
+  curs_set(CURSOR_VISIBILITY::CURSOR_INVISIBLE);
+  raw();
 
-  // start_color();
-  // use_default_colors();
+  start_color();
+  use_default_colors();
 
-  // for (i, &(ref fg, ref bg)) in PALETTE.iter().enumerate() {
-  //   init_pair(i as i16, fg.to_term(), bg.to_term());
-  // }
+  for (i, &(ref fg, ref bg)) in PALETTE.iter().enumerate() {
+    init_pair(i as i16, fg.to_term(), bg.to_term());
+  }
 
   env_logger::init().unwrap();
 
   let core = Core::load();
-  core.package_repository.get_keymap("default/Default (OSX).sublime-keymap");
-  core.package_repository.get_keymap("default/Default (Windows).sublime-keymap");
-  core.package_repository.get_keymap("default/Default (Linux).sublime-keymap");
+  let window = Window::new(core);
+
+  window.render(Canvas { x1: 0, y1: 0, x2: 80, y2: 20});
+
+  // core.package_repository.get_keymap("default/Default (OSX).sublime-keymap");
+  // core.package_repository.get_keymap("default/Default (Windows).sublime-keymap");
+  // core.package_repository.get_keymap("default/Default (Linux).sublime-keymap");
 
 
-  info!("hello world!");
+  // info!("hello world!");
 
   // menu.render(Canvas { x1: 0, y1: 0, x2: 80, y2: 20});
 
@@ -88,13 +92,13 @@ fn main()
 
 
   /* Wait for a key press. */
-  // loop {
-  //     let c = getch();
-  //     if c == 10 {
-  //       break;
-  //     }
-  // }
+  loop {
+      let c = getch();
+      if c == 10 {
+        break;
+      }
+  }
 
-  // /* Terminate ncurses. */
-  // endwin();
+  /* Terminate ncurses. */
+  endwin();
 }

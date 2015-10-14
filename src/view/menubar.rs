@@ -1,173 +1,79 @@
 use toolkit::*;
+use core::Core;
 use core::menu::{Menu, MenuItem};
 use core::command::Command;
 use view::theme::*;
 
-const MENUBAR_STYLE          : Style = Style { colors: MENUBAR, attrs: NORMAL };
-const MENUBAR_SELECTED_STYLE : Style = Style { colors: MENUBAR_SELECTED, attrs: NORMAL };
-
-const view : Decorator<HorizontalList<Selected<Text>>> =
-    Decorator(MENUBAR_STYLE, HorizontalList(Selected(MENUBAR_SELECTED_STYLE, Text)));
+const MENUBAR_STYLE          : Style = Style { colors: MENUBAR_COLORS, attrs: NORMAL };
+const MENUBAR_SELECTED_STYLE : Style = Style { colors: MENUBAR_SELECTED_COLORS, attrs: NORMAL };
 
 pub struct MenubarItem {
     pub id: Box<str>,
     pub name: Box<str>
 }
 
-struct Menubar {
+impl<'c> View<&'c Core> for MenubarItem {
+    fn width(&self, core: &Core) -> usize {
+        self.name.len() + 2
+    }
+
+    fn height(&self, core: &Core) -> usize {
+        1
+    }
+
+    fn render(&self, core: &Core, canvas: Canvas) {
+        // info!("render {}, {:?}", self.name, canvas)
+        canvas.char(' ', 0, 0);
+        canvas.text(&*self.name, 0, 1);
+        canvas.char(' ', 0, self.name.len() + 1);
+    }
+}
+
+
+pub struct Menubar {
     focused: Option<usize>,
     items: Box<[MenubarItem]>
 }
 
-// trait Control<'a> {
-//     type Context: ?Sized + 'a;
-//     type View: View<Self::Context>;
-
-//     fn view(&self) -> Self::View;
-//     fn context(&self) -> Self::Context;
-
-//     fn render(&self, canvas: Canvas) {
-//         self.view().render(self.context(), canvas);
-//     }
-// }
-
 impl Menubar {
-    fn new(items: Box<[MenubarItem]>) -> Menubar {
-        Menubar { focused: None, items: items }
-    }
-
-    // core::iter::Map<core::iter::Enumerate<core::slice::Iter<'_, view::menubar::MenubarItem>>, [closure@src/view/menubar.rs:40:43: 40:98 self:_]>
-    // fn context(&self) -> &Iterator<Item=(bool, &str)> {
-    //     self.items.iter().enumerate().map(move |(i, item)| (self.focused == Some(i), &*item.name))
-    // }
-
-    fn render(&self, canvas: Canvas) {
-        // let context = ;
-
-        // let view = Decorator(MENUBAR_STYLE, HorizontalList(
-        //     self.items.iter().enumerate().map(|(i, item)|
-        //         Selected(if self.focused == Some(i) { Some(MENUBAR_SELECTED_STYLE) } else { None }
-        //     , &*item.name))
-        // ));
-        // view.render(context, canvas);
+    pub fn new(core: &Core) -> Menubar {
+        let mut items = Vec::new();
+        for item in core.package_repository.get_menu("default/Main.sublime-menu").iter() {
+            match item {
+                &MenuItem::Group(ref name, _) => items.push(MenubarItem {
+                    id: "id".to_string().into_boxed_str(), name: name.clone().into_boxed_str()
+                }),
+                _ => { error!("Incorrect menu item") }
+            }
+        }
+        Menubar { focused: Some(3), items: items.into_boxed_slice() }
     }
 }
 
-// impl<'a> Control<'a> for Menubar {
-//     type Context = Iterator<Item=(bool, &'a str)>;
-//     type View = Decorator<HorizontalList<Selected<Text>>>;
+impl<'c> View<&'c Core> for Menubar {
+    fn width(&self, core: &Core) -> usize {
+        sum_width(core, self.items.iter())
+    }
 
-//     fn view(&self) -> Decorator<HorizontalList<Selected<Text>>> {
-//         view
-//     }
-// }
+    fn height(&self, core: &Core) -> usize {
+        1
+    }
 
-// pub type MenuBar = Decorator<HorizontalWidget<MenuGroup>>;
-// pub type MenuBox = VerticalWidget<MenuChild>;
-
-// #[derive(Debug)]
-// struct MenuGroup {
-//     caption: String,
-//     submenu: MenuBox
-// }
-
-// #[derive(Debug)]
-// enum MenuChild {
-//     Button(String, Command, bool),
-//     Group(String, MenuBox),
-//     Divider
-// }
-
-// impl Menu for MenuBar {
-//     type I = MenuGroup;
-
-//     fn from_vec(items: Vec<MenuGroup>) -> MenuBar {
-//         MenuBar {
-//             style: Style {
-//                 colors: MENUBAR,
-//                 attrs: NORMAL
-//             },
-//             item: HorizontalWidget {
-//                 children: items
-//             }
-//         }
-//     }
-// }
-
-// impl MenuItem for MenuGroup {
-//     type M = MenuBox;
-
-//     fn divider() -> Option<MenuGroup> {
-//         None
-//     }
-
-//     fn button(caption: String, command: Command, is_checkbox: bool) -> Option<MenuGroup> {
-//         None
-//     }
-
-//     fn group(caption: String, submenu: MenuBox) -> Option<MenuGroup> {
-//         Some(MenuGroup { caption: caption, submenu: submenu })
-//     }
-// }
-
-// impl Menu for MenuBox {
-//     type I = MenuChild;
-
-//     fn from_vec(items: Vec<MenuChild>) -> MenuBox {
-//         MenuBox {children: items}
-//     }
-// }
-
-// impl MenuItem for MenuChild {
-//     type M = MenuBox;
-
-//     fn divider() -> Option<MenuChild> {
-//         Some(MenuChild::Divider)
-//     }
-
-//     fn button(caption: String, command: Command, is_checkbox: bool) -> Option<MenuChild> {
-//         Some(MenuChild::Button(caption, command, is_checkbox))
-//     }
-
-//     fn group(caption: String, submenu: MenuBox) -> Option<MenuChild> {
-//         Some(MenuChild::Group(caption, submenu))
-//     }
-// }
-
-// impl HasWidth for MenuGroup {
-//     fn width(&self) -> size {
-//         self.caption.len() + 2
-//     }
-// }
-
-// impl HasHeight for MenuGroup {
-//     fn height(&self) -> size {
-//         1
-//     }
-// }
-
-// impl Rendering for MenuGroup {
-//     fn render(&self, canvas: Canvas) {
-//         canvas.char(' ', 0, 0);
-//         canvas.text(&self.caption, 1, 0);
-//         canvas.char(' ', self.caption.len() + 1, 0);
-//     }
-// }
-
-// impl HasWidth for MenuChild {
-//     fn width(&self) -> size {
-//         10
-//     }
-// }
-
-// impl HasHeight for MenuChild {
-//     fn height(&self) -> size {
-//         1
-//     }
-// }
-
-// impl Rendering for MenuChild {
-//     fn render(&self, canvas: Canvas) {
-
-//     }
-// }
+    fn render(&self, core: &Core, mut canvas: Canvas) {
+        MENUBAR_STYLE.set();
+        for (i, item) in self.items.iter().enumerate() {
+            let w = item.width(core);
+            if w > canvas.width() {
+                break
+            }
+            let item_canvas = canvas.cut_left(w);
+            if self.focused == Some(i) {
+                MENUBAR_SELECTED_STYLE.set();
+                item.render(core, item_canvas);
+                MENUBAR_STYLE.set();
+            } else {
+                item.render(core, item_canvas);
+            }
+        }
+    }
+}

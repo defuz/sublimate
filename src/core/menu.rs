@@ -1,4 +1,5 @@
 use std::convert::From;
+use std::slice::Iter;
 use rustc_serialize::json::Json;
 use core::command::Command;
 
@@ -10,6 +11,14 @@ pub enum MenuItem {
     Button(Option<String>, Command, bool),
     Group(String, Menu),
     Divider
+}
+
+impl Menu {
+    pub fn iter<'a>(&'a self) -> Iter<'a, MenuItem> {
+        match *self {
+            Menu(ref items) => items.iter()
+        }
+    }
 }
 
 impl From<Json> for Menu {
