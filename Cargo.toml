@@ -5,6 +5,7 @@ version = "0.0.1"
 authors = ["Ivan Ivaschenko <defuz@me.com>"]
 
 [dependencies]
+regex = "0.1.41"
 ncurses = "5.73.0"
 bitflags = "0.3.2"
 weakjson = "0.0.7"

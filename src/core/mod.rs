@@ -5,6 +5,7 @@ mod packages;
 mod build;
 pub mod command;
 pub mod keymap;
+pub mod context;
 
 use core::menu::Menu;
 use core::project::Project;

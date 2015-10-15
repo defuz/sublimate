@@ -1,5 +1,6 @@
 #![allow(dead_code)]
 #![feature(associated_consts)]
+#![feature(convert)]
 
 
 mod core;
@@ -13,6 +14,7 @@ extern crate bitflags;
 extern crate log;
 extern crate env_logger;
 
+extern crate regex;
 
 extern crate ncurses;
 extern crate rustc_serialize;
