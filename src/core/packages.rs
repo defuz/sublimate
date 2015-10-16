@@ -9,7 +9,7 @@ use core::keymap::Keymap;
 
 #[derive(Debug)]
 pub struct PackageRepository {
-    path: PathBuf,
+    path: PathBuf
 }
 
 impl PackageRepository {

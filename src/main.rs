@@ -1,6 +1,7 @@
 #![allow(dead_code)]
 #![feature(associated_consts)]
 #![feature(convert)]
+#![feature(pattern)]
 
 
 mod core;
@@ -55,7 +56,7 @@ fn main() {
         x1: 0,
         y1: 0,
         x2: 80,
-        y2: 20,
+        y2: 20
     });
 
   // core.package_repository.get_keymap("default/Default (OSX).sublime-keymap");

@@ -36,16 +36,16 @@ impl From<Json> for Menu {
                     } else if let Some(menu_json) = obj.remove("children") {
                         items.push(MenuItem::Group(caption.unwrap_or_default(),
                                                    Menu::from(menu_json)));
-                    } else if let Some(Json::String(command)) = obj.remove("command") {
-                        let is_checkbox = obj.remove("checkbox") == Some(Json::Boolean(true));
-                        let args = obj.remove("args");
-                        items.push(MenuItem::Button(caption,
-                                                    Command {
-                                                        name: command,
-                                                        args: args,
-                                                    },
-                                                    is_checkbox))
-                    } else {
+                    // } else if let Some(Json::String(command)) = obj.remove("command") {
+                    //     let is_checkbox = obj.remove("checkbox") == Some(Json::Boolean(true));
+                    //     let args = obj.remove("args");
+                    //     items.push(MenuItem::Button(caption,
+                    //                                 Command {
+                    //                                     name: command,
+                    //                                     args: args
+                    //                                 },
+                    //                                 is_checkbox))
+                    // } else {
                         error!("Incorrect menu item: {:?}", obj)
                     }
                 }

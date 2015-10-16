@@ -6,16 +6,16 @@ use view::theme::*;
 
 const MENUBAR_STYLE          : Style = Style {
     colors: MENUBAR_COLORS,
-    attrs: NORMAL,
+    attrs: NORMAL
 };
 const MENUBAR_SELECTED_STYLE : Style = Style {
     colors: MENUBAR_SELECTED_COLORS,
-    attrs: NORMAL,
+    attrs: NORMAL
 };
 
 pub struct MenubarItem {
     pub id: Box<str>,
-    pub name: Box<str>,
+    pub name: Box<str>
 }
 
 impl<'c> View<&'c Core> for MenubarItem {
@@ -38,7 +38,7 @@ impl<'c> View<&'c Core> for MenubarItem {
 
 pub struct Menubar {
     focused: Option<usize>,
-    items: Box<[MenubarItem]>,
+    items: Box<[MenubarItem]>
 }
 
 impl Menubar {
@@ -48,7 +48,7 @@ impl Menubar {
             match item {
                 &MenuItem::Group(ref name, _) => items.push(MenubarItem {
                     id: "id".to_string().into_boxed_str(),
-                    name: name.clone().into_boxed_str(),
+                    name: name.clone().into_boxed_str()
                 }),
                 _ => {
                     error!("Incorrect menu item")
@@ -57,7 +57,7 @@ impl Menubar {
         }
         Menubar {
             focused: Some(3),
-            items: items.into_boxed_slice(),
+            items: items.into_boxed_slice()
         }
     }
 }

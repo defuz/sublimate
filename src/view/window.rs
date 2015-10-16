@@ -4,7 +4,7 @@ use view::menubar::Menubar;
 
 pub struct Window {
     core: Core,
-    menubar: Menubar,
+    menubar: Menubar
 }
 
 impl Window {
@@ -13,7 +13,7 @@ impl Window {
 
         Window {
             core: core,
-            menubar: menubar,
+            menubar: menubar
         }
     }
 

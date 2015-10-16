@@ -1,35 +1,38 @@
 use std::str::FromStr;
-use std::convert::From;
-use std::collections::HashMap;
-use rustc_serialize::json::Json;
-use core::command::Command;
+
+use core::command::{Command, ParseCommandError};
+use core::context::{Context, ParseContextError};
+use core::settings::{Settings, FromSettings};
+
+use self::ParseHotkeyError::*;
+use self::ParseHotkeyBindingError::*;
 
 bitflags! {
     flags Modifiers: u8 {
-        const None  = 0,
-        const Super = 1,
-        const Ctrl  = 2,
-        const Alt   = 4,
-        const Shift = 8
+        const MODIFIER_NONE  = 0,
+        const MODIFIER_SUPER = 1,
+        const MODIFIER_CTRL  = 2,
+        const MODIFIER_ALT   = 4,
+        const MODIFIER_SHIFT = 8
     }
 }
 
 impl FromStr for Modifiers {
-    type Err = String;
+    type Err = ParseHotkeyError;
 
     fn from_str(s: &str) -> Result<Modifiers, Self::Err> {
         Ok(match s {
-            "super" => Super,
-            "ctrl" => Ctrl,
-            "alt" => Alt,
-            "shift" => Shift,
-            _ => return Err(s.to_string()),
+            "super" => MODIFIER_SUPER,
+            "ctrl" => MODIFIER_CTRL,
+            "alt" => MODIFIER_ALT,
+            "shift" => MODIFIER_SHIFT,
+            _ => return Err(IncorrectModifier(s.to_string())),
         })
     }
 }
 
 #[derive(Debug, Hash, PartialEq, Eq)]
-enum Key {
+pub enum Key {
     ContextMenu,
     Tab,
     Enter,
@@ -73,34 +76,11 @@ enum Key {
 }
 
 impl FromStr for Key {
-    type Err = String;
+    type Err = ParseHotkeyError;
     fn from_str(s: &str) -> Result<Key, Self::Err> {
         if s.len() == 1 {
             // Single character keys
-            let c = s.chars().next().unwrap();
-            match c {
-                '[' |
-                ']' |
-                '(' |
-                ')' |
-                '{' |
-                '}' |
-                '`' |
-                '=' |
-                ';' |
-                ',' |
-                '\'' |
-                '\"' |
-                '\\' |
-                '.' |
-                '/' |
-                '*' |
-                '-' |
-                '+' |
-                'a' ... 'z' |
-                '0' ... '9' => return Ok(Key::Char(c)),
-                _ => return Err(s.to_string()),
-            }
+            return Ok(Key::Char(s.chars().next().unwrap()));
         }
         let key = match s {
             // Named keys
@@ -140,7 +120,7 @@ impl FromStr for Key {
                     // F1, F2, ..., F20 keys
                     match u8::from_str(&s[1..]) {
                         Ok(i) if 1 <= i && i <= 20 => Key::F(i),
-                        _ => return Err(s.to_string()),
+                        _ => return Err(IncorrectKey(s.to_string())),
                     }
                 } else if s.starts_with("keypad_") {
                     // Keypad special keys
@@ -151,13 +131,13 @@ impl FromStr for Key {
                         "minus" => Key::KeypadMinus,
                         "plus" => Key::KeypadPlus,
                         "enter" => Key::KeypadEnter,
-                        _ => return Err(s.to_string()),
+                        _ => return Err(IncorrectKey(s.to_string())),
                     }
                 } else if s.starts_with("keypad") {
                     // Keypad digits
                     match u8::from_str(&s[6..]) {
                         Ok(i) if 0 <= i && i <= 9 => Key::Keypad(i),
-                        _ => return Err(s.to_string()),
+                        _ => return Err(IncorrectKey(s.to_string())),
                     }
                 } else if s.starts_with("browser_") {
                     // "Browser" keys
@@ -169,10 +149,10 @@ impl FromStr for Key {
                         "search" => Key::BrowserSearch,
                         "favorites" => Key::BrowserFavorites,
                         "home" => Key::BrowserHome,
-                        _ => return Err(s.to_string()),
+                        _ => return Err(IncorrectKey(s.to_string())),
                     }
                 } else {
-                    return Err(s.to_string());
+                    return Err(IncorrectKey(s.to_string()));
                 }
             }
         };
@@ -183,84 +163,123 @@ impl FromStr for Key {
 
 
 #[derive(Debug, Hash, PartialEq, Eq)]
-struct Hotkey {
+pub struct Hotkey {
     key: Key,
-    modifiers: Modifiers,
+    modifiers: Modifiers
 }
 
 #[derive(Debug)]
-enum ParseHotKeyError {
+pub enum ParseHotkeyError {
     IncorrectKey(String),
     IncorrectModifier(String),
 }
 
 impl FromStr for Hotkey {
-    type Err = ParseHotKeyError;
+    type Err = ParseHotkeyError;
     fn from_str(s: &str) -> Result<Hotkey, Self::Err> {
         let mut parts = s.rsplit('+');
-        let mut modifiers = None;
+        let mut modifiers = MODIFIER_NONE;
         let key = if s.ends_with("++") {
             // Fix for hotkeys like "ctrl++", where second plus isn't separator
             parts.next();
             parts.next();
             Key::Char('+')
         } else {
-            match Key::from_str(parts.next().unwrap()) {
-                Ok(key) => key,
-                Err(key) => return Err(ParseHotKeyError::IncorrectKey(key)),
-            }
+            try!(Key::from_str(parts.next().unwrap()))
         };
         for part in parts {
-            modifiers = modifiers |
-                        match Modifiers::from_str(part) {
-                Ok(modifier) => modifier,
-                Err(modifier) => return Err(ParseHotKeyError::IncorrectModifier(modifier)),
+            modifiers = modifiers | try!(Modifiers::from_str(part))
+        }
+        Ok(Hotkey {key: key, modifiers: modifiers})
+    }
+}
+
+#[derive(Debug)]
+pub struct HotkeyBinding {
+    hotkeys: Box<[Hotkey]>,
+    command: Command,
+    context: Option<Context>
+}
+
+pub enum ParseHotkeyBindingError {
+    BindingIsNotObject,
+    HotkeySequenceIsNotArray,
+    HotKeyIsNotString,
+    HotKeyError(ParseHotkeyError),
+    CommandError(ParseCommandError),
+    ContextError(ParseContextError)
+}
+
+impl FromSettings for HotkeyBinding {
+    type Error = ParseHotkeyBindingError;
+    fn from_settings(settings: Settings) -> Result<HotkeyBinding, Self::Error> {
+        let mut obj = match settings {
+            Settings::Object(obj) => obj,
+            _ => return Err(BindingIsNotObject),
+        };
+
+        let mut arr = match obj.remove("keys") {
+            Some(Settings::Array(arr)) => arr,
+            _ => return Err(HotkeySequenceIsNotArray)
+        };
+
+        let mut hotkeys = Vec::new();
+
+        for settings in arr {
+            match settings {
+                Settings::String(s) => {
+                    match Hotkey::from_str(&s) {
+                        Ok(hotkey) => hotkeys.push(hotkey),
+                        Err(err) => return Err(HotKeyError(err))
+                    }
+                },
+                _ => return Err(HotKeyIsNotString)
             }
         }
-        Ok(Hotkey {
-            key: key,
-            modifiers: modifiers,
+
+        let context = match obj.remove("context") {
+            Some(settings) => {
+                match Context::from_settings(settings) {
+                    Ok(context) => Some(context),
+                    Err(err) => return Err(ContextError(err))
+                }
+            },
+            _ => None
+        };
+
+        let command = match Command::from_settings(Settings::Object(obj)) {
+            Ok(command) => command,
+            Err(err) => return Err(CommandError(err))
+        };
+
+        Ok(HotkeyBinding {
+            hotkeys: hotkeys.into_boxed_slice(),
+            command: command,
+            context: context
         })
     }
 }
 
-type HotkeySequence = Box<[Hotkey]>;
-
 #[derive(Debug, Default)]
 pub struct Keymap {
-    commands: HashMap<HotkeySequence, Command>,
-    hotkeys: HashMap<Command, HotkeySequence>,
+    bindings: Box<[HotkeyBinding]>
 }
 
-impl From<Json> for Keymap {
-    fn from(json: Json) -> Keymap {
-        let mut keymap = Keymap {
-            commands: HashMap::new(),
-            hotkeys: HashMap::new(),
+impl From<Settings> for Keymap {
+    fn from(settings: Settings) -> Keymap {
+        let arr = match settings {
+            Settings::Array(arr) => arr,
+            _ => return Keymap::default()
         };
-        if let Json::Array(array) = json {
-            for mut item_json in array {
-                if let Some(obj) = item_json.as_object_mut() {
-                    match obj.remove("keys") {
-                        Some(Json::Array(keys)) => {
-                            for i in keys {
-                                match i {
-                                    Json::String(key) => match Hotkey::from_str(&key[..]) {
-                                        Ok(hotkey) => {}
-                                        Err(err) => {
-                                            error!("{:?}", err);
-                                            error!("{:?}", key);
-                                        }
-                                    },
-                                    _ => {}
-                                }
-                            }
-                        }
-                        _ => continue,
-                    }
+        let mut bindings = Vec::new();
+        for settings in arr {
+            match HotkeyBinding::from_settings(settings) {
+                Ok(binding) => bindings.push(binding),
+                Err(err) => {
+                    // TODO: warning
                 }
             }
         }
-        keymap
+        Keymap { bindings: bindings.into_boxed_slice() }
     }
 }

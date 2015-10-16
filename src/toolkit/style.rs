@@ -57,18 +57,18 @@ bitflags! {
 
 pub struct Style {
     pub colors: ColorPair,
-    pub attrs: Attr,
+    pub attrs: Attr
 }
 
 struct StyleContext {
-    prev_style: Style,
+    prev_style: Style
 }
 
 impl Style {
     fn normal(colors: ColorPair) -> Style {
         Style {
             colors: colors,
-            attrs: NORMAL,
+            attrs: NORMAL
         }
     }
 
@@ -78,7 +78,7 @@ impl Style {
         attr_get(&mut attrs, &mut colors);
         Style {
             colors: ColorPair::from_term(colors),
-            attrs: Attr::from_bits(attrs).unwrap_or(NORMAL),
+            attrs: Attr::from_bits(attrs).unwrap_or(NORMAL)
         }
     }
 

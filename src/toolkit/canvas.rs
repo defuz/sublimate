@@ -11,7 +11,7 @@ pub struct Canvas {
     pub x1: usize,
     pub y1: usize,
     pub x2: usize,
-    pub y2: usize,
+    pub y2: usize
 }
 
 impl HasSize for Canvas {
@@ -31,7 +31,7 @@ impl Canvas {
             x1: max(self.x1, self.x1 + inner.x1),
             y1: max(self.y1, self.y1 + inner.y1),
             x2: min(self.x2, self.x1 + inner.x2),
-            y2: min(self.y2, self.y1 + inner.y2),
+            y2: min(self.y2, self.y1 + inner.y2)
         }
     }
 
@@ -42,7 +42,7 @@ impl Canvas {
             x1: self.x1 + left,
             y1: self.y1 + top,
             x2: self.x2 - right,
-            y2: self.y2 - bottom,
+            y2: self.y2 - bottom
         }
     }
 
@@ -51,7 +51,7 @@ impl Canvas {
             x1: self.x1,
             y1: self.y1,
             x2: self.x1 + width,
-            y2: self.y2,
+            y2: self.y2
         }
     }
 
@@ -60,7 +60,7 @@ impl Canvas {
             x1: self.x2 - width,
             y1: self.y1,
             x2: self.x2,
-            y2: self.y2,
+            y2: self.y2
         }
     }
 
@@ -69,7 +69,7 @@ impl Canvas {
             x1: self.x1,
             y1: self.y1,
             x2: self.x2,
-            y2: self.y1 + height,
+            y2: self.y1 + height
         }
     }
 
@@ -78,7 +78,7 @@ impl Canvas {
             x1: self.x1,
             y1: self.y2 - height,
             x2: self.x2,
-            y2: self.y2,
+            y2: self.y2
         }
     }
 

@@ -14,7 +14,7 @@ use core::packages::PackageRepository;
 #[derive(Debug)]
 pub struct Core {
     pub package_repository: PackageRepository,
-    pub project: Project,
+    pub project: Project
 }
 
 impl Core {
@@ -23,7 +23,7 @@ impl Core {
         let repository = PackageRepository::open("/Users/defuz/Projects/sublimate/packages/");
         Core {
             project: Project::open("/Users/defuz/Projects/sublimate/sublimate.sublime-project"),
-            package_repository: repository,
+            package_repository: repository
         }
     }
 

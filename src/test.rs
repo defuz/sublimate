@@ -11,7 +11,7 @@ trait Test<C> {
 
 #[derive(Debug)]
 struct Item {
-    x: u64
+    x: u64,
 }
 
 struct Smart;

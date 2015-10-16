@@ -1,11 +1,17 @@
 use regex;
-use core::settings::{Settings, FromSettings};
-use self::ParseContextRuleError::*;
 
-struct Context {
-    rules: Box<[ContextRule]>,
+use std::borrow::Borrow;
+
+use core::settings::{Settings, FromSettings};
+use core::Core;
+use self::ParseContextError::*;
+
+#[derive(Debug)]
+pub struct Context {
+    rules: Box<[ContextRule]>
 }
 
+#[derive(Debug)]
 enum ContextRule {
     /// Returns `true` if the autocomplete list is visible.
     AutoCompleteVisibleEqual(bool),
@@ -37,20 +43,19 @@ enum ContextRule {
     Setting(String, Operator<Settings>),
 }
 
+#[derive(Debug)]
 enum Operator<T> {
     /// Test for equality.
     Equal(T),
     NotEqual(T),
-    /// Match against a regular expression (full match).
-    RegexMatch(regex::Regex),
-    NotRegexMatch(regex::Regex),
-    /// Match against a regular expression (partial match).
+    /// Match against a regular expression.
     RegexContains(regex::Regex),
     NotRegexContains(regex::Regex),
 }
 
-enum ParseContextRuleError {
-    NotObject,
+pub enum ParseContextError {
+    ContextIsNotArray,
+    ContextRuleIsNotObject,
     IncorrectKey,
     IncorrectOperatorOrOperand,
     IncorrectMatchAllValue,
@@ -58,11 +63,11 @@ enum ParseContextRuleError {
 }
 
 impl FromSettings for ContextRule {
-    type Error = ParseContextRuleError;
-    fn from_settings(s: Settings) -> Result<ContextRule, Self::Error> {
-        let mut obj = match s {
+    type Error = ParseContextError;
+    fn from_settings(settings: Settings) -> Result<ContextRule, Self::Error> {
+        let mut obj = match settings {
             Settings::Object(obj) => obj,
-            _ => return Err(NotObject),
+            _ => return Err(ContextRuleIsNotObject),
         };
 
         let key_string = match obj.remove("key") {
@@ -88,7 +93,15 @@ impl FromSettings for ContextRule {
                 _ => return Err(IncorrectOperatorOrOperand),
             })
         } else {
-            (key_string.as_str(), (operator_string.as_str(), operand))
+            // Convert rule like {"key": "foo", "operator": "regex_match", "operand": "bar"}
+            //    into equialent {"key": "foo", "operator": "regex_contains", "operand": "^bar$"}
+            (key_string.as_str(), match (operator_string.as_str(), operand) {
+                ("regex_match", Settings::String(s)) =>
+                    ("regex_contains", Settings::String("^".to_string() + &s + "$")),
+                ("not_regex_match", Settings::String(s)) =>
+                    ("not_regex_contains", Settings::String("^".to_string() + &s + "$")),
+                (operator, operand) => (operator, operand),
+            })
         };
 
         let context_rule = if key.starts_with("setting.") {
@@ -98,8 +111,6 @@ impl FromSettings for ContextRule {
                 ("not_equal", operand) => Operator::NotEqual(operand),
                 (op, Settings::String(pattern)) => {
                     let operator_builder: fn(regex::Regex) -> Operator<Settings> = match op {
-                        "regex_match" => Operator::RegexMatch,
-                        "not_regex_match" => Operator::NotRegexMatch,
                         "regex_contains" => Operator::RegexContains,
                         "not_regex_contains" => Operator::NotRegexContains,
                         _ => return Err(IncorrectOperatorOrOperand),
@@ -151,8 +162,6 @@ impl FromSettings for ContextRule {
                         ("not_equal", Settings::String(operand)) => Operator::NotEqual(operand),
                         (op, Settings::String(pattern)) => {
                             let operator_builder: fn(regex::Regex) -> Operator<String> = match op {
-                                "regex_match" => Operator::RegexMatch,
-                                "not_regex_match" => Operator::NotRegexMatch,
                                 "regex_contains" => Operator::RegexContains,
                                 "not_regex_contains" => Operator::NotRegexContains,
                                 _ => return Err(IncorrectOperatorOrOperand),
@@ -174,7 +183,64 @@ impl FromSettings for ContextRule {
                 }
             }
         };
-        // todo: check that obj is empty
+        // TODO: check that obj is empty
         Ok(context_rule)
+    }
+}
+
+impl FromSettings for Context {
+    type Error = ParseContextError;
+    fn from_settings(settings: Settings) -> Result<Context, Self::Error> {
+        let arr = match settings {
+            Settings::Array(arr) => arr,
+            _ => return Err(ContextIsNotArray),
+        };
+        let mut rules = Vec::new();
+        for settings in arr {
+            rules.push(try!(ContextRule::from_settings(settings)));
+        }
+        Ok(Context { rules: rules.into_boxed_slice() })
+    }
+}
+
+impl Operator<String> {
+    fn evaluate(&self, v: &str) -> bool {
+        match *self {
+            Operator::Equal(ref operand) => v == operand,
+            Operator::NotEqual(ref operand) => v != operand,
+            Operator::RegexContains(ref operand) => operand.is_match(v),
+            Operator::NotRegexContains(ref operand) => !operand.is_match(v),
+        }
+    }
+}
+
+impl Operator<Settings> {
+    fn evaluate(&self, v: &Settings) -> bool {
+        match *self {
+            Operator::Equal(ref operand) => v == operand,
+            Operator::NotEqual(ref operand) => v != operand,
+            Operator::RegexContains(ref operand) => match *v {
+                Settings::String(ref v) => operand.is_match(v),
+                _ => false
+            },
+            Operator::NotRegexContains(ref operand) => match *v {
+                Settings::String(ref v) => !operand.is_match(v),
+                _ => false
+            }
+        }
+    }
+}
+
+
+impl ContextRule {
+    fn evaluate(&self, core: &Core) -> bool {
+        // TODO: implement this
+        false
+    }
+}
+
+impl Context {
+    pub fn evaluate(&self, core: &Core) -> bool {
+        self.rules.iter().all(|rule| rule.evaluate(core))
     }
 }
