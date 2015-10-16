@@ -9,7 +9,7 @@ use core::keymap::Keymap;
 
 #[derive(Debug)]
 pub struct PackageRepository {
-    path: PathBuf
+    path: PathBuf,
 }
 
 impl PackageRepository {
@@ -20,16 +20,16 @@ impl PackageRepository {
     pub fn load_settings(&self, filename: &str) -> Option<Settings> {
         let mut file = match File::open(self.path.join(filename)) {
             Ok(file) => file,
-            Err(_) => return None
+            Err(_) => return None,
         };
         let mut data = String::new();
         match file.read_to_string(&mut data) {
-            Ok(_) => {},
-            Err(_) => return None
+            Ok(_) => {}
+            Err(_) => return None,
         }
         match from_str(&data) {
             Ok(settings) => Some(settings),
-            Err(_) => None
+            Err(_) => None,
         }
     }
 

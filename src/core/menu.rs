@@ -10,13 +10,13 @@ pub struct Menu(Box<[MenuItem]>);
 pub enum MenuItem {
     Button(Option<String>, Command, bool),
     Group(String, Menu),
-    Divider
+    Divider,
 }
 
 impl Menu {
     pub fn iter<'a>(&'a self) -> Iter<'a, MenuItem> {
         match *self {
-            Menu(ref items) => items.iter()
+            Menu(ref items) => items.iter(),
         }
     }
 }
@@ -29,23 +29,27 @@ impl From<Json> for Menu {
                 if let Some(obj) = item_json.as_object_mut() {
                     let caption = match obj.remove("caption") {
                         Some(Json::String(caption)) => Some(caption),
-                        _ => None
+                        _ => None,
                     };
                     if caption == Some("-".to_string()) {
                         items.push(MenuItem::Divider);
                     } else if let Some(menu_json) = obj.remove("children") {
-                        items.push(MenuItem::Group(caption.unwrap_or_default(), Menu::from(menu_json)));
+                        items.push(MenuItem::Group(caption.unwrap_or_default(),
+                                                   Menu::from(menu_json)));
                     } else if let Some(Json::String(command)) = obj.remove("command") {
                         let is_checkbox = obj.remove("checkbox") == Some(Json::Boolean(true));
                         let args = obj.remove("args");
-                        items.push(MenuItem::Button(caption, Command {
-                            name: command, args: args
-                        }, is_checkbox))
+                        items.push(MenuItem::Button(caption,
+                                                    Command {
+                                                        name: command,
+                                                        args: args,
+                                                    },
+                                                    is_checkbox))
                     } else {
                         error!("Incorrect menu item: {:?}", obj)
                     }
                 }
-            };
+            }
         }
         Menu(items.into_boxed_slice())
     }

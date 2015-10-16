@@ -9,8 +9,10 @@ pub trait View<C> {
     fn render(&self, context: C, canvas: Canvas);
 }
 
-pub fn sum_width<'c, C, V, I>(context: &'c C, views: I)
-    -> usize where V: View<&'c C>, I: Iterator<Item=&'c V> {
+pub fn sum_width<'c, C, V, I>(context: &'c C, views: I) -> usize
+    where V: View<&'c C>,
+          I: Iterator<Item = &'c V>
+{
     views.into_iter().fold(0, |acc, view| acc + view.width(context))
 }
 
@@ -104,7 +106,7 @@ impl<I, R> View<R> for VerticalList<I> where R: Iterator, I: View<R::Item>, R::I
         for c in context {
             let h = item.height(c);
             if h < canvas.height() {
-                break
+                break;
             }
             item.render(c, canvas.cut_top(h))
         }
@@ -131,7 +133,7 @@ impl<I, R> View<R> for HorizontalList<I> where R: Iterator, I: View<R::Item>, R:
         for c in context {
             let w = item.width(c);
             if w < canvas.width() {
-                break
+                break;
             }
             item.render(c, canvas.cut_left(w))
         }

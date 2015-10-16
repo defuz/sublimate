@@ -14,7 +14,7 @@ use core::packages::PackageRepository;
 #[derive(Debug)]
 pub struct Core {
     pub package_repository: PackageRepository,
-    pub project: Project
+    pub project: Project,
 }
 
 impl Core {

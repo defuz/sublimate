@@ -42,35 +42,33 @@ macro_rules! create_color_pair {
     ))
 }
 
-pub const PALETTE : [(Color, Color); 19] = [
-    // editor
-    create_color_pair!(0,  0),  // EDITOR
-    create_color_pair!(1,  0),  // EDITOR_SELECTED
+pub const PALETTE : [(Color, Color); 19] = [// editor
+ create_color_pair!(0, 0), // EDITOR
+ create_color_pair!(1, 0), // EDITOR_SELECTED
 
-    // sidebar
-    create_color_pair!(1,  0),  // SIDEBAR
-    create_color_pair!(2,  0),  // SIDEBAR_SELECTED
-    create_color_pair!(1, -1),  // SIDEBAR_LOW
-    create_color_pair!(2, -1),  // SIDEBAR_LOW_SELECTED
+ // sidebar
+ create_color_pair!(1, 0), // SIDEBAR
+ create_color_pair!(2, 0), // SIDEBAR_SELECTED
+ create_color_pair!(1, -1), // SIDEBAR_LOW
+ create_color_pair!(2, -1), // SIDEBAR_LOW_SELECTED
 
-    // tabs
-    create_color_pair!(2,  0),  // TABS
-    create_color_pair!(0,  0),  // TABS_SELECTED
-    create_color_pair!(2, -1),  // TABS_LOW
-    create_color_pair!(0, -1),  // TABS_LOW_SELECTED
+ // tabs
+ create_color_pair!(2, 0), // TABS
+ create_color_pair!(0, 0), // TABS_SELECTED
+ create_color_pair!(2, -1), // TABS_LOW
+ create_color_pair!(0, -1), // TABS_LOW_SELECTED
 
-    // menubar
-    create_color_pair!(3, -1),  // MENUBAR
-    create_color_pair!(4,  0),  // MENUBAR_SELECTED
+ // menubar
+ create_color_pair!(3, -1), // MENUBAR
+ create_color_pair!(4, 0), // MENUBAR_SELECTED
 
-    // statusbar
-    create_color_pair!(3, -1),  // STATUSBAR
+ // statusbar
+ create_color_pair!(3, -1), // STATUSBAR
 
-    // modals
-    create_color_pair!(4,  0),  // MODAL
-    create_color_pair!(5,  0),  // MODAL_SELECTED
-    create_color_pair!(4, -1),  // MODAL_LOW
-    create_color_pair!(5, -1),  // MODAL_LOW_SELECTED
-    create_color_pair!(4, -1),  // MODAL_DISABLED
-    create_color_pair!(4, -2),  // MODAL_DISABLED_LOW
-];
+ // modals
+ create_color_pair!(4, 0), // MODAL
+ create_color_pair!(5, 0), // MODAL_SELECTED
+ create_color_pair!(4, -1), // MODAL_LOW
+ create_color_pair!(5, -1), // MODAL_LOW_SELECTED
+ create_color_pair!(4, -1), // MODAL_DISABLED
+ create_color_pair!(4, -2) /* MODAL_DISABLED_LOW */];

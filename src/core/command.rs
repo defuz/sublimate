@@ -5,7 +5,7 @@ use core::settings::Settings;
 #[derive(Debug, PartialEq)]
 pub struct Command {
     pub name: String,
-    pub args: Option<Settings>
+    pub args: Option<Settings>,
 }
 
 impl Eq for Command {}

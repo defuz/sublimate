@@ -9,7 +9,7 @@ impl ColorPair {
 
     pub fn to_term(&self) -> i16 {
         match self {
-            &ColorPair(colors) => colors as i16
+            &ColorPair(colors) => colors as i16,
         }
     }
 }
@@ -28,7 +28,7 @@ impl Color {
 
     pub fn to_term(&self) -> i16 {
         match self {
-            &Color(color) => color as i16
+            &Color(color) => color as i16,
         }
     }
 }
@@ -57,16 +57,19 @@ bitflags! {
 
 pub struct Style {
     pub colors: ColorPair,
-    pub attrs: Attr
+    pub attrs: Attr,
 }
 
 struct StyleContext {
-    prev_style: Style
+    prev_style: Style,
 }
 
 impl Style {
     fn normal(colors: ColorPair) -> Style {
-        Style { colors: colors, attrs: NORMAL }
+        Style {
+            colors: colors,
+            attrs: NORMAL,
+        }
     }
 
     pub fn current() -> Style {
@@ -75,7 +78,7 @@ impl Style {
         attr_get(&mut attrs, &mut colors);
         Style {
             colors: ColorPair::from_term(colors),
-            attrs: Attr::from_bits(attrs).unwrap_or(NORMAL)
+            attrs: Attr::from_bits(attrs).unwrap_or(NORMAL),
         }
     }
 

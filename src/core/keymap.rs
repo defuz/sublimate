@@ -20,10 +20,10 @@ impl FromStr for Modifiers {
     fn from_str(s: &str) -> Result<Modifiers, Self::Err> {
         Ok(match s {
             "super" => Super,
-            "ctrl"  => Ctrl,
-            "alt"   => Alt,
+            "ctrl" => Ctrl,
+            "alt" => Alt,
             "shift" => Shift,
-            _ => return Err(s.to_string())
+            _ => return Err(s.to_string()),
         })
     }
 }
@@ -31,21 +31,45 @@ impl FromStr for Modifiers {
 #[derive(Debug, Hash, PartialEq, Eq)]
 enum Key {
     ContextMenu,
-    Tab, Enter, Escape, Backspace,
-    Right, Left, Up, Down,
-    Delete, Insert, Home, End, PageUp, PageDown,
-    Pause, Clear, Sysreq, Break,
+    Tab,
+    Enter,
+    Escape,
+    Backspace,
+    Right,
+    Left,
+    Up,
+    Down,
+    Delete,
+    Insert,
+    Home,
+    End,
+    PageUp,
+    PageDown,
+    Pause,
+    Clear,
+    Sysreq,
+    Break,
     /// "Browser" keys
-    BrowserBack, BrowserForward, BrowserRefresh, BrowserStop,
-    BrowserSearch, BrowserFavorites, BrowserHome,
+    BrowserBack,
+    BrowserForward,
+    BrowserRefresh,
+    BrowserStop,
+    BrowserSearch,
+    BrowserFavorites,
+    BrowserHome,
     /// Keypad special keys
-    KeypadPeriod, KeypadDivide, KeypadMultiply, KeypadMinus, KeypadPlus, KeypadEnter,
+    KeypadPeriod,
+    KeypadDivide,
+    KeypadMultiply,
+    KeypadMinus,
+    KeypadPlus,
+    KeypadEnter,
     /// Keypad digit keys
     Keypad(u8),
     /// F1, F2, ..., F20 keys
     F(u8),
     /// Single character keys
-    Char(char)
+    Char(char),
 }
 
 impl FromStr for Key {
@@ -55,43 +79,60 @@ impl FromStr for Key {
             // Single character keys
             let c = s.chars().next().unwrap();
             match c {
-                '[' | ']' | '(' | ')' | '{' | '}' |
-                '`' | '=' | ';' | ',' | '\'' | '\"' | '\\' |
-                '.' | '/' | '*' | '-' | '+' | 'a' ... 'z' | '0' ... '9' => return Ok(Key::Char(c)),
-                _ => return Err(s.to_string())
-            };
+                '[' |
+                ']' |
+                '(' |
+                ')' |
+                '{' |
+                '}' |
+                '`' |
+                '=' |
+                ';' |
+                ',' |
+                '\'' |
+                '\"' |
+                '\\' |
+                '.' |
+                '/' |
+                '*' |
+                '-' |
+                '+' |
+                'a' ... 'z' |
+                '0' ... '9' => return Ok(Key::Char(c)),
+                _ => return Err(s.to_string()),
+            }
         }
         let key = match s {
             // Named keys
-            "context_menu"  => Key::ContextMenu,
-            "tab"           => Key::Tab,
-            "enter"         => Key::Enter,
-            "escape"        => Key::Escape,
-            "backspace"     => Key::Backspace,
+            "context_menu" => Key::ContextMenu,
+            "tab" => Key::Tab,
+            "enter" => Key::Enter,
+            "escape" => Key::Escape,
+            "backspace" => Key::Backspace,
 
-            "right"         => Key::Right,
-            "left"          => Key::Left,
-            "up"            => Key::Up,
-            "down"          => Key::Down,
+            "right" => Key::Right,
+            "left" => Key::Left,
+            "up" => Key::Up,
+            "down" => Key::Down,
 
-            "delete"        => Key::Delete,
-            "insert"        => Key::Insert,
-            "home"          => Key::Home,
-            "end"           => Key::End,
-            "pageup"        => Key::PageUp,
-            "pagedown"      => Key::PageDown,
+            "delete" => Key::Delete,
+            "insert" => Key::Insert,
+            "home" => Key::Home,
+            "end" => Key::End,
+            "pageup" => Key::PageUp,
+            "pagedown" => Key::PageDown,
 
-            "pause"         => Key::Pause,
-            "clear"         => Key::Clear,
-            "sysreq"        => Key::Sysreq,
-            "break"         => Key::Break,
+            "pause" => Key::Pause,
+            "clear" => Key::Clear,
+            "sysreq" => Key::Sysreq,
+            "break" => Key::Break,
 
             // Single character synonyms
-            "space"         => Key::Char(' '),
-            "plus"          => Key::Char('+'),
-            "minus"         => Key::Char('-'),
-            "equals"        => Key::Char('='),
-            "backquote"     => Key::Char('`'),
+            "space" => Key::Char(' '),
+            "plus" => Key::Char('+'),
+            "minus" => Key::Char('-'),
+            "equals" => Key::Char('='),
+            "backquote" => Key::Char('`'),
             "forward_slash" => Key::Char('\\'),
 
             _ => {
@@ -99,39 +140,39 @@ impl FromStr for Key {
                     // F1, F2, ..., F20 keys
                     match u8::from_str(&s[1..]) {
                         Ok(i) if 1 <= i && i <= 20 => Key::F(i),
-                        _ => return Err(s.to_string())
+                        _ => return Err(s.to_string()),
                     }
                 } else if s.starts_with("keypad_") {
                     // Keypad special keys
                     match &s[7..] {
-                        "period"    => Key::KeypadPeriod,
-                        "divide"    => Key::KeypadDivide,
-                        "multiply"  => Key::KeypadMultiply,
-                        "minus"     => Key::KeypadMinus,
-                        "plus"      => Key::KeypadPlus,
-                        "enter"     => Key::KeypadEnter,
-                        _           => return Err(s.to_string())
+                        "period" => Key::KeypadPeriod,
+                        "divide" => Key::KeypadDivide,
+                        "multiply" => Key::KeypadMultiply,
+                        "minus" => Key::KeypadMinus,
+                        "plus" => Key::KeypadPlus,
+                        "enter" => Key::KeypadEnter,
+                        _ => return Err(s.to_string()),
                     }
                 } else if s.starts_with("keypad") {
                     // Keypad digits
                     match u8::from_str(&s[6..]) {
                         Ok(i) if 0 <= i && i <= 9 => Key::Keypad(i),
-                        _ => return Err(s.to_string())
+                        _ => return Err(s.to_string()),
                     }
                 } else if s.starts_with("browser_") {
                     // "Browser" keys
                     match &s[8..] {
-                        "back"      => Key::BrowserBack,
-                        "forward"   => Key::BrowserForward,
-                        "refresh"   => Key::BrowserRefresh,
-                        "stop"      => Key::BrowserStop,
-                        "search"    => Key::BrowserSearch,
+                        "back" => Key::BrowserBack,
+                        "forward" => Key::BrowserForward,
+                        "refresh" => Key::BrowserRefresh,
+                        "stop" => Key::BrowserStop,
+                        "search" => Key::BrowserSearch,
                         "favorites" => Key::BrowserFavorites,
-                        "home"      => Key::BrowserHome,
-                        _           => return Err(s.to_string())
+                        "home" => Key::BrowserHome,
+                        _ => return Err(s.to_string()),
                     }
                 } else {
-                    return Err(s.to_string())
+                    return Err(s.to_string());
                 }
             }
         };
@@ -144,13 +185,13 @@ impl FromStr for Key {
 #[derive(Debug, Hash, PartialEq, Eq)]
 struct Hotkey {
     key: Key,
-    modifiers: Modifiers
+    modifiers: Modifiers,
 }
 
 #[derive(Debug)]
 enum ParseHotKeyError {
     IncorrectKey(String),
-    IncorrectModifier(String)
+    IncorrectModifier(String),
 }
 
 impl FromStr for Hotkey {
@@ -166,16 +207,20 @@ impl FromStr for Hotkey {
         } else {
             match Key::from_str(parts.next().unwrap()) {
                 Ok(key) => key,
-                Err(key) => return Err(ParseHotKeyError::IncorrectKey(key))
+                Err(key) => return Err(ParseHotKeyError::IncorrectKey(key)),
             }
         };
         for part in parts {
-            modifiers = modifiers | match Modifiers::from_str(part) {
+            modifiers = modifiers |
+                        match Modifiers::from_str(part) {
                 Ok(modifier) => modifier,
-                Err(modifier) => return Err(ParseHotKeyError::IncorrectModifier(modifier))
+                Err(modifier) => return Err(ParseHotKeyError::IncorrectModifier(modifier)),
             }
         }
-        Ok(Hotkey { key: key, modifiers: modifiers })
+        Ok(Hotkey {
+            key: key,
+            modifiers: modifiers,
+        })
     }
 }
 
@@ -184,12 +229,15 @@ type HotkeySequence = Box<[Hotkey]>;
 #[derive(Debug, Default)]
 pub struct Keymap {
     commands: HashMap<HotkeySequence, Command>,
-    hotkeys: HashMap<Command, HotkeySequence>
+    hotkeys: HashMap<Command, HotkeySequence>,
 }
 
 impl From<Json> for Keymap {
     fn from(json: Json) -> Keymap {
-        let mut keymap = Keymap { commands: HashMap::new(), hotkeys: HashMap::new() };
+        let mut keymap = Keymap {
+            commands: HashMap::new(),
+            hotkeys: HashMap::new(),
+        };
         if let Json::Array(array) = json {
             for mut item_json in array {
                 if let Some(obj) = item_json.as_object_mut() {
@@ -198,7 +246,7 @@ impl From<Json> for Keymap {
                             for i in keys {
                                 match i {
                                     Json::String(key) => match Hotkey::from_str(&key[..]) {
-                                        Ok(hotkey) => {},
+                                        Ok(hotkey) => {}
                                         Err(err) => {
                                             error!("{:?}", err);
                                             error!("{:?}", key);
@@ -207,8 +255,8 @@ impl From<Json> for Keymap {
                                     _ => {}
                                 }
                             }
-                        },
-                        _ => continue
+                        }
+                        _ => continue,
                     }
                 }
             }

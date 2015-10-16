@@ -4,4 +4,3 @@ pub struct BuildSystem {
     file_regex: Option<String>,
     selector: Option<String>,
 }
-

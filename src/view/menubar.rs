@@ -4,12 +4,18 @@ use core::menu::{Menu, MenuItem};
 use core::command::Command;
 use view::theme::*;
 
-const MENUBAR_STYLE          : Style = Style { colors: MENUBAR_COLORS, attrs: NORMAL };
-const MENUBAR_SELECTED_STYLE : Style = Style { colors: MENUBAR_SELECTED_COLORS, attrs: NORMAL };
+const MENUBAR_STYLE          : Style = Style {
+    colors: MENUBAR_COLORS,
+    attrs: NORMAL,
+};
+const MENUBAR_SELECTED_STYLE : Style = Style {
+    colors: MENUBAR_SELECTED_COLORS,
+    attrs: NORMAL,
+};
 
 pub struct MenubarItem {
     pub id: Box<str>,
-    pub name: Box<str>
+    pub name: Box<str>,
 }
 
 impl<'c> View<&'c Core> for MenubarItem {
@@ -32,7 +38,7 @@ impl<'c> View<&'c Core> for MenubarItem {
 
 pub struct Menubar {
     focused: Option<usize>,
-    items: Box<[MenubarItem]>
+    items: Box<[MenubarItem]>,
 }
 
 impl Menubar {
@@ -41,12 +47,18 @@ impl Menubar {
         for item in core.package_repository.get_menu("default/Main.sublime-menu").iter() {
             match item {
                 &MenuItem::Group(ref name, _) => items.push(MenubarItem {
-                    id: "id".to_string().into_boxed_str(), name: name.clone().into_boxed_str()
+                    id: "id".to_string().into_boxed_str(),
+                    name: name.clone().into_boxed_str(),
                 }),
-                _ => { error!("Incorrect menu item") }
+                _ => {
+                    error!("Incorrect menu item")
+                }
             }
         }
-        Menubar { focused: Some(3), items: items.into_boxed_slice() }
+        Menubar {
+            focused: Some(3),
+            items: items.into_boxed_slice(),
+        }
     }
 }
 
@@ -64,7 +76,7 @@ impl<'c> View<&'c Core> for Menubar {
         for (i, item) in self.items.iter().enumerate() {
             let w = item.width(core);
             if w > canvas.width() {
-                break
+                break;
             }
             let item_canvas = canvas.cut_left(w);
             if self.focused == Some(i) {
