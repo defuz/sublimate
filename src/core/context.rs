@@ -6,12 +6,12 @@ use core::settings::{Settings, FromSettings};
 use core::Core;
 use self::ParseContextError::*;
 
-#[derive(Debug)]
+#[derive(Debug, Default, Clone)]
 pub struct Context {
     rules: Box<[ContextRule]>
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 enum ContextRule {
     /// Returns `true` if the autocomplete list is visible.
     AutoCompleteVisibleEqual(bool),
@@ -43,7 +43,7 @@ enum ContextRule {
     Setting(String, Operator<Settings>),
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 enum Operator<T> {
     /// Test for equality.
     Equal(T),

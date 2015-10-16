@@ -7,31 +7,27 @@ use core::settings::{Settings, FromSettings};
 use self::ParseHotkeyError::*;
 use self::ParseHotkeyBindingError::*;
 
-bitflags! {
-    flags Modifiers: u8 {
-        const MODIFIER_NONE  = 0,
-        const MODIFIER_SUPER = 1,
-        const MODIFIER_CTRL  = 2,
-        const MODIFIER_ALT   = 4,
-        const MODIFIER_SHIFT = 8
-    }
+#[derive(Debug, Default)]
+pub struct Keymap {
+    pub bindings: Box<[HotkeyBinding]>
 }
 
-impl FromStr for Modifiers {
-    type Err = ParseHotkeyError;
-
-    fn from_str(s: &str) -> Result<Modifiers, Self::Err> {
-        Ok(match s {
-            "super" => MODIFIER_SUPER,
-            "ctrl" => MODIFIER_CTRL,
-            "alt" => MODIFIER_ALT,
-            "shift" => MODIFIER_SHIFT,
-            _ => return Err(IncorrectModifier(s.to_string())),
-        })
-    }
+#[derive(Debug)]
+pub struct HotkeyBinding {
+    pub hotkeys: HotkeySequence,
+    pub command: Command,
+    pub context: Context
 }
 
-#[derive(Debug, Hash, PartialEq, Eq)]
+pub type HotkeySequence = Box<[Hotkey]>;
+
+#[derive(Debug, Clone, Copy, Hash, PartialEq, Eq)]
+pub struct Hotkey {
+    key: Key,
+    modifiers: Modifiers
+}
+
+#[derive(Debug, Clone, Copy, Hash, PartialEq, Eq)]
 pub enum Key {
     ContextMenu,
     Tab,
@@ -73,6 +69,31 @@ pub enum Key {
     F(u8),
     /// Single character keys
     Char(char),
+}
+
+bitflags! {
+    flags Modifiers: u8 {
+        const MODIFIER_NONE  = 0,
+        const MODIFIER_SUPER = 1,
+        const MODIFIER_CTRL  = 2,
+        const MODIFIER_ALT   = 4,
+        const MODIFIER_SHIFT = 8
+    }
+}
+
+pub enum ParseHotkeyBindingError {
+    BindingIsNotObject,
+    HotkeySequenceIsNotArray,
+    HotKeyIsNotString,
+    HotKeyError(ParseHotkeyError),
+    CommandError(ParseCommandError),
+    ContextError(ParseContextError)
+}
+
+#[derive(Debug)]
+pub enum ParseHotkeyError {
+    IncorrectKey(String),
+    IncorrectModifier(String),
 }
 
 impl FromStr for Key {
@@ -160,18 +181,18 @@ impl FromStr for Key {
     }
 }
 
+impl FromStr for Modifiers {
+    type Err = ParseHotkeyError;
 
-
-#[derive(Debug, Hash, PartialEq, Eq)]
-pub struct Hotkey {
-    key: Key,
-    modifiers: Modifiers
-}
-
-#[derive(Debug)]
-pub enum ParseHotkeyError {
-    IncorrectKey(String),
-    IncorrectModifier(String),
+    fn from_str(s: &str) -> Result<Modifiers, Self::Err> {
+        Ok(match s {
+            "super" => MODIFIER_SUPER,
+            "ctrl" => MODIFIER_CTRL,
+            "alt" => MODIFIER_ALT,
+            "shift" => MODIFIER_SHIFT,
+            _ => return Err(IncorrectModifier(s.to_string())),
+        })
+    }
 }
 
 impl FromStr for Hotkey {
@@ -192,22 +213,6 @@ impl FromStr for Hotkey {
         }
         Ok(Hotkey {key: key, modifiers: modifiers})
     }
-}
-
-#[derive(Debug)]
-pub struct HotkeyBinding {
-    hotkeys: Box<[Hotkey]>,
-    command: Command,
-    context: Option<Context>
-}
-
-pub enum ParseHotkeyBindingError {
-    BindingIsNotObject,
-    HotkeySequenceIsNotArray,
-    HotKeyIsNotString,
-    HotKeyError(ParseHotkeyError),
-    CommandError(ParseCommandError),
-    ContextError(ParseContextError)
 }
 
 impl FromSettings for HotkeyBinding {
@@ -240,11 +245,11 @@ impl FromSettings for HotkeyBinding {
         let context = match obj.remove("context") {
             Some(settings) => {
                 match Context::from_settings(settings) {
-                    Ok(context) => Some(context),
+                    Ok(context) => context,
                     Err(err) => return Err(ContextError(err))
                 }
             },
-            _ => None
+            _ => Context::default()
         };
 
         let command = match Command::from_settings(Settings::Object(obj)) {
@@ -260,16 +265,14 @@ impl FromSettings for HotkeyBinding {
     }
 }
 
-#[derive(Debug, Default)]
-pub struct Keymap {
-    bindings: Box<[HotkeyBinding]>
-}
-
 impl From<Settings> for Keymap {
     fn from(settings: Settings) -> Keymap {
         let arr = match settings {
             Settings::Array(arr) => arr,
-            _ => return Keymap::default()
+            _ => {
+                // TODO: warning
+                return Keymap::default();
+            }
         };
         let mut bindings = Vec::new();
         for settings in arr {

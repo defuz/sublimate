@@ -4,7 +4,7 @@ use core::settings::{Settings, SettingsObject, FromSettings};
 
 use self::ParseCommandError::*;
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct Command {
     pub name: String,
     pub args: SettingsObject
