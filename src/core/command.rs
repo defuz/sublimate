@@ -21,7 +21,7 @@ impl Hash for Command {
 pub enum ParseCommandError {
     CommandIsNotObject,
     CommandNameIsNotString,
-    CommandArgsIsNotObject
+    CommandArgsIsNotObject,
 }
 
 impl FromSettings for Command {
@@ -32,17 +32,20 @@ impl FromSettings for Command {
             _ => return Err(CommandIsNotObject),
         };
 
-        let name = match obj.remove("name") {
+        let name = match obj.remove("command") {
             Some(Settings::String(name)) => name,
-            _ => return Err(CommandNameIsNotString)
+            _ => return Err(CommandNameIsNotString),
         };
 
         let args = match obj.remove("args") {
             Some(Settings::Object(args)) => args,
             None => SettingsObject::default(),
-            _ => return Err(CommandArgsIsNotObject)
+            _ => return Err(CommandArgsIsNotObject),
         };
 
-        Ok(Command { name: name, args: args})
+        Ok(Command {
+            name: name,
+            args: args
+        })
     }
 }

@@ -9,14 +9,32 @@ pub trait View<C> {
     fn render(&self, context: C, canvas: Canvas);
 }
 
-pub fn sum_width<'c, C, V, I>(context: &'c C, views: I) -> usize
-    where V: View<&'c C>,
-          I: Iterator<Item = &'c V>
+pub fn sum_width<'c, C, V, I>(context: C, views: I) -> usize
+    where V: View<C> + 'c,
+          I: Iterator<Item = &'c V>,
+          C: Copy
 {
-    views.into_iter().fold(0, |acc, view| acc + view.width(context))
+    let mut r = 0;
+    for v in views {
+        r += v.width(context);
+    }
+    return r;
 }
 
-//////////////////////////////////// Text //////////////////////////////////////////////////////////
+pub fn max_width<'c, C, V, I>(context: C, views: I) -> usize
+    where V: View<C> + 'c,
+          I: Iterator<Item = &'c V>,
+          C: Copy
+{
+    let mut r = 0;
+    for v in views {
+        r = ::std::cmp::max(v.width(context), r);
+    }
+    return r;
+}
+
+/// ///////////////////////////////// Text
+/// //////////////////////////////////////////////////////////
 
 pub struct Text;
 
@@ -34,7 +52,8 @@ impl<'a> View<&'a str> for Text {
     }
 }
 
-//////////////////////////////////// Decorator /////////////////////////////////////////////////////
+/// ///////////////////////////////// Decorator
+/// /////////////////////////////////////////////////////
 
 pub struct Decorator<I>(pub Style, pub I);
 
@@ -58,7 +77,8 @@ impl<C, I> View<C> for Decorator<I> where I: View<C> {
     }
 }
 
-//////////////////////////////////// Selected //////////////////////////////////////////////////////
+/// ///////////////////////////////// Selected
+/// //////////////////////////////////////////////////////
 
 pub struct Selected<I>(pub Style, pub I);
 
@@ -86,7 +106,8 @@ impl<C, I> View<(bool, C)> for Selected<I> where I: View<C> {
     }
 }
 
-//////////////////////////////////// VerticalList //////////////////////////////////////////////////
+/// ///////////////////////////////// VerticalList
+/// //////////////////////////////////////////////////
 
 pub struct VerticalList<I>(pub I);
 
@@ -113,7 +134,8 @@ impl<I, R> View<R> for VerticalList<I> where R: Iterator, I: View<R::Item>, R::I
     }
 }
 
-//////////////////////////////////// HorizontalList ////////////////////////////////////////////////
+/// ///////////////////////////////// HorizontalList
+/// ////////////////////////////////////////////////
 
 pub struct HorizontalList<I>(pub I);
 

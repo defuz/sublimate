@@ -4,7 +4,9 @@ use rustc_serialize::json::Json;
 use core::command::Command;
 
 #[derive(Debug, Default)]
-pub struct Menu(Box<[MenuItem]>);
+pub struct Menu {
+    pub items: Vec<MenuItem>
+}
 
 #[derive(Debug)]
 pub enum MenuItem {
@@ -15,9 +17,7 @@ pub enum MenuItem {
 
 impl Menu {
     pub fn iter<'a>(&'a self) -> Iter<'a, MenuItem> {
-        match *self {
-            Menu(ref items) => items.iter(),
-        }
+        self.items.iter()
     }
 }
 
@@ -36,21 +36,22 @@ impl From<Json> for Menu {
                     } else if let Some(menu_json) = obj.remove("children") {
                         items.push(MenuItem::Group(caption.unwrap_or_default(),
                                                    Menu::from(menu_json)));
-                    // } else if let Some(Json::String(command)) = obj.remove("command") {
-                    //     let is_checkbox = obj.remove("checkbox") == Some(Json::Boolean(true));
-                    //     let args = obj.remove("args");
-                    //     items.push(MenuItem::Button(caption,
-                    //                                 Command {
-                    //                                     name: command,
-                    //                                     args: args
-                    //                                 },
-                    //                                 is_checkbox))
-                    // } else {
+                        // } else if let Some(Json::String(command)) = obj.remove("command") {
+                        // let is_checkbox = obj.remove("checkbox") ==
+                        // Some(Json::Boolean(true));
+                        //     let args = obj.remove("args");
+                        //     items.push(MenuItem::Button(caption,
+                        //                                 Command {
+                        //                                     name: command,
+                        //                                     args: args
+                        //                                 },
+                        //                                 is_checkbox))
+                        // } else {
                         error!("Incorrect menu item: {:?}", obj)
                     }
                 }
             }
         }
-        Menu(items.into_boxed_slice())
+        Menu { items: items }
     }
 }

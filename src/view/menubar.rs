@@ -4,15 +4,9 @@ use core::menu::{Menu, MenuItem};
 use core::command::Command;
 use view::theme::*;
 
-const MENUBAR_STYLE          : Style = Style {
-    colors: MENUBAR_COLORS,
-    attrs: NORMAL
-};
-const MENUBAR_SELECTED_STYLE : Style = Style {
-    colors: MENUBAR_SELECTED_COLORS,
-    attrs: NORMAL
-};
+use view::context::ContextMenu;
 
+#[derive(Debug)]
 pub struct MenubarItem {
     pub id: Box<str>,
     pub name: Box<str>
@@ -35,30 +29,34 @@ impl<'c> View<&'c Core> for MenubarItem {
     }
 }
 
-
+#[derive(Debug)]
 pub struct Menubar {
     focused: Option<usize>,
     items: Box<[MenubarItem]>
 }
 
 impl Menubar {
-    pub fn new(core: &Core) -> Menubar {
+    pub fn new(core: &Core) -> (Menubar, Vec<ContextMenu>) {
         let mut items = Vec::new();
-        for item in core.package_repository.get_menu("default/Main.sublime-menu").iter() {
+        let mut menus = Vec::new();
+        for item in core.package_repository.get_menu("default/Main.sublime-menu").items {
             match item {
-                &MenuItem::Group(ref name, _) => items.push(MenubarItem {
-                    id: "id".to_string().into_boxed_str(),
-                    name: name.clone().into_boxed_str()
-                }),
+                MenuItem::Group(name, menu) => {
+                    items.push(MenubarItem {
+                        id: "id".to_string().into_boxed_str(),
+                        name: name.clone().into_boxed_str()
+                    });
+                    menus.push(ContextMenu::new(menu))
+                },
                 _ => {
                     error!("Incorrect menu item")
                 }
             }
         }
-        Menubar {
+        (Menubar {
             focused: Some(3),
             items: items.into_boxed_slice()
-        }
+        }, menus)
     }
 }
 

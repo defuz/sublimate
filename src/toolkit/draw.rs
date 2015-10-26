@@ -5,6 +5,8 @@ pub trait Drawing {
 
     fn text(&self, s: &str, x: usize, y: usize);
 
+    fn fill_char(&self, c: char);
+
     fn fill(&self);
 
 }

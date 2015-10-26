@@ -89,6 +89,13 @@ impl Canvas {
         left
     }
 
+    pub fn cut_right(&mut self, mut width: usize) -> Canvas {
+        width = min(width, self.width());
+        let right = self.right(width);
+        self.x2 -= width;
+        right
+    }
+
     pub fn cut_top(&mut self, mut height: usize) -> Canvas {
         height = min(height, self.height());
         let top = self.top(height);
@@ -99,6 +106,10 @@ impl Canvas {
 
 impl Drawing for Canvas {
     fn fill(&self) {
+        self.fill_char(' ')
+    }
+
+    fn fill_char(&self, c: char) {
     }
 
     fn char(&self, c: char, y: usize, x: usize) {

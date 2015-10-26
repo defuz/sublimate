@@ -3,6 +3,7 @@ pub mod draw;
 mod core;
 mod canvas;
 pub mod views;
+pub mod keys;
 
 pub use toolkit::core::*;
 pub use toolkit::canvas::*;

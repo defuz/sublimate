@@ -8,12 +8,13 @@ use core::context::Context;
 
 type PerformerNodeId = usize;
 
-#[derive(Default)]
+#[derive(Default, Debug)]
 struct PerformerNode {
     children: HashMap<Hotkey, PerformerNodeId>,
     commands: Vec<(Command, Context)>
 }
 
+#[derive(Default, Debug)]
 pub struct HotkeyPerformer {
     node_id: PerformerNodeId,
     nodes: Vec<PerformerNode>,
@@ -25,7 +26,7 @@ impl HotkeyPerformer {
         HotkeyPerformer {
             node_id: 0,
             nodes: vec![PerformerNode::default()],
-            hotkeys: HashMap::new(),
+            hotkeys: HashMap::new()
         }
     }
 

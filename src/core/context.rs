@@ -82,7 +82,8 @@ impl FromSettings for ContextRule {
         };
 
         let (key, operator) = if key_string.as_str() == "selection_empty" {
-            // Convert rule like {"key": "selection_empty", "operator": "equal", "operand": true}
+            // Convert rule like {"key": "selection_empty", "operator": "equal", "operand":
+            // true}
             //    into equialent {"key": "text", "operator": "equal", "operand": ""}
             ("text",
              match (operator_string.as_str(), operand) {
@@ -94,12 +95,16 @@ impl FromSettings for ContextRule {
             })
         } else {
             // Convert rule like {"key": "foo", "operator": "regex_match", "operand": "bar"}
-            //    into equialent {"key": "foo", "operator": "regex_contains", "operand": "^bar$"}
-            (key_string.as_str(), match (operator_string.as_str(), operand) {
+            // into equialent {"key": "foo", "operator": "regex_contains", "operand":
+            // "^bar$"}
+            (key_string.as_str(),
+             match (operator_string.as_str(), operand) {
                 ("regex_match", Settings::String(s)) =>
-                    ("regex_contains", Settings::String("^".to_string() + &s + "$")),
+                    ("regex_contains",
+                     Settings::String("^".to_string() + &s + "$")),
                 ("not_regex_match", Settings::String(s)) =>
-                    ("not_regex_contains", Settings::String("^".to_string() + &s + "$")),
+                    ("not_regex_contains",
+                     Settings::String("^".to_string() + &s + "$")),
                 (operator, operand) => (operator, operand),
             })
         };
@@ -221,12 +226,12 @@ impl Operator<Settings> {
             Operator::NotEqual(ref operand) => v != operand,
             Operator::RegexContains(ref operand) => match *v {
                 Settings::String(ref v) => operand.is_match(v),
-                _ => false
+                _ => false,
             },
             Operator::NotRegexContains(ref operand) => match *v {
                 Settings::String(ref v) => !operand.is_match(v),
-                _ => false
-            }
+                _ => false,
+            },
         }
     }
 }

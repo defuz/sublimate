@@ -11,11 +11,13 @@ pub mod performer;
 use core::menu::Menu;
 use core::project::Project;
 use core::packages::PackageRepository;
+use core::performer::HotkeyPerformer;
 
 #[derive(Debug)]
 pub struct Core {
     pub package_repository: PackageRepository,
-    pub project: Project
+    pub project: Project,
+    pub hotkeys: HotkeyPerformer
 }
 
 impl Core {
@@ -24,7 +26,8 @@ impl Core {
         let repository = PackageRepository::open("/Users/defuz/Projects/sublimate/packages/");
         Core {
             project: Project::open("/Users/defuz/Projects/sublimate/sublimate.sublime-project"),
-            package_repository: repository
+            package_repository: repository,
+            hotkeys: HotkeyPerformer::new(),
         }
     }
 

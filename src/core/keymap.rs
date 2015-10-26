@@ -87,7 +87,7 @@ pub enum ParseHotkeyBindingError {
     HotKeyIsNotString,
     HotKeyError(ParseHotkeyError),
     CommandError(ParseCommandError),
-    ContextError(ParseContextError)
+    ContextError(ParseContextError),
 }
 
 #[derive(Debug)]
@@ -211,7 +211,10 @@ impl FromStr for Hotkey {
         for part in parts {
             modifiers = modifiers | try!(Modifiers::from_str(part))
         }
-        Ok(Hotkey {key: key, modifiers: modifiers})
+        Ok(Hotkey {
+            key: key,
+            modifiers: modifiers
+        })
     }
 }
 
@@ -225,7 +228,7 @@ impl FromSettings for HotkeyBinding {
 
         let mut arr = match obj.remove("keys") {
             Some(Settings::Array(arr)) => arr,
-            _ => return Err(HotkeySequenceIsNotArray)
+            _ => return Err(HotkeySequenceIsNotArray),
         };
 
         let mut hotkeys = Vec::new();
@@ -235,10 +238,10 @@ impl FromSettings for HotkeyBinding {
                 Settings::String(s) => {
                     match Hotkey::from_str(&s) {
                         Ok(hotkey) => hotkeys.push(hotkey),
-                        Err(err) => return Err(HotKeyError(err))
+                        Err(err) => return Err(HotKeyError(err)),
                     }
-                },
-                _ => return Err(HotKeyIsNotString)
+                }
+                _ => return Err(HotKeyIsNotString),
             }
         }
 
@@ -246,16 +249,18 @@ impl FromSettings for HotkeyBinding {
             Some(settings) => {
                 match Context::from_settings(settings) {
                     Ok(context) => context,
-                    Err(err) => return Err(ContextError(err))
+                    Err(err) => return Err(ContextError(err)),
                 }
-            },
-            _ => Context::default()
+            }
+            _ => Context::default(),
         };
 
         let command = match Command::from_settings(Settings::Object(obj)) {
             Ok(command) => command,
-            Err(err) => return Err(CommandError(err))
+            Err(err) => return Err(CommandError(err)),
         };
+
+        // TODO: check that obj is empty
 
         Ok(HotkeyBinding {
             hotkeys: hotkeys.into_boxed_slice(),
