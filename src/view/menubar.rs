@@ -5,8 +5,9 @@ use core::menu::{Menu, MenuItem};
 use core::command::Command;
 use view::theme::*;
 
-use view::event::{OnKeypress, OnKeypressComponent};
+use view::event::OnKeypress;
 use view::context::ContextMenu;
+use view::modal::ModalPosition;
 
 #[derive(Debug)]
 pub struct Menubar {
@@ -60,6 +61,14 @@ impl Menubar {
             items: items.into_boxed_slice()
         }, menus)
     }
+
+    fn focused(&mut self, core: &Core, canvas: Canvas) -> Option<(&mut MenubarItem, Canvas)> {
+        match self.focused {
+            Some(index) => Some((&mut self.items[index], canvas)),
+            None => None
+        }
+    }
+
 
     fn focus_prev(&mut self) {
         if self.items.is_empty() {
@@ -122,25 +131,28 @@ impl<'c> OnKeypress<&'c Core> for MenubarItem {
     }
 }
 
-impl<'c> OnKeypressComponent<&'c Core> for Menubar {
-    type T = MenubarItem;
-
-    fn focused(&mut self, core: &Core, canvas: Canvas) -> Option<(&mut Self::T, Canvas)> {
-        match self.focused {
-            Some(index) => Some((&mut self.items[index], canvas)),
-            None => None
-        }
-    }
+impl<'c> OnKeypress<&'c Core> for Menubar {
 
     fn on_keypress(&mut self, core: &Core, canvas: Canvas, key: Key) -> bool {
+        if let Some((child, canvas)) = self.focused(core, canvas) {
+            if child.on_keypress(core, canvas, key) {
+                return true;
+            }
+        }
         match key {
             Key::Left => {
                 self.focus_prev();
+                if let Some((item, canvas)) = self.focused(core, canvas) {
+                    // core.open_modal_window(item.id, ModalPosition::UnderLeft(canvas))
+                }
                 self.render(core, canvas);
                 true
             },
             Key::Right => {
                 self.focus_next();
+                if let Some((item, canvas)) = self.focused(core, canvas) {
+                    // core.open_modal_window(item.id, ModalPosition::UnderLeft(canvas))
+                }
                 self.render(core, canvas);
                 true
             },

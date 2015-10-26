@@ -17,6 +17,11 @@ pub struct ContextMenu {
     menu: Menu
 }
 
+// struct MenuItemView {
+//     item: MenuItem,
+//     focused: bool
+// }
+
 impl ContextMenu {
     pub fn new(menu: Menu) -> Self {
         ContextMenu {focused: None, menu: menu}

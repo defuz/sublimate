@@ -17,8 +17,10 @@ extern crate env_logger;
 
 extern crate regex;
 extern crate unicode_width;
+extern crate vec_map;
 
 extern crate ncurses;
+
 extern crate rustc_serialize;
 extern crate weakjson;
 

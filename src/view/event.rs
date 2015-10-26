@@ -5,26 +5,24 @@ pub trait OnKeypress<C> {
     fn on_keypress(&mut self, core: C, canvas: Canvas, key: Key) -> bool;
 }
 
-pub trait OnKeypressComponent<C> {
-    type T: OnKeypress<C>;
+// pub trait OnKeypressComponent<C> {
+//     fn focused(&mut self, core: C, canvas: Canvas) -> Option<(&mut OnKeypress<C>, Canvas)>;
 
-    fn focused(&mut self, core: C, canvas: Canvas) -> Option<(&mut Self::T, Canvas)>;
+//     fn on_keypress(&mut self, core: C, canvas: Canvas, key: Key) -> bool {
+//         false
+//     }
+// }
 
-    fn on_keypress(&mut self, core: C, canvas: Canvas, key: Key) -> bool {
-        false
-    }
-}
-
-impl<T, C> OnKeypress<C> for T where T: OnKeypressComponent<C>, C: Copy {
-    fn on_keypress(&mut self, core: C, canvas: Canvas, key: Key) -> bool {
-        if let Some((child, canvas)) = self.focused(core, canvas) {
-            if child.on_keypress(core, canvas, key) {
-                return true;
-            }
-        }
-        OnKeypressComponent::on_keypress(self, core, canvas, key)
-    }
-}
+// impl<T, C> OnKeypress<C> for T where T: OnKeypressComponent<C>, C: Copy {
+//     fn on_keypress(&mut self, core: C, canvas: Canvas, key: Key) -> bool {
+//         if let Some((child, canvas)) = self.focused(core, canvas) {
+//             if child.on_keypress(core, canvas, key) {
+//                 return true;
+//             }
+//         }
+//         OnKeypressComponent::on_keypress(self, core, canvas, key)
+//     }
+// }
 
 // pub enum Event {
 //     KeyPress(Key)

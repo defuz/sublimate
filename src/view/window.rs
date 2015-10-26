@@ -6,6 +6,7 @@ use core::keymap::Key;
 use view::menubar::Menubar;
 use view::context::ContextMenu;
 use view::event::OnKeypress;
+use view::modal::ModalPosition;
 
 #[derive(Debug)]
 pub struct Window {
@@ -24,6 +25,10 @@ impl Window {
             context_menus: menus
         }
     }
+
+    // pub fn open_modal_window(&mut self, id: &str, position: ModalPosition) {
+
+    // }
 
     pub fn render(&self, mut canvas: Canvas) {
         // let ref menu = self.context_menus[0];
