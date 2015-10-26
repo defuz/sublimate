@@ -1,5 +1,4 @@
-use std::borrow::Borrow;
-
+use unicode_width::UnicodeWidthStr;
 
 use core::Core;
 use core::keymap::{Hotkey, HotkeySequence};
@@ -51,14 +50,14 @@ impl<'c> View<(bool, &'c Core)> for MenuItem {
     fn width(&self, (focused, core): (bool, &Core)) -> usize {
         match *self {
             MenuItem::Divider => 2,
-            MenuItem::Group(ref caption, _) => caption.len() + 5,
+            MenuItem::Group(ref caption, _) => caption.width() + 5,
             MenuItem::Button(ref caption, ref command, _) => {
                 let caption: &str = match *caption {
                     Some(ref c) => c,
                     None => "<No caption>"
                 };
                 let hotkey = hotkey_to_string(core.hotkeys.get_hotkeys(&command));
-                caption.len() + hotkey.len() + 4
+                caption.width() + hotkey.width() + 4
             }
         }
     }
@@ -71,27 +70,22 @@ impl<'c> View<(bool, &'c Core)> for MenuItem {
         match *self {
             MenuItem::Divider => {
                 MODAL_DISABLED_STYLE.set();
-                canvas.fill_char('-');
+                canvas.fill_char('─');
             },
             MenuItem::Group(ref caption, _) => {
                 let (style, low_style) = if focused {
-                    (MODAL_STYLE, MODAL_LOW_STYLE)
-                } else {
                     (MODAL_SELECTED_STYLE, MODAL_SELECTED_LOW_STYLE)
+                } else {
+                    (MODAL_STYLE, MODAL_LOW_STYLE)
                 };
-                let left_canvas = canvas.cut_left(caption.len() + 1);
+                let left_canvas = canvas.cut_left(caption.width() + 1);
                 let right_canvas = canvas.cut_right(2);
                 style.set();
                 left_canvas.char(' ', 0, 0);
                 left_canvas.text(caption, 0, 1);
                 canvas.fill();
-                if focused {
-                    MODAL_LOW_STYLE.set();
-                } else {
-                    MODAL_SELECTED_LOW_STYLE.set();
-                }
                 low_style.set();
-                right_canvas.char('>', 0, 0);
+                right_canvas.char('▸', 0, 0);
                 right_canvas.char(' ', 0, 1);
             },
             MenuItem::Button(ref caption, ref command, _) => {
@@ -108,14 +102,15 @@ impl<'c> View<(bool, &'c Core)> for MenuItem {
                 } else {
                     (MODAL_DISABLED_STYLE, MODAL_DISABLED_STYLE)
                 };
-                let left_canvas = canvas.cut_left(caption.len() + 1);
-                let right_canvas = canvas.cut_right(hotkey.len() + 1);
+                let left_canvas = canvas.cut_left(caption.width() + 1);
+                let right_canvas = canvas.cut_right(hotkey.width() + 1);
                 style.set();
                 left_canvas.char(' ', 0, 0);
                 left_canvas.text(caption, 0, 1);
                 canvas.fill();
+                low_style.set();
                 right_canvas.text(&hotkey, 0, 0);
-                right_canvas.char(' ', 0, hotkey.len());
+                right_canvas.char(' ', 0, hotkey.width());
             }
         }
     }

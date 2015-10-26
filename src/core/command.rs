@@ -1,4 +1,3 @@
-use std::convert::From;
 use std::hash::{Hash, Hasher};
 use core::settings::{Settings, SettingsObject, ParseSettings};
 

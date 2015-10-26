@@ -16,6 +16,7 @@ extern crate log;
 extern crate env_logger;
 
 extern crate regex;
+extern crate unicode_width;
 
 extern crate ncurses;
 extern crate rustc_serialize;
@@ -33,19 +34,19 @@ fn main() {
 
     setlocale(LcCategory::all, "en_US.utf-8");
 
-    // initscr();
+    initscr();
 
-    // noecho();
-    // keypad(stdscr, true);
-    // curs_set(CURSOR_VISIBILITY::CURSOR_INVISIBLE);
-    // raw();
+    noecho();
+    keypad(stdscr, true);
+    curs_set(CURSOR_VISIBILITY::CURSOR_INVISIBLE);
+    raw();
 
-    // start_color();
-    // use_default_colors();
+    start_color();
+    use_default_colors();
 
-    // for (i, &(ref fg, ref bg)) in PALETTE.iter().enumerate() {
-    //     init_pair(i as i16, fg.to_term(), bg.to_term());
-    // }
+    for (i, &(ref fg, ref bg)) in PALETTE.iter().enumerate() {
+        init_pair(i as i16, fg.to_term(), bg.to_term());
+    }
 
     env_logger::init().unwrap();
 
@@ -56,10 +57,10 @@ fn main() {
         x1: 0,
         y1: 0,
         x2: 80,
-        y2: 20
+        y2: 40
     });
 
-    println!("{:?}", window);
+    // println!("{:?}", window);
 
     // core.package_repository.get_keymap("default/Default (OSX).sublime-keymap");
     // core.package_repository.get_keymap("default/Default

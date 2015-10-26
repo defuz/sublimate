@@ -4,7 +4,7 @@ use toolkit::core::*;
 use toolkit::style::Style;
 use toolkit::draw::Drawing;
 
-use ncurses::{mvaddstr, mvaddch};
+use ncurses::{stdscr, mvaddch, mvaddstr};
 
 #[derive(Debug)]
 pub struct Canvas {
@@ -110,10 +110,17 @@ impl Drawing for Canvas {
     }
 
     fn fill_char(&self, c: char) {
+        for y in 0..self.y2-self.y1 {
+            for x in 0..self.x2-self.x1 {
+                self.char(c, y, x)
+            }
+        }
     }
 
     fn char(&self, c: char, y: usize, x: usize) {
-        mvaddch((self.y1 + y) as i32, (self.x1 + x) as i32, c as u64);
+        let mut s = String::new();
+        s.push(c);
+        mvaddstr((self.y1 + y) as i32, (self.x1 + x) as i32, &s);
     }
 
     fn text(&self, s: &str, y: usize, x: usize) {

@@ -21,8 +21,9 @@ impl Window {
         }
     }
 
-    pub fn render(&self, canvas: Canvas) {
-        self.context_menus[0].render(&self.core, canvas);
+    pub fn render(&self, mut canvas: Canvas) {
+        let ref menu = self.context_menus[0];
+        menu.render(&self.core, canvas.cut_left(menu.width(&self.core)));
         // self.menubar.render(&self.core, canvas);
     }
 }
