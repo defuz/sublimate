@@ -6,7 +6,7 @@ use toolkit::draw::Drawing;
 
 use ncurses::{stdscr, mvaddch, mvaddstr};
 
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone)]
 pub struct Canvas {
     pub x1: usize,
     pub y1: usize,

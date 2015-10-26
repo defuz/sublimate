@@ -116,7 +116,7 @@ pub const PALETTE: [(Color, Color); 19] = [// editor
                                            create_color_pair!(0, -1), // TABS_LOW_SELECTED
 
                                            // menubar
-                                           create_color_pair!(3, -1), // MENUBAR
+                                           create_color_pair!(3, -2), // MENUBAR
                                            create_color_pair!(4, 0), // MENUBAR_SELECTED
 
                                            // statusbar

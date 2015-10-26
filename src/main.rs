@@ -26,9 +26,11 @@ extern crate weakjson;
 use ncurses::*;
 
 use core::Core;
+use core::keymap::Key;
 use view::window::Window;
 use toolkit::*;
 use view::theme::PALETTE;
+use view::event::OnKeypress;
 
 fn main() {
 
@@ -51,14 +53,29 @@ fn main() {
     env_logger::init().unwrap();
 
     let core = Core::load();
-    let window = Window::new(core);
+    let mut window = Window::new(core);
 
-    window.render(Canvas {
+    let (mut height, mut width) : (i32, i32) = (0, 0);
+
+    getmaxyx(stdscr, &mut height, &mut width);
+
+    let canvas = Canvas {
         x1: 0,
         y1: 0,
-        x2: 80,
-        y2: 40
-    });
+        x2: width as usize,
+        y2: height as usize
+    };
+
+    window.render(canvas);
+
+    loop {
+        if let Some(key) = Key::from_keycode(getch()) {
+            if key == Key::Enter {
+                break;
+            }
+            window.on_keypress((), canvas, key);
+        }
+    }
 
     // println!("{:?}", window);
 
@@ -103,13 +120,13 @@ fn main() {
 
 
     // Wait for a key press.
-    loop {
-        let c = getch();
-        println!("{:?}\r", c);
-        if c == 10 {
-            break;
-        }
-    }
+    // loop {
+    //     let c = getch();
+    //     println!("{:?}\r", c);
+    //     if c == 10 {
+    //         break;
+    //     }
+    // }
 
     // Terminate ncurses.
     endwin();

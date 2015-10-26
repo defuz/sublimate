@@ -1,10 +1,18 @@
 use toolkit::*;
 use core::Core;
+use core::keymap::Key;
 use core::menu::{Menu, MenuItem};
 use core::command::Command;
 use view::theme::*;
 
+use view::event::{OnKeypress, OnKeypressComponent};
 use view::context::ContextMenu;
+
+#[derive(Debug)]
+pub struct Menubar {
+    focused: Option<usize>,
+    items: Box<[MenubarItem]>
+}
 
 #[derive(Debug)]
 pub struct MenubarItem {
@@ -27,12 +35,6 @@ impl<'c> View<&'c Core> for MenubarItem {
         canvas.text(&*self.name, 0, 1);
         canvas.char(' ', 0, self.name.len() + 1);
     }
-}
-
-#[derive(Debug)]
-pub struct Menubar {
-    focused: Option<usize>,
-    items: Box<[MenubarItem]>
 }
 
 impl Menubar {
@@ -58,6 +60,27 @@ impl Menubar {
             items: items.into_boxed_slice()
         }, menus)
     }
+
+    fn focus_prev(&mut self) {
+        if self.items.is_empty() {
+            return;
+        }
+        self.focused = Some(match self.focused {
+            Some(index) if index != 0 => index - 1,
+            _ => self.items.len() - 1
+        })
+    }
+
+    fn focus_next(&mut self) {
+        if self.items.is_empty() {
+            return;
+        }
+        self.focused = Some(match self.focused {
+            Some(index) => (index + 1) % self.items.len(),
+            None => 0
+        })
+    }
+
 }
 
 impl<'c> View<&'c Core> for Menubar {
@@ -84,6 +107,44 @@ impl<'c> View<&'c Core> for Menubar {
             } else {
                 item.render(core, item_canvas);
             }
+        }
+        canvas.fill();
+    }
+}
+
+impl<'c> OnKeypress<&'c Core> for MenubarItem {
+    fn on_keypress(&mut self, core: &Core, canvas: Canvas, key: Key) -> bool {
+        // core.get_context(self.id).on_keypress(core, key)
+        match key {
+            Key::Up | Key::Down => true,
+            _ => false
+        }
+    }
+}
+
+impl<'c> OnKeypressComponent<&'c Core> for Menubar {
+    type T = MenubarItem;
+
+    fn focused(&mut self, core: &Core, canvas: Canvas) -> Option<(&mut Self::T, Canvas)> {
+        match self.focused {
+            Some(index) => Some((&mut self.items[index], canvas)),
+            None => None
+        }
+    }
+
+    fn on_keypress(&mut self, core: &Core, canvas: Canvas, key: Key) -> bool {
+        match key {
+            Key::Left => {
+                self.focus_prev();
+                self.render(core, canvas);
+                true
+            },
+            Key::Right => {
+                self.focus_next();
+                self.render(core, canvas);
+                true
+            },
+            _ => false
         }
     }
 }

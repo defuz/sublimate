@@ -38,9 +38,16 @@ use core::keymap::Key;
 // shift tab 353
 
 impl Key {
-    fn from_keycode(keycode: i32) -> Option<Key> {
+    pub fn from_keycode(keycode: i32) -> Option<Key> {
         match keycode {
+            10  => Some(Key::Enter),
+
+            260 => Some(Key::Left),
+            261 => Some(Key::Right),
+            259 => Some(Key::Up),
+            258 => Some(Key::Down),
             _ => {
+
                 // TODO: warning
                 None
             }

@@ -1,7 +1,11 @@
 use toolkit::*;
 use core::Core;
+
+use core::keymap::Key;
+
 use view::menubar::Menubar;
 use view::context::ContextMenu;
+use view::event::OnKeypress;
 
 #[derive(Debug)]
 pub struct Window {
@@ -22,8 +26,14 @@ impl Window {
     }
 
     pub fn render(&self, mut canvas: Canvas) {
-        let ref menu = self.context_menus[0];
-        menu.render(&self.core, canvas.cut_left(menu.width(&self.core)));
-        // self.menubar.render(&self.core, canvas);
+        // let ref menu = self.context_menus[0];
+        // menu.render(&self.core, canvas.cut_left(menu.width(&self.core)));
+        self.menubar.render(&self.core, canvas.cut_top(1));
+    }
+}
+
+impl OnKeypress<()> for Window {
+    fn on_keypress(&mut self, core: (), mut canvas: Canvas, key: Key) -> bool {
+        self.menubar.on_keypress(&self.core, canvas.cut_top(1), key)
     }
 }
