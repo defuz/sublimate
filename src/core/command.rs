@@ -1,6 +1,6 @@
 use std::convert::From;
 use std::hash::{Hash, Hasher};
-use core::settings::{Settings, SettingsObject, FromSettings};
+use core::settings::{Settings, SettingsObject, ParseSettings};
 
 use self::ParseCommandError::*;
 
@@ -24,9 +24,9 @@ pub enum ParseCommandError {
     CommandArgsIsNotObject,
 }
 
-impl FromSettings for Command {
+impl ParseSettings for Command {
     type Error = ParseCommandError;
-    fn from_settings(settings: Settings) -> Result<Command, Self::Error> {
+    fn parse_settings(settings: Settings) -> Result<Command, Self::Error> {
         let mut obj = match settings {
             Settings::Object(obj) => obj,
             _ => return Err(CommandIsNotObject),
@@ -42,6 +42,8 @@ impl FromSettings for Command {
             None => SettingsObject::default(),
             _ => return Err(CommandArgsIsNotObject),
         };
+
+        // TODO: check obj is empty
 
         Ok(Command {
             name: name,

@@ -4,7 +4,7 @@ use std::collections::hash_map::HashMap;
 use core::Core;
 use core::command::Command;
 use core::keymap::{Keymap, Hotkey, HotkeySequence};
-use core::context::Context;
+use core::context::{Context, Evaluate};
 
 type PerformerNodeId = usize;
 
@@ -32,17 +32,17 @@ impl HotkeyPerformer {
 
     pub fn add_keymap(&mut self, keymap: Keymap) {
         let mut next_id = self.nodes.len();
-        for binding in keymap.bindings.into_iter() {
+        for binding in keymap {
             self.hotkeys.insert(binding.command.clone(), binding.hotkeys.clone());
             let mut node_id = 0;
-            for &hotkey in binding.hotkeys.into_iter() {
+            for hotkey in binding.hotkeys {
                 node_id = *self.nodes[node_id].children.entry(hotkey).or_insert(next_id);
                 if node_id == next_id {
                     self.nodes.push(PerformerNode::default());
                     next_id += 1;
                 }
             }
-            self.nodes[node_id].commands.push((binding.command.clone(), binding.context.clone()));
+            self.nodes[node_id].commands.push((binding.command, binding.context));
         }
     }
 

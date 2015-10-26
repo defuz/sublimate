@@ -39,7 +39,7 @@ impl Menubar {
     pub fn new(core: &Core) -> (Menubar, Vec<ContextMenu>) {
         let mut items = Vec::new();
         let mut menus = Vec::new();
-        for item in core.package_repository.get_menu("default/Main.sublime-menu").items {
+        for item in core.package_repository.get_menu("default/Main.sublime-menu") {
             match item {
                 MenuItem::Group(name, menu) => {
                     items.push(MenubarItem {

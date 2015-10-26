@@ -26,15 +26,15 @@ impl ContextMenu {
 
 impl<'c> View<&'c Core> for ContextMenu {
     fn width(&self, core: &Core) -> usize {
-        self.menu.items.iter().map(|v| v.width((false, core))).max().unwrap_or(0)
+        self.menu.iter().map(|v| v.width((false, core))).max().unwrap_or(0)
     }
 
     fn height(&self, core: &Core) -> usize {
-        self.menu.items.len()
+        self.menu.len()
     }
 
     fn render(&self, core: &Core, mut canvas: Canvas) {
-        for (i, item) in self.menu.items.iter().enumerate() {
+        for (i, item) in self.menu.iter().enumerate() {
             let h = item.height((false, core));
             if h > canvas.height() {
                 break;

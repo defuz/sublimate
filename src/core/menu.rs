@@ -1,12 +1,9 @@
-use std::convert::From;
-use std::slice::Iter;
-use rustc_serialize::json::Json;
-use core::command::Command;
+use core::settings::{Settings, FromSettings, ParseSettings};
+use core::command::{Command, ParseCommandError};
 
-#[derive(Debug, Default)]
-pub struct Menu {
-    pub items: Vec<MenuItem>
-}
+use self::ParseMenuError::*;
+
+pub type Menu = Vec<MenuItem>;
 
 #[derive(Debug)]
 pub enum MenuItem {
@@ -15,43 +12,74 @@ pub enum MenuItem {
     Divider,
 }
 
-impl Menu {
-    pub fn iter<'a>(&'a self) -> Iter<'a, MenuItem> {
-        self.items.iter()
+enum ParseMenuError {
+    ItemIsNotObject,
+    CaptionIsNotString,
+    CaptionIsNotDefinedForGroup,
+    CheckboxIsNotBoolean,
+    CommandError(ParseCommandError)
+}
+
+impl ParseSettings for MenuItem {
+    type Error = ParseMenuError;
+    fn parse_settings(settings: Settings) -> Result<MenuItem, Self::Error> {
+        let mut obj = match settings {
+            Settings::Object(obj) => obj,
+            _ => return Err(ItemIsNotObject),
+        };
+        let caption = match obj.remove("caption") {
+            Some(Settings::String(caption)) => {
+                if caption == "-" {
+                    // TODO: check obj is empty
+                    return Ok(MenuItem::Divider);
+                }
+                Some(caption)
+            },
+            None => None,
+            _ => return Err(CaptionIsNotString)
+        };
+        // parse group
+        if let Some(settings) = obj.remove("children") {
+            let caption = match caption {
+                Some(caption) => caption,
+                None => return Err(CaptionIsNotDefinedForGroup)
+            };
+            // TODO: check obj is empty
+            return Ok(MenuItem::Group(caption, Menu::from_settings(settings)));
+        };
+        // parse button
+        let is_checkbox = match obj.remove("checkbox") {
+            Some(Settings::Boolean(v)) => v,
+            None => false,
+            _ => return Err(CheckboxIsNotBoolean)
+        };
+        let command = match Command::parse_settings(Settings::Object(obj)) {
+            Ok(command) => command,
+            Err(err) => return Err(CommandError(err))
+        };
+        // TODO: check obj is empty
+        Ok(MenuItem::Button(caption, command, is_checkbox))
     }
 }
 
-impl From<Json> for Menu {
-    fn from(json: Json) -> Menu {
-        let mut items = Vec::new();
-        if let Json::Array(array) = json {
-            for mut item_json in array {
-                if let Some(obj) = item_json.as_object_mut() {
-                    let caption = match obj.remove("caption") {
-                        Some(Json::String(caption)) => Some(caption),
-                        _ => None,
-                    };
-                    if caption == Some("-".to_string()) {
-                        items.push(MenuItem::Divider);
-                    } else if let Some(menu_json) = obj.remove("children") {
-                        items.push(MenuItem::Group(caption.unwrap_or_default(),
-                                                   Menu::from(menu_json)));
-                        // } else if let Some(Json::String(command)) = obj.remove("command") {
-                        // let is_checkbox = obj.remove("checkbox") ==
-                        // Some(Json::Boolean(true));
-                        //     let args = obj.remove("args");
-                        //     items.push(MenuItem::Button(caption,
-                        //                                 Command {
-                        //                                     name: command,
-                        //                                     args: args
-                        //                                 },
-                        //                                 is_checkbox))
-                        // } else {
-                        error!("Incorrect menu item: {:?}", obj)
-                    }
+impl FromSettings for Menu {
+    fn from_settings(settings: Settings) -> Menu {
+        let arr = match settings {
+            Settings::Array(arr) => arr,
+            _ => {
+                // TODO: warning
+                return Menu::default();
+            }
+        };
+        let mut menu = Menu::new();
+        for settings in arr {
+            match MenuItem::parse_settings(settings) {
+                Ok(item) => menu.push(item),
+                Err(err) => {
+                    // TODO: warning
                 }
             }
         }
-        Menu { items: items }
+        menu
     }
 }

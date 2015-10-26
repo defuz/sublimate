@@ -2,14 +2,11 @@ use regex;
 
 use std::borrow::Borrow;
 
-use core::settings::{Settings, FromSettings};
+use core::settings::{Settings, ParseSettings};
 use core::Core;
 use self::ParseContextError::*;
 
-#[derive(Debug, Default, Clone)]
-pub struct Context {
-    rules: Box<[ContextRule]>
-}
+pub type Context = Vec<ContextRule>;
 
 #[derive(Debug, Clone)]
 enum ContextRule {
@@ -62,9 +59,9 @@ pub enum ParseContextError {
     RegexError(regex::Error),
 }
 
-impl FromSettings for ContextRule {
+impl ParseSettings for ContextRule {
     type Error = ParseContextError;
-    fn from_settings(settings: Settings) -> Result<ContextRule, Self::Error> {
+    fn parse_settings(settings: Settings) -> Result<ContextRule, Self::Error> {
         let mut obj = match settings {
             Settings::Object(obj) => obj,
             _ => return Err(ContextRuleIsNotObject),
@@ -193,18 +190,18 @@ impl FromSettings for ContextRule {
     }
 }
 
-impl FromSettings for Context {
+impl ParseSettings for Context {
     type Error = ParseContextError;
-    fn from_settings(settings: Settings) -> Result<Context, Self::Error> {
+    fn parse_settings(settings: Settings) -> Result<Context, Self::Error> {
         let arr = match settings {
             Settings::Array(arr) => arr,
             _ => return Err(ContextIsNotArray),
         };
-        let mut rules = Vec::new();
+        let mut context = Context::new();
         for settings in arr {
-            rules.push(try!(ContextRule::from_settings(settings)));
+            context.push(try!(ContextRule::parse_settings(settings)));
         }
-        Ok(Context { rules: rules.into_boxed_slice() })
+        Ok(context)
     }
 }
 
@@ -236,16 +233,20 @@ impl Operator<Settings> {
     }
 }
 
+pub trait Evaluate {
+    fn evaluate(&self, core: &Core) -> bool;
+}
 
-impl ContextRule {
+
+impl Evaluate for ContextRule {
     fn evaluate(&self, core: &Core) -> bool {
         // TODO: implement this
         false
     }
 }
 
-impl Context {
-    pub fn evaluate(&self, core: &Core) -> bool {
-        self.rules.iter().all(|rule| rule.evaluate(core))
+impl Evaluate for Context {
+    fn evaluate(&self, core: &Core) -> bool {
+        self.iter().all(|rule| rule.evaluate(core))
     }
 }

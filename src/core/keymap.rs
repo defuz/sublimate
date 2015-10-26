@@ -2,15 +2,12 @@ use std::str::FromStr;
 
 use core::command::{Command, ParseCommandError};
 use core::context::{Context, ParseContextError};
-use core::settings::{Settings, FromSettings};
+use core::settings::{Settings, FromSettings, ParseSettings};
 
 use self::ParseHotkeyError::*;
 use self::ParseHotkeyBindingError::*;
 
-#[derive(Debug, Default)]
-pub struct Keymap {
-    pub bindings: Box<[HotkeyBinding]>
-}
+pub type Keymap = Vec<HotkeyBinding>;
 
 #[derive(Debug)]
 pub struct HotkeyBinding {
@@ -19,7 +16,7 @@ pub struct HotkeyBinding {
     pub context: Context
 }
 
-pub type HotkeySequence = Box<[Hotkey]>;
+pub type HotkeySequence = Vec<Hotkey>;
 
 #[derive(Debug, Clone, Copy, Hash, PartialEq, Eq)]
 pub struct Hotkey {
@@ -218,9 +215,9 @@ impl FromStr for Hotkey {
     }
 }
 
-impl FromSettings for HotkeyBinding {
+impl ParseSettings for HotkeyBinding {
     type Error = ParseHotkeyBindingError;
-    fn from_settings(settings: Settings) -> Result<HotkeyBinding, Self::Error> {
+    fn parse_settings(settings: Settings) -> Result<HotkeyBinding, Self::Error> {
         let mut obj = match settings {
             Settings::Object(obj) => obj,
             _ => return Err(BindingIsNotObject),
@@ -247,7 +244,7 @@ impl FromSettings for HotkeyBinding {
 
         let context = match obj.remove("context") {
             Some(settings) => {
-                match Context::from_settings(settings) {
+                match Context::parse_settings(settings) {
                     Ok(context) => context,
                     Err(err) => return Err(ContextError(err)),
                 }
@@ -255,7 +252,7 @@ impl FromSettings for HotkeyBinding {
             _ => Context::default(),
         };
 
-        let command = match Command::from_settings(Settings::Object(obj)) {
+        let command = match Command::parse_settings(Settings::Object(obj)) {
             Ok(command) => command,
             Err(err) => return Err(CommandError(err)),
         };
@@ -263,15 +260,15 @@ impl FromSettings for HotkeyBinding {
         // TODO: check that obj is empty
 
         Ok(HotkeyBinding {
-            hotkeys: hotkeys.into_boxed_slice(),
+            hotkeys: hotkeys,
             command: command,
             context: context
         })
     }
 }
 
-impl From<Settings> for Keymap {
-    fn from(settings: Settings) -> Keymap {
+impl FromSettings for Keymap {
+    fn from_settings(settings: Settings) -> Keymap {
         let arr = match settings {
             Settings::Array(arr) => arr,
             _ => {
@@ -279,15 +276,15 @@ impl From<Settings> for Keymap {
                 return Keymap::default();
             }
         };
-        let mut bindings = Vec::new();
+        let mut keymap = Keymap::new();
         for settings in arr {
-            match HotkeyBinding::from_settings(settings) {
-                Ok(binding) => bindings.push(binding),
+            match HotkeyBinding::parse_settings(settings) {
+                Ok(binding) => keymap.push(binding),
                 Err(err) => {
                     // TODO: warning
                 }
             }
         }
-        Keymap { bindings: bindings.into_boxed_slice() }
+        keymap
     }
 }

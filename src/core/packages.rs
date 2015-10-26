@@ -3,7 +3,7 @@ use std::io::Read;
 use std::fs::File;
 use std::path::{Path, PathBuf};
 
-use core::settings::Settings;
+use core::settings::{Settings, FromSettings};
 use core::menu::Menu;
 use core::keymap::Keymap;
 
@@ -34,10 +34,10 @@ impl PackageRepository {
     }
 
     pub fn get_menu(&self, filename: &str) -> Menu {
-        self.load_settings(filename).map_or_else(Menu::default, Menu::from)
+        self.load_settings(filename).map_or_else(Menu::default, Menu::from_settings)
     }
 
     pub fn get_keymap(&self, filename: &str) -> Keymap {
-        self.load_settings(filename).map_or_else(Keymap::default, Keymap::from)
+        self.load_settings(filename).map_or_else(Keymap::default, Keymap::from_settings)
     }
 }
