@@ -1,3 +1,4 @@
+use std::io::Write;
 use unicode_width::UnicodeWidthStr;
 
 use core::Core;
@@ -7,8 +8,23 @@ use core::menu::{Menu, MenuItem};
 use toolkit::*;
 use view::theme::*;
 
-fn hotkey_to_string(key: Option<&HotkeySequence>) -> String {
-    "Ctrl+Alt+A".to_string()
+fn hotkey_to_string(keys: Option<&HotkeySequence>) -> String {
+    match keys {
+        Some(keys) => {
+            let mut buf = Vec::new();
+            let mut first = true;
+            for key in keys {
+                write!(buf, "{}", key);
+                if first {
+                    first = false
+                } else {
+                    write!(buf, ", ");
+                }
+            }
+            String::from_utf8(buf).unwrap()
+        },
+        None => "".to_string()
+    }
 }
 
 #[derive(Debug)]

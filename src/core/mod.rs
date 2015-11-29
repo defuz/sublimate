@@ -24,10 +24,12 @@ impl Core {
 
     pub fn load() -> Core {
         let repository = PackageRepository::open("/Users/defuz/Projects/sublimate/packages/");
+        let mut hotkeys = HotkeyPerformer::new();
+        hotkeys.add_keymap(repository.get_keymap("default/Default (OSX).sublime-keymap"));
         Core {
             project: Project::open("/Users/defuz/Projects/sublimate/sublimate.sublime-project"),
             package_repository: repository,
-            hotkeys: HotkeyPerformer::new(),
+            hotkeys: hotkeys
         }
     }
 

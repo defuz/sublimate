@@ -1,4 +1,5 @@
 use std::str::FromStr;
+use std::fmt::{Display, Formatter, Write, Error as FormatterError};
 
 use core::command::{Command, ParseCommandError};
 use core::context::{Context, ParseContextError};
@@ -70,7 +71,6 @@ pub enum Key {
 
 bitflags! {
     flags Modifiers: u8 {
-        const MODIFIER_NONE  = 0,
         const MODIFIER_SUPER = 1,
         const MODIFIER_CTRL  = 2,
         const MODIFIER_ALT   = 4,
@@ -91,6 +91,83 @@ pub enum ParseHotkeyBindingError {
 pub enum ParseHotkeyError {
     IncorrectKey(String),
     IncorrectModifier(String),
+}
+
+impl Display for Modifiers {
+    fn fmt(&self, fmt: &mut Formatter) -> Result<(), FormatterError> {
+        if self.contains(MODIFIER_CTRL) {
+            try!(fmt.write_str("Ctrl+"));
+        }
+        if self.contains(MODIFIER_ALT) {
+            try!(fmt.write_str("Alt+"));
+        }
+        if self.contains(MODIFIER_SHIFT) {
+            try!(fmt.write_str("Shift+"));
+        }
+        if self.contains(MODIFIER_SUPER) {
+            try!(fmt.write_str("Super+"));
+        }
+        Ok(())
+    }
+}
+
+impl Display for Key {
+    fn fmt(&self, fmt: &mut Formatter) -> Result<(), FormatterError> {
+        match *self {
+            Key::ContextMenu => fmt.write_str("Context Menu"),
+            Key::Tab => fmt.write_str("Tab"),
+            Key::Enter => fmt.write_str("Enter"),
+            Key::Escape => fmt.write_str("Escape"),
+            Key::Backspace => fmt.write_str("Backspace"),
+            Key::Right => fmt.write_str("Right"),
+            Key::Left => fmt.write_str("Left"),
+            Key::Up => fmt.write_str("Up"),
+            Key::Down => fmt.write_str("Down"),
+            Key::Delete => fmt.write_str("Delete"),
+            Key::Insert => fmt.write_str("Insert"),
+            Key::Home => fmt.write_str("Home"),
+            Key::End => fmt.write_str("End"),
+            Key::PageUp => fmt.write_str("Page Up"),
+            Key::PageDown => fmt.write_str("Page Down"),
+            Key::Pause => fmt.write_str("Pause"),
+            Key::Clear => fmt.write_str("Clear"),
+            Key::Sysreq => fmt.write_str("Sysreq"),
+            Key::Break => fmt.write_str("Break"),
+            /// "Browser" keys
+            Key::BrowserBack => fmt.write_str("Browser Back"),
+            Key::BrowserForward => fmt.write_str("Browser Forward"),
+            Key::BrowserRefresh => fmt.write_str("Browser Refresh"),
+            Key::BrowserStop => fmt.write_str("Browser Stop"),
+            Key::BrowserSearch => fmt.write_str("Browser Search"),
+            Key::BrowserFavorites => fmt.write_str("Browser Favorites"),
+            Key::BrowserHome => fmt.write_str("Browser Home"),
+            /// Keypad special keys
+            Key::KeypadPeriod => fmt.write_str("Keypad %"),
+            Key::KeypadDivide => fmt.write_str("Keypad /"),
+            Key::KeypadMultiply => fmt.write_str("Keypad *"),
+            Key::KeypadMinus => fmt.write_str("Keypad -"),
+            Key::KeypadPlus => fmt.write_str("Keypad +"),
+            Key::KeypadEnter => fmt.write_str("Keypad Enter"),
+            /// Keypad digit keys
+            Key::Keypad(num) => write!(fmt, "Keypad {}", num),
+            /// Functional keys
+            Key::F(num) => write!(fmt, "F{}", num),
+            /// Single character keys
+            Key::Char(mut c) => {
+                if c == ' ' {
+                    fmt.write_str("Space")
+                } else {
+                    fmt.write_str(&c.to_uppercase().collect::<String>())
+                }
+            },
+        }
+    }
+}
+
+impl Display for Hotkey {
+    fn fmt(&self, fmt: &mut Formatter) -> Result<(), FormatterError> {
+        write!(fmt, "{}{}", self.modifiers, self.key)
+    }
 }
 
 impl FromStr for Key {
@@ -196,7 +273,7 @@ impl FromStr for Hotkey {
     type Err = ParseHotkeyError;
     fn from_str(s: &str) -> Result<Hotkey, Self::Err> {
         let mut parts = s.rsplit('+');
-        let mut modifiers = MODIFIER_NONE;
+        let mut modifiers = Modifiers::empty();
         let key = if s.ends_with("++") {
             // Fix for hotkeys like "ctrl++", where second plus isn't separator
             parts.next();
@@ -206,7 +283,7 @@ impl FromStr for Hotkey {
             try!(Key::from_str(parts.next().unwrap()))
         };
         for part in parts {
-            modifiers = modifiers | try!(Modifiers::from_str(part))
+            modifiers.insert(try!(Modifiers::from_str(part)))
         }
         Ok(Hotkey {
             key: key,
