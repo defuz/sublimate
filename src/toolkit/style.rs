@@ -1,4 +1,4 @@
-use ncurses::{attr_get, attr_set, attr_t, A_NORMAL};
+use ncurses::{attr_get, attr_t, A_NORMAL};
 
 pub struct Color(pub u8);
 
@@ -64,6 +64,12 @@ struct StyleContext {
     prev_style: Style
 }
 
+impl Attr {
+    pub fn to_term(&self) -> u64 {
+        self.bits
+    }
+}
+
 impl Style {
     fn normal(colors: ColorPair) -> Style {
         Style {
@@ -82,19 +88,15 @@ impl Style {
         }
     }
 
-    pub fn set(&self) {
-        attr_set(self.attrs.bits, self.colors.to_term());
-    }
-
-    pub fn context(&self) -> StyleContext {
-        self.set();
-        StyleContext { prev_style: Style::current() }
-    }
+    // pub fn context(&self) -> StyleContext {
+    //     self.set();
+    //     StyleContext { prev_style: Style::current() }
+    // }
 
 }
 
-impl Drop for StyleContext {
-    fn drop(&mut self) {
-        self.prev_style.set();
-    }
-}
+// impl Drop for StyleContext {
+//     fn drop(&mut self) {
+//         self.prev_style.set();
+//     }
+// }

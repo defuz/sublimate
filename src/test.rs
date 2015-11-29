@@ -5,29 +5,30 @@ use std::convert::AsRef;
 use std::iter::Iterator;
 use std::fmt::Debug;
 
-trait Test<C> {
-    fn test(&self, context: C);
+struct Menubar;
+
+struct Window {
+    menubar: Menubar
 }
 
-#[derive(Debug)]
-struct Item {
-    x: u64,
+
+trait OnKeypress<C> {
+    fn on_keypress(&mut self, context: C);
 }
 
-struct Smart;
+impl<'c> OnKeypress<&'c mut Window> for Menubar {
+    fn on_keypress(&mut self, context: &'c mut Window) {
 
-impl<I, C> Test<I> for Smart where I: Iterator<Item=C>, C: Debug {
-    fn test(&self, context: I) {
-        for c in context {
-            println!("{:?}", c);
-            println!("{:?}", c)
-        }
+    }
+}
+
+impl Window {
+    fn on_keypress(&mut self) {
+        self.menubar.on_keypress(self)
     }
 }
 
 
 fn main() {
-    let x = vec![Item { x: 5 }];
-    let s = Smart;
-    s.test(x.iter().map(|i| i));
+
 }

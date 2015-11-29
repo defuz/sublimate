@@ -52,7 +52,7 @@ impl HotkeyPerformer {
 
     pub fn perform_hotkey(&mut self, core: &Core, hotkey: &Hotkey) -> Option<Command> {
         if let Some(&node_id) = self.nodes[self.node_id].children.get(hotkey) {
-            // Check whether there are commands that binded to current state
+            // Check whether there are commands that binded to the current state
             // If yes, return it
             for &(ref command, ref context) in self.nodes[node_id].commands.iter() {
                 if context.evaluate(core) {

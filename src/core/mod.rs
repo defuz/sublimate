@@ -1,4 +1,4 @@
-mod settings;
+pub mod settings;
 pub mod menu;
 mod project;
 mod packages;

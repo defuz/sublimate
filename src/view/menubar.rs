@@ -5,6 +5,7 @@ use core::menu::{Menu, MenuItem};
 use core::command::Command;
 use view::theme::*;
 
+use view::window::{Window, Context};
 use view::event::OnKeypress;
 use view::context::ContextMenu;
 use view::modal::ModalPosition;
@@ -12,13 +13,13 @@ use view::modal::ModalPosition;
 #[derive(Debug)]
 pub struct Menubar {
     focused: Option<usize>,
-    items: Box<[MenubarItem]>
+    items: Vec<MenubarItem>
 }
 
 #[derive(Debug)]
 pub struct MenubarItem {
-    pub id: Box<str>,
-    pub name: Box<str>
+    pub id: usize,
+    pub name: String
 }
 
 impl<'c> View<&'c Core> for MenubarItem {
@@ -46,8 +47,8 @@ impl Menubar {
             match item {
                 MenuItem::Group(name, menu) => {
                     items.push(MenubarItem {
-                        id: "id".to_string().into_boxed_str(),
-                        name: name.clone().into_boxed_str()
+                        id: menus.len(),
+                        name: name.clone()
                     });
                     menus.push(ContextMenu::new(menu))
                 },
@@ -58,13 +59,21 @@ impl Menubar {
         }
         (Menubar {
             focused: Some(3),
-            items: items.into_boxed_slice()
+            items: items
         }, menus)
     }
 
-    fn focused(&mut self, core: &Core, canvas: Canvas) -> Option<(&mut MenubarItem, Canvas)> {
+    fn focused(&mut self, core: &Core, mut canvas: Canvas) -> Option<(&MenubarItem, Canvas)> {
         match self.focused {
-            Some(index) => Some((&mut self.items[index], canvas)),
+            Some(index) => {
+                // FIXME: if canvas is less then needed, return None instead of item canvas
+                for item in self.items.iter().take(index) {
+                    canvas.cut_left(item.width(core));
+                }
+                let ref item = self.items[index];
+                let item_canvas = canvas.cut_left(item.width(core));
+                Some((item, item_canvas))
+            },
             None => None
         }
     }
@@ -93,16 +102,16 @@ impl Menubar {
 }
 
 impl<'c> View<&'c Core> for Menubar {
-    fn width(&self, core: &Core) -> usize {
+    fn width(&self, core: &'c Core) -> usize {
         sum_width(core, self.items.iter())
     }
 
-    fn height(&self, core: &Core) -> usize {
+    fn height(&self, core: &'c Core) -> usize {
         1
     }
 
     fn render(&self, core: &Core, mut canvas: Canvas) {
-        MENUBAR_STYLE.set();
+        canvas.style(MENUBAR_STYLE);
         for (i, item) in self.items.iter().enumerate() {
             let w = item.width(core);
             if w > canvas.width() {
@@ -110,9 +119,9 @@ impl<'c> View<&'c Core> for Menubar {
             }
             let item_canvas = canvas.cut_left(w);
             if self.focused == Some(i) {
-                MENUBAR_SELECTED_STYLE.set();
+                item_canvas.style(MENUBAR_SELECTED_STYLE);
                 item.render(core, item_canvas);
-                MENUBAR_STYLE.set();
+                item_canvas.style(MENUBAR_STYLE);
             } else {
                 item.render(core, item_canvas);
             }
@@ -121,39 +130,39 @@ impl<'c> View<&'c Core> for Menubar {
     }
 }
 
-impl<'c> OnKeypress<&'c Core> for MenubarItem {
-    fn on_keypress(&mut self, core: &Core, canvas: Canvas, key: Key) -> bool {
-        // core.get_context(self.id).on_keypress(core, key)
-        match key {
-            Key::Up | Key::Down => true,
-            _ => false
-        }
-    }
-}
+// impl<'c> OnKeypress<Context<'c>> for MenubarItem {
+//     fn on_keypress(&mut self, context: Context<'c>, canvas: Canvas, key: Key) -> bool {
+//         // context.models.get_modal(self.id).on_keypress(context, key)
+//         match key {
+//             Key::Up | Key::Down => true,
+//             _ => false
+//         }
+//     }
+// }
 
-impl<'c> OnKeypress<&'c Core> for Menubar {
+impl<'c> OnKeypress<Context<'c>> for Menubar {
 
-    fn on_keypress(&mut self, core: &Core, canvas: Canvas, key: Key) -> bool {
-        if let Some((child, canvas)) = self.focused(core, canvas) {
-            if child.on_keypress(core, canvas, key) {
-                return true;
-            }
-        }
+    fn on_keypress(&mut self, context: Context<'c>, canvas: Canvas, key: Key) -> bool {
+        // if let Some((child, canvas)) = self.focused(canvas) {
+        //     if child.on_keypress(context, canvas, key) {
+        //         return true;
+        //     }
+        // }
         match key {
             Key::Left => {
                 self.focus_prev();
-                if let Some((item, canvas)) = self.focused(core, canvas) {
-                    // core.open_modal_window(item.id, ModalPosition::UnderLeft(canvas))
+                if let Some((item, c)) = self.focused(context.core, canvas) {
+                    context.modals.replace_modal_window(item.id, context.core, ModalPosition::UnderLeft(c))
                 }
-                self.render(core, canvas);
+                self.render(context.core, canvas);
                 true
             },
             Key::Right => {
                 self.focus_next();
-                if let Some((item, canvas)) = self.focused(core, canvas) {
-                    // core.open_modal_window(item.id, ModalPosition::UnderLeft(canvas))
+                if let Some((item, c)) = self.focused(context.core, canvas) {
+                    context.modals.replace_modal_window(item.id, context.core, ModalPosition::UnderLeft(c))
                 }
-                self.render(core, canvas);
+                self.render(context.core, canvas);
                 true
             },
             _ => false

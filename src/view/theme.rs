@@ -125,7 +125,7 @@ pub const PALETTE: [(Color, Color); 19] = [// editor
                                            // modals
                                            create_color_pair!(4, 0), // MODAL
                                            create_color_pair!(5, 0), // MODAL_SELECTED
-                                           create_color_pair!(4, -1), // MODAL_LOW
-                                           create_color_pair!(5, -1), // MODAL_LOW_SELECTED
-                                           create_color_pair!(4, -1), // MODAL_DISABLED
-                                           create_color_pair!(4, -2) /* MODAL_DISABLED_LOW */];
+                                           create_color_pair!(4, -2), // MODAL_LOW
+                                           create_color_pair!(5, -2), // MODAL_LOW_SELECTED
+                                           create_color_pair!(4, -2), // MODAL_DISABLED
+                                           create_color_pair!(4, -4) /* MODAL_DISABLED_LOW */];

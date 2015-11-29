@@ -52,33 +52,53 @@ fn main() {
         init_pair(i as i16, fg.to_term(), bg.to_term());
     }
 
-    env_logger::init().unwrap();
+    // env_logger::init().unwrap();
 
-    let core = Core::load();
-    let mut window = Window::new(core);
+    // fn fill(w: WINDOW, s: &str) {
+    //     let (mut height, mut width) : (i32, i32) = (0, 0);
+    //     getmaxyx(w, &mut height, &mut width);
+    //     for y in 0..height {
+    //         for x in 0..width {
+    //             mvwaddstr(w, y, x, s);
+    //         }
+    //     }
+    // }
 
-    let (mut height, mut width) : (i32, i32) = (0, 0);
+    // let w1 = newwin(10, 10, 5, 5);
+    // let w2 = newwin(15, 15, 7, 7);
 
-    getmaxyx(stdscr, &mut height, &mut width);
+    // let m1 = new_panel(w1);
+    // let m2 = new_panel(w2);
 
-    let canvas = Canvas {
-        x1: 0,
-        y1: 0,
-        x2: width as usize,
-        y2: height as usize
-    };
+    // fill(stdscr, "_");
+    // fill(w1, "@");
+    // fill(w2, ".");
 
-    window.render(canvas);
+    // update_panels();
+    // doupdate();
 
+    // loop {
+    //     if getch() == 10 {
+    //         break;
+    //     }
+    //     hide_panel(m2);
+    //     if getch() == 10 {
+    //         break
+    //     }
+    //     show_panel(m2);
+    //     update_panels();
+    //     doupdate();
+    // }
+    let mut window = Window::new(Core::load());
+    window.render(Canvas::screen());
     loop {
         if let Some(key) = Key::from_keycode(getch()) {
             if key == Key::Enter {
                 break;
             }
-            window.on_keypress((), canvas, key);
+            window.on_keypress(Canvas::screen(), key);
         }
     }
-
     // println!("{:?}", window);
 
     // core.package_repository.get_keymap("default/Default (OSX).sublime-keymap");

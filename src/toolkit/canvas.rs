@@ -1,13 +1,13 @@
 use std::cmp::{min, max};
 
-use toolkit::core::*;
 use toolkit::style::Style;
-use toolkit::draw::Drawing;
+use toolkit::draw::*;
 
-use ncurses::{stdscr, mvaddch, mvaddstr};
+use ncurses::{WINDOW, stdscr, getmaxyx, mvwaddstr, wattr_set};
 
 #[derive(Debug, Copy, Clone)]
 pub struct Canvas {
+    pub win: WINDOW, // TODO: make me private
     pub x1: usize,
     pub y1: usize,
     pub x2: usize,
@@ -26,28 +26,40 @@ impl HasSize for Canvas {
 
 impl Canvas {
 
-    fn inner(&self, inner: Canvas) -> Canvas {
-        Canvas {
-            x1: max(self.x1, self.x1 + inner.x1),
-            y1: max(self.y1, self.y1 + inner.y1),
-            x2: min(self.x2, self.x1 + inner.x2),
-            y2: min(self.y2, self.y1 + inner.y2)
-        }
+    pub fn screen() -> Canvas {
+        let mut y = 0i32;
+        let mut x = 0i32;
+        getmaxyx(stdscr, &mut y, &mut x);
+        Canvas {win: stdscr, x1: 0, y1: 0, x2: x as usize, y2: y as usize}
     }
 
-    fn padding(&self, left: usize, right: usize, top: usize, bottom: usize) -> Canvas {
-        assert!(left + right <= self.width());
-        assert!(top + bottom <= self.height());
-        Canvas {
-            x1: self.x1 + left,
-            y1: self.y1 + top,
-            x2: self.x2 - right,
-            y2: self.y2 - bottom
-        }
+    // fn inner(&self, inner: Canvas) -> Canvas {
+    //     Canvas {
+    //         x1: max(self.x1, self.x1 + inner.x1),
+    //         y1: max(self.y1, self.y1 + inner.y1),
+    //         x2: min(self.x2, self.x1 + inner.x2),
+    //         y2: min(self.y2, self.y1 + inner.y2)
+    //     }
+    // }
+
+    // fn padding(&self, left: usize, right: usize, top: usize, bottom: usize) -> Canvas {
+    //     assert!(left + right <= self.width());
+    //     assert!(top + bottom <= self.height());
+    //     Canvas {
+    //         x1: self.x1 + left,
+    //         y1: self.y1 + top,
+    //         x2: self.x2 - right,
+    //         y2: self.y2 - bottom
+    //     }
+    // }
+
+    pub fn style(&self, style: Style) {
+        wattr_set(self.win, style.attrs.to_term(), style.colors.to_term());
     }
 
     fn left(&self, width: usize) -> Canvas {
         Canvas {
+            win: self.win,
             x1: self.x1,
             y1: self.y1,
             x2: self.x1 + width,
@@ -57,6 +69,7 @@ impl Canvas {
 
     fn right(&self, width: usize) -> Canvas {
         Canvas {
+            win: self.win,
             x1: self.x2 - width,
             y1: self.y1,
             x2: self.x2,
@@ -66,6 +79,7 @@ impl Canvas {
 
     fn top(&self, height: usize) -> Canvas {
         Canvas {
+            win: self.win,
             x1: self.x1,
             y1: self.y1,
             x2: self.x2,
@@ -75,6 +89,7 @@ impl Canvas {
 
     fn bottom(&self, height: usize) -> Canvas {
         Canvas {
+            win: self.win,
             x1: self.x1,
             y1: self.y2 - height,
             x2: self.x2,
@@ -120,10 +135,10 @@ impl Drawing for Canvas {
     fn char(&self, c: char, y: usize, x: usize) {
         let mut s = String::new();
         s.push(c);
-        mvaddstr((self.y1 + y) as i32, (self.x1 + x) as i32, &s);
+        mvwaddstr(self.win, (self.y1 + y) as i32, (self.x1 + x) as i32, &s);
     }
 
     fn text(&self, s: &str, y: usize, x: usize) {
-        mvaddstr((self.y1 + y) as i32, (self.x1 + x) as i32, s);
+        mvwaddstr(self.win, (self.y1 + y) as i32, (self.x1 + x) as i32, s);
     }
 }

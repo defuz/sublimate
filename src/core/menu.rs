@@ -1,4 +1,4 @@
-use core::settings::{Settings, FromSettings, ParseSettings};
+use super::settings::{Settings, FromSettings, ParseSettings};
 use core::command::{Command, ParseCommandError};
 
 use self::ParseMenuError::*;

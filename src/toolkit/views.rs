@@ -1,9 +1,10 @@
+use std::fmt::Debug;
+
 use toolkit::canvas::Canvas;
-use toolkit::draw::Drawing;
-use toolkit::core::*;
+use toolkit::draw::*;
 use toolkit::style::Style;
 
-pub trait View<C> {
+pub trait View<C>: Debug where C: Debug {
     fn width(&self, context: C) -> usize;
     fn height(&self, context: C) -> usize;
     fn render(&self, context: C, canvas: Canvas);
@@ -12,7 +13,7 @@ pub trait View<C> {
 pub fn sum_width<'c, C, V, I>(context: C, views: I) -> usize
     where V: View<C> + 'c,
           I: Iterator<Item = &'c V>,
-          C: Copy
+          C: Copy+Debug
 {
     let mut r = 0;
     for v in views {
@@ -24,7 +25,7 @@ pub fn sum_width<'c, C, V, I>(context: C, views: I) -> usize
 pub fn max_width<'c, C, V, I>(context: C, views: I) -> usize
     where V: View<C> + 'c,
           I: Iterator<Item = &'c V>,
-          C: Copy
+          C: Copy+Debug
 {
     let mut r = 0;
     for v in views {
@@ -33,131 +34,131 @@ pub fn max_width<'c, C, V, I>(context: C, views: I) -> usize
     return r;
 }
 
-/// ///////////////////////////////// Text
-/// //////////////////////////////////////////////////////////
+// /// ///////////////////////////////// Text
+// /// //////////////////////////////////////////////////////////
 
-pub struct Text;
+// pub struct Text;
 
-impl<'a> View<&'a str> for Text {
-    fn width(&self, context: &str) -> usize {
-        context.len()
-    }
+// impl<'a> View<&'a str> for Text {
+//     fn width(&self, context: &str) -> usize {
+//         context.len()
+//     }
 
-    fn height(&self, context: &str) -> usize {
-        1
-    }
+//     fn height(&self, context: &str) -> usize {
+//         1
+//     }
 
-    fn render(&self, context: &str, canvas: Canvas) {
-        canvas.text(context.as_ref(), 0, 0);
-    }
-}
+//     fn render(&self, context: &str, canvas: Canvas) {
+//         canvas.text(context.as_ref(), 0, 0);
+//     }
+// }
 
-/// ///////////////////////////////// Decorator
-/// /////////////////////////////////////////////////////
+// /// ///////////////////////////////// Decorator
+// /// /////////////////////////////////////////////////////
 
-pub struct Decorator<I>(pub Style, pub I);
+// pub struct Decorator<I>(pub Style, pub I);
 
-impl<C, I> View<C> for Decorator<I> where I: View<C> {
-    fn width(&self, context: C) -> usize {
-        let Decorator(_, ref item) = *self;
-        item.width(context)
-    }
+// impl<C, I> View<C> for Decorator<I> where I: View<C> {
+//     fn width(&self, context: C) -> usize {
+//         let Decorator(_, ref item) = *self;
+//         item.width(context)
+//     }
 
-    fn height(&self, context: C) -> usize {
-        let Decorator(_, ref item) = *self;
-        item.height(context)
-    }
+//     fn height(&self, context: C) -> usize {
+//         let Decorator(_, ref item) = *self;
+//         item.height(context)
+//     }
 
-    fn render(&self, context: C, canvas: Canvas) {
-        let Decorator(ref style, ref item) = *self;
-        let prev = Style::current();
-        style.set();
-        item.render(context, canvas);
-        prev.set();
-    }
-}
+//     fn render(&self, context: C, canvas: Canvas) {
+//         let Decorator(ref style, ref item) = *self;
+//         let prev = Style::current();
+//         style.set();
+//         item.render(context, canvas);
+//         prev.set();
+//     }
+// }
 
-/// ///////////////////////////////// Selected
-/// //////////////////////////////////////////////////////
+// /// ///////////////////////////////// Selected
+// /// //////////////////////////////////////////////////////
 
-pub struct Selected<I>(pub Style, pub I);
+// pub struct Selected<I>(pub Style, pub I);
 
-impl<C, I> View<(bool, C)> for Selected<I> where I: View<C> {
-    fn width(&self, (selected, context): (bool, C)) -> usize {
-        let Selected(_, ref item) = *self;
-        item.width(context)
-    }
+// impl<C, I> View<(bool, C)> for Selected<I> where I: View<C> {
+//     fn width(&self, (selected, context): (bool, C)) -> usize {
+//         let Selected(_, ref item) = *self;
+//         item.width(context)
+//     }
 
-    fn height(&self, (selected, context): (bool, C)) -> usize {
-        let Selected(_, ref item) = *self;
-        item.height(context)
-    }
+//     fn height(&self, (selected, context): (bool, C)) -> usize {
+//         let Selected(_, ref item) = *self;
+//         item.height(context)
+//     }
 
-    fn render(&self, (selected, context): (bool, C), canvas: Canvas) {
-        let Selected(ref style, ref item) = *self;
-        if selected {
-            let prev = Style::current();
-            style.set();
-            item.render(context, canvas);
-            prev.set();
-        } else {
-            item.render(context, canvas);
-        }
-    }
-}
+//     fn render(&self, (selected, context): (bool, C), canvas: Canvas) {
+//         let Selected(ref style, ref item) = *self;
+//         if selected {
+//             let prev = Style::current();
+//             style.set();
+//             item.render(context, canvas);
+//             prev.set();
+//         } else {
+//             item.render(context, canvas);
+//         }
+//     }
+// }
 
-/// ///////////////////////////////// VerticalList
-/// //////////////////////////////////////////////////
+// /// ///////////////////////////////// VerticalList
+// /// //////////////////////////////////////////////////
 
-pub struct VerticalList<I>(pub I);
+// pub struct VerticalList<I>(pub I);
 
-impl<I, R> View<R> for VerticalList<I> where R: Iterator, I: View<R::Item>, R::Item: Copy {
-    fn width(&self, context: R) -> usize {
-        let VerticalList(ref item) = *self;
-        context.map(|c| item.width(c)).max().unwrap_or(0)
-    }
+// impl<I, R> View<R> for VerticalList<I> where R: Iterator, I: View<R::Item>, R::Item: Copy {
+//     fn width(&self, context: R) -> usize {
+//         let VerticalList(ref item) = *self;
+//         context.map(|c| item.width(c)).max().unwrap_or(0)
+//     }
 
-    fn height(&self, context: R) -> usize {
-        let VerticalList(ref item) = *self;
-        context.fold(0, |acc, c| acc + item.height(c))
-    }
+//     fn height(&self, context: R) -> usize {
+//         let VerticalList(ref item) = *self;
+//         context.fold(0, |acc, c| acc + item.height(c))
+//     }
 
-    fn render(&self, context: R, mut canvas: Canvas) {
-        let VerticalList(ref item) = *self;
-        for c in context {
-            let h = item.height(c);
-            if h < canvas.height() {
-                break;
-            }
-            item.render(c, canvas.cut_top(h))
-        }
-    }
-}
+//     fn render(&self, context: R, mut canvas: Canvas) {
+//         let VerticalList(ref item) = *self;
+//         for c in context {
+//             let h = item.height(c);
+//             if h < canvas.height() {
+//                 break;
+//             }
+//             item.render(c, canvas.cut_top(h))
+//         }
+//     }
+// }
 
-/// ///////////////////////////////// HorizontalList
-/// ////////////////////////////////////////////////
+// /// ///////////////////////////////// HorizontalList
+// /// ////////////////////////////////////////////////
 
-pub struct HorizontalList<I>(pub I);
+// pub struct HorizontalList<I>(pub I);
 
-impl<I, R> View<R> for HorizontalList<I> where R: Iterator, I: View<R::Item>, R::Item: Copy {
-    fn width(&self, context: R) -> usize {
-        let HorizontalList(ref item) = *self;
-        context.fold(0, |acc, c| acc + item.width(c))
-    }
+// impl<I, R> View<R> for HorizontalList<I> where R: Iterator, I: View<R::Item>, R::Item: Copy {
+//     fn width(&self, context: R) -> usize {
+//         let HorizontalList(ref item) = *self;
+//         context.fold(0, |acc, c| acc + item.width(c))
+//     }
 
-    fn height(&self, context: R) -> usize {
-        let HorizontalList(ref item) = *self;
-        context.map(|c| item.height(c)).max().unwrap_or(0)
-    }
+//     fn height(&self, context: R) -> usize {
+//         let HorizontalList(ref item) = *self;
+//         context.map(|c| item.height(c)).max().unwrap_or(0)
+//     }
 
-    fn render(&self, context: R, mut canvas: Canvas) {
-        let HorizontalList(ref item) = *self;
-        for c in context {
-            let w = item.width(c);
-            if w < canvas.width() {
-                break;
-            }
-            item.render(c, canvas.cut_left(w))
-        }
-    }
-}
+//     fn render(&self, context: R, mut canvas: Canvas) {
+//         let HorizontalList(ref item) = *self;
+//         for c in context {
+//             let w = item.width(c);
+//             if w < canvas.width() {
+//                 break;
+//             }
+//             item.render(c, canvas.cut_left(w))
+//         }
+//     }
+// }

@@ -9,7 +9,7 @@ struct Panel {
 }
 
 impl Panel {
-    pub static fn new() -> Panel {
+    pub static fn new(window: Window) -> Panel {
 
     }
 
@@ -17,15 +17,7 @@ impl Panel {
 
     }
 
-    pub fn to_top(&self) {
-
-    }
-
-    pub fn to_bottom(&self) {
-
-    }
-
-    pub fn move(&self, position: Position) {
+    pub fn visible(&self) -> bool {
 
     }
 
@@ -33,28 +25,42 @@ impl Panel {
 
     }
 
-    pub fn set_window(&self, window: Window) {
+    // pub fn top() -> Option<&mut Panel> {
+
+    // }
+
+    // pub fn bottom() -> Option<&mut Panel> {
+
+    // }
+
+    pub fn to_top(&mut self) {
 
     }
 
-    pub fn visible(&self) -> bool {
+    pub fn to_bottom(&mut self) {
 
     }
 
-    pub fn set_visible(&self, bool visible) {
+    pub fn move(&mut self, position: Position) {
 
     }
 
-    pub fn next(&self) -> Panel {
+    pub fn set_window(&mut self, window: Window) {
 
     }
 
-    pub fn prev(&self) -> Panel {
+    // pub fn next(&self) -> Option<&Panel> {
+
+    // }
+
+    // pub fn prev(&self) -> Option<&Panel> {
+
+    // }
+
+}
+
+impl Drop for Panel {
+    fn drop(&mut self) {
 
     }
-
-    pub fn remove(&self) {
-
-    }
-
 }
