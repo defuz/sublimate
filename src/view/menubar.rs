@@ -62,14 +62,14 @@ impl Menubar {
         }, menus)
     }
 
-    fn focused(&mut self, core: &Core, mut canvas: Canvas) -> Option<(&MenubarItem, Canvas)> {
+    fn focused(&mut self, core: &Core, mut canvas: Canvas) -> Option<(&mut MenubarItem, Canvas)> {
         match self.focused {
             Some(index) => {
                 // FIXME: if canvas is less then needed, return None instead of item canvas
                 for item in self.items.iter().take(index) {
                     canvas.cut_left(item.width(core));
                 }
-                let ref item = self.items[index];
+                let ref mut item = self.items[index];
                 let item_canvas = canvas.cut_left(item.width(core));
                 Some((item, item_canvas))
             },
@@ -148,11 +148,11 @@ impl View<Core> for Menubar {
 impl OnKeypress<Core> for Menubar {
 
     fn on_keypress(&mut self, core: &Core, canvas: Canvas, key: Key) -> bool {
-        // if let Some((child, canvas)) = self.focused(canvas) {
-        //     if child.on_keypress(context, canvas, key) {
-        //         return true;
-        //     }
-        // }
+        if let Some((child, canvas)) = self.focused(core, canvas) {
+            if child.items.on_keypress(core, canvas, key) {
+                return true;
+            }
+        }
         match key {
             Key::Left => self.focus_prev(),
             Key::Right => self.focus_next(),

@@ -24,7 +24,7 @@ pub enum ModalPosition {
 pub struct Modal<C, V: View<C>> {
     position: ModalPosition,
     _phantom: PhantomData<C>,
-    panel: Cell<Option<PANEL>>,
+    panel: Cell<Option<(PANEL, Canvas)>>,
     content: V
 }
 
@@ -41,19 +41,30 @@ impl<C, V> Modal<C, V> where C: Debug, V: View<C> {
     pub fn render(&self, context: &C, base: Canvas) {
         self.hide();
         let (canvas, panel) = self.position.get_window(base, self.content.width(context), self.content.height(context));
-        self.panel.set(Some(panel));
+        self.panel.set(Some((panel, canvas)));
         self.content.render(context, canvas);
         update_panels();
         doupdate();
     }
 
     pub fn hide(&self) {
-        if let Some(panel) = self.panel.get() {
+        if let Some((panel, _)) = self.panel.get() {
             del_panel(panel);
             self.panel.set(None)
         }
     }
 
+}
+
+impl<C, V> OnKeypress<C> for Modal<C, V> where C: Debug, V: View<C>+OnKeypress<C> {
+    fn on_keypress(&mut self, core: &C, base: Canvas, key: Key) -> bool {
+        let r = self.content.on_keypress(core, self.panel.get().unwrap().1, key);
+        if r {
+            update_panels();
+            doupdate();
+        }
+        r
+    }
 }
 
 impl ModalPosition {
