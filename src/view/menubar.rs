@@ -8,7 +8,7 @@ use view::theme::*;
 use view::window::{Window, Context};
 use view::event::OnKeypress;
 use view::context::ContextMenu;
-use view::modal::ModalPosition;
+use view::modal::{Modal, ModalPosition};
 
 #[derive(Debug)]
 pub struct Menubar {
@@ -18,11 +18,11 @@ pub struct Menubar {
 
 #[derive(Debug)]
 pub struct MenubarItem {
-    pub id: usize,
-    pub name: String
+    pub name: String,
+    pub items: Modal<Core, ContextMenu>
 }
 
-impl<'c> View<&'c Core> for MenubarItem {
+impl View<Core> for MenubarItem {
     fn width(&self, core: &Core) -> usize {
         self.name.len() + 2
     }
@@ -47,10 +47,9 @@ impl Menubar {
             match item {
                 MenuItem::Group(name, menu) => {
                     items.push(MenubarItem {
-                        id: menus.len(),
-                        name: name.clone()
+                        name: name.clone(),
+                        items: Modal::new(ContextMenu::new(menu), ModalPosition::UnderLeft)
                     });
-                    menus.push(ContextMenu::new(menu))
                 },
                 _ => {
                     error!("Incorrect menu item")
@@ -78,13 +77,15 @@ impl Menubar {
         }
     }
 
-
     fn focus_prev(&mut self) {
         if self.items.is_empty() {
             return;
         }
         self.focused = Some(match self.focused {
-            Some(index) if index != 0 => index - 1,
+            Some(index) => {
+                self.items[index].items.hide();
+                (index + self.items.len() - 1) % self.items.len()
+            },
             _ => self.items.len() - 1
         })
     }
@@ -94,19 +95,22 @@ impl Menubar {
             return;
         }
         self.focused = Some(match self.focused {
-            Some(index) => (index + 1) % self.items.len(),
+            Some(index) => {
+                self.items[index].items.hide();
+                (index + 1) % self.items.len()
+            },
             None => 0
         })
     }
 
 }
 
-impl<'c> View<&'c Core> for Menubar {
-    fn width(&self, core: &'c Core) -> usize {
+impl View<Core> for Menubar {
+    fn width(&self, core: &Core) -> usize {
         sum_width(core, self.items.iter())
     }
 
-    fn height(&self, core: &'c Core) -> usize {
+    fn height(&self, core: &Core) -> usize {
         1
     }
 
@@ -121,6 +125,7 @@ impl<'c> View<&'c Core> for Menubar {
             if self.focused == Some(i) {
                 item_canvas.style(MENUBAR_SELECTED_STYLE);
                 item.render(core, item_canvas);
+                item.items.render(core, item_canvas);
                 item_canvas.style(MENUBAR_STYLE);
             } else {
                 item.render(core, item_canvas);
@@ -149,23 +154,14 @@ impl<'c> OnKeypress<Context<'c>> for Menubar {
         //     }
         // }
         match key {
-            Key::Left => {
-                self.focus_prev();
-                if let Some((item, c)) = self.focused(context.core, canvas) {
-                    context.modals.replace_modal_window(item.id, context.core, ModalPosition::UnderLeft(c))
-                }
-                self.render(context.core, canvas);
-                true
-            },
-            Key::Right => {
-                self.focus_next();
-                if let Some((item, c)) = self.focused(context.core, canvas) {
-                    context.modals.replace_modal_window(item.id, context.core, ModalPosition::UnderLeft(c))
-                }
-                self.render(context.core, canvas);
-                true
-            },
-            _ => false
+            Key::Left => self.focus_prev(),
+            Key::Right => self.focus_next(),
+            _ => return false
         }
+        // if let Some((item, c)) = self.focused(context.core, canvas) {
+            // context.modals.replace_modal_window(item.id, context.core, ModalPosition::UnderLeft(c))
+        // }
+        self.render(context.core, canvas);
+        return true;
     }
 }

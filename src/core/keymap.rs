@@ -95,17 +95,17 @@ pub enum ParseHotkeyError {
 
 impl Display for Modifiers {
     fn fmt(&self, fmt: &mut Formatter) -> Result<(), FormatterError> {
-        if self.contains(MODIFIER_CTRL) {
-            try!(fmt.write_str("Ctrl+"));
-        }
         if self.contains(MODIFIER_ALT) {
             try!(fmt.write_str("Alt+"));
         }
-        if self.contains(MODIFIER_SHIFT) {
-            try!(fmt.write_str("Shift+"));
+        if self.contains(MODIFIER_CTRL) {
+            try!(fmt.write_str("Ctrl+"));
         }
         if self.contains(MODIFIER_SUPER) {
             try!(fmt.write_str("Super+"));
+        }
+        if self.contains(MODIFIER_SHIFT) {
+            try!(fmt.write_str("Shift+"));
         }
         Ok(())
     }

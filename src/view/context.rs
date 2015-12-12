@@ -2,24 +2,25 @@ use std::io::Write;
 use unicode_width::UnicodeWidthStr;
 
 use core::Core;
-use core::keymap::{Hotkey, HotkeySequence};
+use view::window::{Window, Context};
+use core::keymap::{Key, Hotkey, HotkeySequence};
 use core::menu::{Menu, MenuItem};
 
 use toolkit::*;
 use view::theme::*;
+use view::event::OnKeypress;
 
 fn hotkey_to_string(keys: Option<&HotkeySequence>) -> String {
     match keys {
         Some(keys) => {
             let mut buf = Vec::new();
-            let mut first = true;
+            let mut comma = false;
             for key in keys {
-                write!(buf, "{}", key);
-                if first {
-                    first = false
-                } else {
+                if comma {
                     write!(buf, ", ");
                 }
+                comma = true;
+                write!(buf, "{}", key);
             }
             String::from_utf8(buf).unwrap()
         },
@@ -30,41 +31,50 @@ fn hotkey_to_string(keys: Option<&HotkeySequence>) -> String {
 #[derive(Debug)]
 pub struct ContextMenu {
     focused: Option<usize>,
-    menu: Menu
+    items: Menu
 }
 
 #[derive(Debug)]
 struct MenuItemView<'a>(&'a MenuItem, /* is selected? */ bool);
 
 impl ContextMenu {
-    pub fn new(menu: Menu) -> Self {
-        ContextMenu {focused: None, menu: menu}
+    pub fn new(items: Menu) -> Self {
+        ContextMenu {focused: None, items: items}
     }
 
-    // fn view<'a>(&'a self, core: &Core) -> Box<View> {
-    //     Box::new(VerticalListView::new(&self.menu, self.focused, core))
-    // }
+    fn focus_prev(&mut self) {
+        if self.items.is_empty() {
+            return;
+        }
+        self.focused = Some(match self.focused {
+            Some(index) if index != 0 => index - 1,
+            _ => self.items.len() - 1
+        })
+    }
 
-    fn items<'a>(&'a self) -> Box<Iterator<Item=MenuItemView<'a>> + 'a> {
-        let iter = self.menu.iter()
-                            .enumerate()
-                            .map(move |(i, v)| MenuItemView(v, self.focused == Some(i)));
-        Box::new(iter)
+    fn focus_next(&mut self) {
+        if self.items.is_empty() {
+            return;
+        }
+        self.focused = Some(match self.focused {
+            Some(index) => (index + 1) % self.items.len(),
+            None => 0
+        })
     }
 }
 
-impl<'c> View<&'c Core> for ContextMenu {
+impl View<Core> for ContextMenu {
 
     fn width(&self, core: &Core) -> usize {
-        self.menu.iter().map(|i| MenuItemView(i, false).width(core)).max().unwrap_or(0)
+        self.items.iter().map(|i| MenuItemView(i, false).width(core)).max().unwrap_or(0)
     }
 
     fn height(&self, core: &Core) -> usize {
-        self.menu.len()
+        self.items.len()
     }
 
     fn render(&self, core: &Core, mut canvas: Canvas) {
-        for (i, item) in self.menu.iter().enumerate() {
+        for (i, item) in self.items.iter().enumerate() {
             let view = MenuItemView(item, self.focused == Some(i));
             let h = view.height(core);
             if h > canvas.height() {
@@ -77,7 +87,7 @@ impl<'c> View<&'c Core> for ContextMenu {
 }
 
 
-impl<'c> View<&'c Core> for MenuItemView<'c> {
+impl<'c> View<Core> for MenuItemView<'c> {
     fn width(&self, core: &Core) -> usize {
         let MenuItemView(item, _) = *self;
         match *item {
@@ -148,3 +158,20 @@ impl<'c> View<&'c Core> for MenuItemView<'c> {
         }
     }
 }
+
+impl<'c> OnKeypress<Context<'c>> for ContextMenu {
+
+    fn on_keypress(&mut self, context: Context<'c>, canvas: Canvas, key: Key) -> bool {
+        match key {
+            Key::Up => self.focus_prev(),
+            Key::Down => self.focus_next(),
+            _ => return false
+        }
+        // if let Some((item, c)) = self.focused(context.core, canvas) {
+        //     context.modals.replace_modal_window(item.id, context.core, ModalPosition::UnderLeft(c))
+        // }
+        self.render(context.core, canvas);
+        return true;
+    }
+}
+
