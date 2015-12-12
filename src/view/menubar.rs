@@ -5,7 +5,7 @@ use core::menu::{Menu, MenuItem};
 use core::command::Command;
 use view::theme::*;
 
-use view::window::{Window, Context};
+use view::window::Window;
 use view::event::OnKeypress;
 use view::context::ContextMenu;
 use view::modal::{Modal, ModalPosition};
@@ -145,9 +145,9 @@ impl View<Core> for Menubar {
 //     }
 // }
 
-impl<'c> OnKeypress<Context<'c>> for Menubar {
+impl OnKeypress<Core> for Menubar {
 
-    fn on_keypress(&mut self, context: Context<'c>, canvas: Canvas, key: Key) -> bool {
+    fn on_keypress(&mut self, core: &Core, canvas: Canvas, key: Key) -> bool {
         // if let Some((child, canvas)) = self.focused(canvas) {
         //     if child.on_keypress(context, canvas, key) {
         //         return true;
@@ -161,7 +161,7 @@ impl<'c> OnKeypress<Context<'c>> for Menubar {
         // if let Some((item, c)) = self.focused(context.core, canvas) {
             // context.modals.replace_modal_window(item.id, context.core, ModalPosition::UnderLeft(c))
         // }
-        self.render(context.core, canvas);
+        self.render(core, canvas);
         return true;
     }
 }

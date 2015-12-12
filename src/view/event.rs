@@ -2,7 +2,7 @@ use toolkit::Canvas;
 use core::keymap::Key;
 
 pub trait OnKeypress<C> {
-    fn on_keypress(&mut self, core: C, canvas: Canvas, key: Key) -> bool;
+    fn on_keypress(&mut self, context: &C, canvas: Canvas, key: Key) -> bool;
 }
 
 // pub trait OnKeypressComponent<C> {

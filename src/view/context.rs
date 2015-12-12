@@ -2,7 +2,7 @@ use std::io::Write;
 use unicode_width::UnicodeWidthStr;
 
 use core::Core;
-use view::window::{Window, Context};
+use view::window::Window;
 use core::keymap::{Key, Hotkey, HotkeySequence};
 use core::menu::{Menu, MenuItem};
 
@@ -159,9 +159,9 @@ impl<'c> View<Core> for MenuItemView<'c> {
     }
 }
 
-impl<'c> OnKeypress<Context<'c>> for ContextMenu {
+impl OnKeypress<Core> for ContextMenu {
 
-    fn on_keypress(&mut self, context: Context<'c>, canvas: Canvas, key: Key) -> bool {
+    fn on_keypress(&mut self, core: &Core, canvas: Canvas, key: Key) -> bool {
         match key {
             Key::Up => self.focus_prev(),
             Key::Down => self.focus_next(),
@@ -170,7 +170,7 @@ impl<'c> OnKeypress<Context<'c>> for ContextMenu {
         // if let Some((item, c)) = self.focused(context.core, canvas) {
         //     context.modals.replace_modal_window(item.id, context.core, ModalPosition::UnderLeft(c))
         // }
-        self.render(context.core, canvas);
+        self.render(core, canvas);
         return true;
     }
 }

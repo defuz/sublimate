@@ -5,14 +5,11 @@ use std::marker::PhantomData;
 
 use ncurses::{newwin, new_panel, PANEL, del_panel, update_panels, doupdate};
 
-
 use core::Core;
 use core::keymap::Key;
 
 use toolkit::*;
 
-use view::window::{Window, Context};
-use view::context::ContextMenu;
 use view::event::OnKeypress;
 
 #[derive(Debug)]
@@ -21,12 +18,6 @@ pub enum ModalPosition {
     AboveRight,
     UnderLeft,
     UnderRight
-}
-
-#[derive(Debug)]
-pub struct ModalManager {
-    modals: Vec<ContextMenu>,
-    panels: VecMap<PANEL>
 }
 
 #[derive(Debug)]
@@ -75,55 +66,5 @@ impl ModalPosition {
             },
             _ => unimplemented!()
         }
-    }
-}
-
-impl ModalManager {
-    pub fn new(modals: Vec<ContextMenu>) -> ModalManager {
-        ModalManager { modals: modals, panels: VecMap::new() }
-    }
-
-    pub fn show_modal_window(&mut self, id: usize, core: &Core, position: ModalPosition) {
-        // let ref view = self.modals[id];
-        // let (canvas, panel) = position.get_window(view.width(core), view.height(core));
-        // view.render(core, canvas);
-        // self.panels.insert(id, panel);
-        // self.update();
-    }
-
-    pub fn hide_modal_window(&mut self, id: usize) {
-        if let Some(panel) = self.panels.remove(&id) {
-            del_panel(panel);
-        }
-    }
-
-    pub fn clear(&mut self) {
-        for panel in self.panels.values() {
-            del_panel(*panel);
-        }
-        self.panels.clear();
-    }
-
-    pub fn replace_modal_window(&mut self, id: usize, core: &Core, position: ModalPosition) {
-        self.clear();
-        self.show_modal_window(id, core, position);
-    }
-
-    pub fn update(&self) {
-        update_panels();
-        doupdate();
-    }
-}
-
-impl<'c> OnKeypress<&'c mut Core> for ModalManager {
-    fn on_keypress(&mut self, core: &'c mut Core, canvas: Canvas, key: Key) -> bool {
-        // let context = Context { core: core, modals: self};
-        // for menu in self.modals.iter().rev() {
-        //     if menu.on_keypress(context, canvas, key) {
-        //         return true;
-        //     }
-        // }
-        false
-        // self.base.on_keypress(core, canvas, key)
     }
 }
