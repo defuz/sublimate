@@ -167,9 +167,6 @@ impl OnKeypress<Core> for ContextMenu {
             Key::Down => self.focus_next(),
             _ => return false
         }
-        // if let Some((item, c)) = self.focused(context.core, canvas) {
-        //     context.modals.replace_modal_window(item.id, context.core, ModalPosition::UnderLeft(c))
-        // }
         self.render(core, canvas);
         return true;
     }

@@ -129,16 +129,6 @@ impl View<Core> for Menubar {
     }
 }
 
-// impl<'c> OnKeypress<Context<'c>> for MenubarItem {
-//     fn on_keypress(&mut self, context: Context<'c>, canvas: Canvas, key: Key) -> bool {
-//         // context.models.get_modal(self.id).on_keypress(context, key)
-//         match key {
-//             Key::Up | Key::Down => true,
-//             _ => false
-//         }
-//     }
-// }
-
 impl OnKeypress<Core> for Menubar {
 
     fn on_keypress(&mut self, core: &Core, canvas: Canvas, key: Key) -> bool {
@@ -152,9 +142,6 @@ impl OnKeypress<Core> for Menubar {
             Key::Right => self.focus_next(),
             _ => return false
         }
-        // if let Some((item, c)) = self.focused(context.core, canvas) {
-            // context.modals.replace_modal_window(item.id, context.core, ModalPosition::UnderLeft(c))
-        // }
         self.render(core, canvas);
         return true;
     }
