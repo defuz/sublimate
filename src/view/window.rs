@@ -15,7 +15,7 @@ pub struct Window {
 
 impl Window {
     pub fn new(core: Core) -> Window {
-        let (menubar, menus) = Menubar::new(&core);
+        let menubar = Menubar::new(&core);
 
         Window {
             core: core,

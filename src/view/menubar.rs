@@ -40,9 +40,8 @@ impl View<Core> for MenubarItem {
 }
 
 impl Menubar {
-    pub fn new(core: &Core) -> (Menubar, Vec<ContextMenu>) {
+    pub fn new(core: &Core) -> Menubar {
         let mut items = Vec::new();
-        let mut menus = Vec::new();
         for item in core.package_repository.get_menu("default/Main.sublime-menu") {
             match item {
                 MenuItem::Group(name, menu) => {
@@ -51,15 +50,10 @@ impl Menubar {
                         items: Modal::new(ContextMenu::new(menu), ModalPosition::UnderLeft)
                     });
                 },
-                _ => {
-                    error!("Incorrect menu item")
-                }
+                _ => error!("Incorrect menu item")
             }
         }
-        (Menubar {
-            focused: Some(3),
-            items: items
-        }, menus)
+        Menubar {focused: None, items: items}
     }
 
     fn focused(&mut self, core: &Core, mut canvas: Canvas) -> Option<(&mut MenubarItem, Canvas)> {
