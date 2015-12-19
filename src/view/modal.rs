@@ -17,11 +17,12 @@ pub enum ModalPosition {
     AboveLeft,
     AboveRight,
     UnderLeft,
-    UnderRight
+    UnderRight,
+    RightTop,
 }
 
 #[derive(Debug)]
-pub struct Modal<C, V: View<C>> {
+pub struct Modal<C: Debug, V: View<C>> {
     position: ModalPosition,
     _phantom: PhantomData<C>,
     panel: Cell<Option<(PANEL, Canvas)>>,
@@ -69,13 +70,13 @@ impl<C, V> OnKeypress<C> for Modal<C, V> where C: Debug, V: View<C>+OnKeypress<C
 
 impl ModalPosition {
     fn get_window(&self, base: Canvas, w: usize, h: usize) -> (Canvas, PANEL) {
-        match *self {
-            ModalPosition::UnderLeft => {
-                // FIXME: use absolute coordinates here
-                let win = newwin(h as i32, w as i32, base.y2 as i32, base.x1 as i32);
-                (Canvas {win: win, x1: 0, y1: 0, x2: w, y2: h}, new_panel(win))
-            },
+        let (x, y) = match *self {
+            // FIXME: use absolute coordinates here
+            ModalPosition::UnderLeft => (base.x1, base.y2),
+            ModalPosition::RightTop => (base.x2, base.y1),
             _ => unimplemented!()
-        }
+        };
+        let win = newwin(h as i32, w as i32, y as i32, x as i32);
+        (Canvas {win: win, x1: 0, y1: 0, x2: w, y2: h}, new_panel(win))
     }
 }

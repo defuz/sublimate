@@ -78,12 +78,12 @@ impl ParseSettings for ContextRule {
             _ => return Err(IncorrectOperatorOrOperand),
         };
 
-        let (key, operator) = if key_string.as_str() == "selection_empty" {
+        let (key, operator) = if &key_string[..] == "selection_empty" {
             // Convert rule like {"key": "selection_empty", "operator": "equal", "operand":
             // true}
             //    into equialent {"key": "text", "operator": "equal", "operand": ""}
             ("text",
-             match (operator_string.as_str(), operand) {
+             match (&operator_string[..], operand) {
                 ("not_equal", Settings::Boolean(false)) | ("equal", Settings::Boolean(true)) =>
                     ("equal", Settings::String("".to_string())),
                 ("not_equal", Settings::Boolean(true)) | ("equal", Settings::Boolean(false)) =>
@@ -94,8 +94,8 @@ impl ParseSettings for ContextRule {
             // Convert rule like {"key": "foo", "operator": "regex_match", "operand": "bar"}
             // into equialent {"key": "foo", "operator": "regex_contains", "operand":
             // "^bar$"}
-            (key_string.as_str(),
-             match (operator_string.as_str(), operand) {
+            (&key_string[..],
+             match (&operator_string[..], operand) {
                 ("regex_match", Settings::String(s)) =>
                     ("regex_contains",
                      Settings::String("^".to_string() + &s + "$")),
@@ -117,7 +117,7 @@ impl ParseSettings for ContextRule {
                         "not_regex_contains" => Operator::NotRegexContains,
                         _ => return Err(IncorrectOperatorOrOperand),
                     };
-                    let regex = match regex::Regex::new(pattern.as_str()) {
+                    let regex = match regex::Regex::new(&pattern) {
                         Ok(regex) => regex,
                         Err(err) => return Err(RegexError(err)),
                     };
@@ -168,7 +168,7 @@ impl ParseSettings for ContextRule {
                                 "not_regex_contains" => Operator::NotRegexContains,
                                 _ => return Err(IncorrectOperatorOrOperand),
                             };
-                            let regex = match regex::Regex::new(pattern.as_str()) {
+                            let regex = match regex::Regex::new(&pattern) {
                                 Ok(regex) => regex,
                                 Err(err) => return Err(RegexError(err)),
                             };

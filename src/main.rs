@@ -1,8 +1,4 @@
 #![allow(dead_code)]
-#![feature(associated_consts)]
-#![feature(convert)]
-#![feature(pattern)]
-
 
 mod core;
 mod toolkit;
@@ -89,6 +85,7 @@ fn main() {
     //     update_panels();
     //     doupdate();
     // }
+
     let mut window = Window::new(Core::load());
     window.render(Canvas::screen());
     loop {
@@ -99,6 +96,8 @@ fn main() {
             window.on_keypress(Canvas::screen(), key);
         }
     }
+
+
     // println!("{:?}", window);
 
     // core.package_repository.get_keymap("default/Default (OSX).sublime-keymap");
@@ -152,4 +151,5 @@ fn main() {
 
     // Terminate ncurses.
     endwin();
+    println!("hello");
 }
