@@ -1,4 +1,5 @@
 use std::io::Write;
+use std::ops::IndexMut;
 use unicode_width::UnicodeWidthStr;
 
 use core::Core;
@@ -39,8 +40,17 @@ pub struct ContextMenu {
 #[derive(Debug)]
 pub enum ContextMenuItem {
     Button(Option<String>, Command, bool),
-    Group(String, Modal<Core, ContextMenu>),
+    Group(String, /* opened? */ bool, Modal<Core, ContextMenu>),
     Divider,
+}
+
+impl ContextMenuItem {
+    fn enabled(&self, core: &Core) -> bool {
+        match *self {
+            ContextMenuItem::Button(..) | ContextMenuItem::Group(..) => true,
+            ContextMenuItem::Divider => false
+        }
+    }
 }
 
 #[derive(Debug)]
@@ -53,7 +63,7 @@ impl From<MenuItem> for ContextMenuItem {
                 ContextMenuItem::Button(name, command, is_checkbox),
             MenuItem::Group(name, menu) => {
                 let modal = Modal::new(ContextMenu::new(menu), ModalPosition::RightTop);
-                ContextMenuItem::Group(name, modal)
+                ContextMenuItem::Group(name, false, modal)
             },
             MenuItem::Divider => ContextMenuItem::Divider
         }
@@ -65,24 +75,47 @@ impl ContextMenu {
         ContextMenu {focused: None, items: items.into_iter().map(From::from).collect()}
     }
 
-    fn focus_prev(&mut self) {
-        if self.items.is_empty() {
-            return;
-        }
-        self.focused = Some(match self.focused {
-            Some(index) if index != 0 => index - 1,
-            _ => self.items.len() - 1
-        })
+    fn focused(&mut self) -> Option<&mut ContextMenuItem> {
+        self.focused.map(move |index| self.items.index_mut(index))
     }
 
-    fn focus_next(&mut self) {
-        if self.items.is_empty() {
-            return;
+    fn focus_prev(&mut self, core: &Core) {
+        let index = self.unfocus();
+        self.focused = self.items
+            .iter()
+            .enumerate()
+            .rev()
+            .cycle()
+            .skip(index.map(|i| self.items.len() - i).unwrap_or(0))
+            .filter(|&(_, ref item)| item.enabled(core))
+            .next()
+            .map(|(i, _)| i);
+    }
+
+    fn focus_next(&mut self, core: &Core) {
+        let index = self.unfocus();
+        self.focused = self.items
+            .iter()
+            .enumerate()
+            .cycle()
+            .skip(index.map(|i| i + 1).unwrap_or(0))
+            .filter(|&(_, ref item)| item.enabled(core))
+            .next()
+            .map(|(i, _)| i);
+    }
+
+    pub fn unfocus(&mut self) -> Option<usize> {
+        if let Some(index) = self.focused {
+            if let ContextMenuItem::Group(_, ref mut opened, ref mut modal) = self.items[index] {
+                *opened = false;
+                modal.content.unfocus();
+                modal.hide();
+            }
+            self.focused = None;
+            Some(index)
+        } else {
+            None
         }
-        self.focused = Some(match self.focused {
-            Some(index) => (index + 1) % self.items.len(),
-            None => 0
-        })
     }
 }
 
@@ -115,7 +148,7 @@ impl<'c> View<Core> for MenuItemView<'c> {
         let MenuItemView(item, _) = *self;
         match *item {
             ContextMenuItem::Divider => 2,
-            ContextMenuItem::Group(ref caption, _) => caption.width() + 5,
+            ContextMenuItem::Group(ref caption, _, _) => caption.width() + 5,
             ContextMenuItem::Button(ref caption, ref command, _) => {
                 let caption = match *caption {
                     Some(ref c) => &c[..],
@@ -138,13 +171,13 @@ impl<'c> View<Core> for MenuItemView<'c> {
                 canvas.style(MODAL_DISABLED_STYLE);
                 canvas.fill_char('─');
             },
-            ContextMenuItem::Group(ref caption, ref modal) => {
+            ContextMenuItem::Group(ref caption, opened, ref modal) => {
                 let (style, low_style) = if focused {
                     (MODAL_SELECTED_STYLE, MODAL_SELECTED_LOW_STYLE)
                 } else {
                     (MODAL_STYLE, MODAL_LOW_STYLE)
                 };
-                if focused {
+                if opened {
                     modal.render(core, canvas.clone());
                 }
                 canvas.style(style);
@@ -186,11 +219,33 @@ impl<'c> View<Core> for MenuItemView<'c> {
 }
 
 impl OnKeypress<Core> for ContextMenu {
-
     fn on_keypress(&mut self, core: &Core, canvas: Canvas, key: Key) -> bool {
+        let processed = match self.focused() {
+            Some(&mut ContextMenuItem::Group(_, true, ref mut modal)) =>
+                modal.on_keypress(core, canvas, key),
+            _ => false
+        };
+        if processed {
+            return true;
+        }
         match key {
-            Key::Up => self.focus_prev(),
-            Key::Down => self.focus_next(),
+            Key::Up => self.focus_prev(core),
+            Key::Down => self.focus_next(core),
+            Key::Right => match self.focused() {
+                Some(&mut ContextMenuItem::Group(_, ref mut opened, ref mut modal)) if !*opened => {
+                    *opened = true;
+                    modal.content.focus_next(core);
+                },
+                _ => return false
+            },
+            Key::Left => match self.focused() {
+                Some(&mut ContextMenuItem::Group(_, ref mut opened, ref mut modal)) if *opened => {
+                    *opened = false;
+                    modal.content.unfocus();
+                    modal.hide();
+                },
+                _ => return false
+            },
             _ => return false
         }
         self.render(core, canvas);

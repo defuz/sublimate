@@ -26,7 +26,7 @@ pub struct Modal<C: Debug, V: View<C>> {
     position: ModalPosition,
     _phantom: PhantomData<C>,
     panel: Cell<Option<(PANEL, Canvas)>>,
-    content: V
+    pub content: V
 }
 
 impl<C, V> Modal<C, V> where C: Debug, V: View<C> {
@@ -71,12 +71,11 @@ impl<C, V> OnKeypress<C> for Modal<C, V> where C: Debug, V: View<C>+OnKeypress<C
 impl ModalPosition {
     fn get_window(&self, base: Canvas, w: usize, h: usize) -> (Canvas, PANEL) {
         let (x, y) = match *self {
-            // FIXME: use absolute coordinates here
-            ModalPosition::UnderLeft => (base.x1, base.y2),
-            ModalPosition::RightTop => (base.x2, base.y1),
+            ModalPosition::UnderLeft => (base.x0 + base.x1, base.y0 + base.y2),
+            ModalPosition::RightTop  => (base.x0 + base.x2, base.y0 + base.y1),
             _ => unimplemented!()
         };
         let win = newwin(h as i32, w as i32, y as i32, x as i32);
-        (Canvas {win: win, x1: 0, y1: 0, x2: w, y2: h}, new_panel(win))
+        (Canvas {win: win, x0: x, y0: y, x1: 0, y1: 0, x2: w, y2: h}, new_panel(win))
     }
 }

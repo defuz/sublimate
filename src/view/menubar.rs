@@ -77,6 +77,7 @@ impl Menubar {
         }
         self.focused = Some(match self.focused {
             Some(index) => {
+                self.items[index].items.content.unfocus();
                 self.items[index].items.hide();
                 (index + self.items.len() - 1) % self.items.len()
             },
@@ -90,6 +91,7 @@ impl Menubar {
         }
         self.focused = Some(match self.focused {
             Some(index) => {
+                self.items[index].items.content.unfocus();
                 self.items[index].items.hide();
                 (index + 1) % self.items.len()
             },
@@ -130,7 +132,6 @@ impl View<Core> for Menubar {
 }
 
 impl OnKeypress<Core> for Menubar {
-
     fn on_keypress(&mut self, core: &Core, canvas: Canvas, key: Key) -> bool {
         if let Some((child, canvas)) = self.focused(core, canvas) {
             if child.items.on_keypress(core, canvas, key) {

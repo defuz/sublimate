@@ -151,5 +151,4 @@ fn main() {
 
     // Terminate ncurses.
     endwin();
-    println!("hello");
 }

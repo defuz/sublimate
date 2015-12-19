@@ -7,9 +7,15 @@ use ncurses::{WINDOW, stdscr, getmaxyx, mvwaddstr, wattr_set};
 
 #[derive(Debug, Copy, Clone)]
 pub struct Canvas {
-    pub win: WINDOW, // TODO: make me private
+    // TODO: make me private
+    pub win: WINDOW,
+    // relative position
+    pub x0: usize,
+    pub y0: usize,
+    // left top point
     pub x1: usize,
     pub y1: usize,
+    // right bottom point
     pub x2: usize,
     pub y2: usize
 }
@@ -30,7 +36,7 @@ impl Canvas {
         let mut y = 0i32;
         let mut x = 0i32;
         getmaxyx(stdscr, &mut y, &mut x);
-        Canvas {win: stdscr, x1: 0, y1: 0, x2: x as usize, y2: y as usize}
+        Canvas {win: stdscr, x0: 0, y0: 0, x1: 0, y1: 0, x2: x as usize, y2: y as usize}
     }
 
     // fn inner(&self, inner: Canvas) -> Canvas {
@@ -60,6 +66,8 @@ impl Canvas {
     fn left(&self, width: usize) -> Canvas {
         Canvas {
             win: self.win,
+            x0: self.x0,
+            y0: self.y0,
             x1: self.x1,
             y1: self.y1,
             x2: self.x1 + width,
@@ -70,6 +78,8 @@ impl Canvas {
     fn right(&self, width: usize) -> Canvas {
         Canvas {
             win: self.win,
+            x0: self.x0,
+            y0: self.y0,
             x1: self.x2 - width,
             y1: self.y1,
             x2: self.x2,
@@ -80,6 +90,8 @@ impl Canvas {
     fn top(&self, height: usize) -> Canvas {
         Canvas {
             win: self.win,
+            x0: self.x0,
+            y0: self.y0,
             x1: self.x1,
             y1: self.y1,
             x2: self.x2,
@@ -90,6 +102,8 @@ impl Canvas {
     fn bottom(&self, height: usize) -> Canvas {
         Canvas {
             win: self.win,
+            x0: self.x0,
+            y0: self.y0,
             x1: self.x1,
             y1: self.y2 - height,
             x2: self.x2,
