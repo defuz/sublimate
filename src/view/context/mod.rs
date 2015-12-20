@@ -9,7 +9,7 @@ use core::menu::{Menu, MenuItem};
 use toolkit::*;
 use view::event::OnKeypress;
 
-mod view;
+pub mod view;
 
 use self::view::{ContextMenuView, ContextMenuItemView, ButtonView, GroupView, ButtonState};
 

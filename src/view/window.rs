@@ -28,6 +28,6 @@ impl Window {
 
 
     pub fn render(&self, mut canvas: Canvas) {
-        self.menubar.render(&self.core, canvas.cut_top(1));
+        self.menubar.view(&self.core).render(canvas.cut_top(1));
     }
 }

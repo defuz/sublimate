@@ -42,7 +42,7 @@ impl<'a> GroupView<'a> {
     }
 }
 
-impl<'a> NewView for GroupView<'a> {
+impl<'a> View for GroupView<'a> {
     fn width(&self) -> usize {
         self.caption.width() + 5
     }
@@ -67,7 +67,7 @@ impl<'a> NewView for GroupView<'a> {
     }
 }
 
-impl<'a> NewView for ContextMenuView<'a> {
+impl<'a> View for ContextMenuView<'a> {
     fn width(&self) -> usize {
         self.views.iter().map(|view| view.width()).max().unwrap_or(0)
     }
@@ -87,7 +87,7 @@ impl<'a> NewView for ContextMenuView<'a> {
     }
 }
 
-impl<'a> NewView for ContextMenuItemView<'a> {
+impl<'a> View for ContextMenuItemView<'a> {
     fn width(&self) -> usize {
         match *self {
             ContextMenuItemView::Divider => 2,
@@ -148,7 +148,7 @@ impl ButtonState {
     }
 }
 
-impl<'a> NewView for ButtonView<'a> {
+impl<'a> View for ButtonView<'a> {
     fn width(&self) -> usize {
         self.caption.width() + self.hotkey.width() + 4
     }

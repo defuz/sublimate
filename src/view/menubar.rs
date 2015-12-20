@@ -1,3 +1,7 @@
+use std::ops::IndexMut;
+
+use unicode_width::UnicodeWidthStr;
+
 use toolkit::*;
 use core::Core;
 use core::keymap::Key;
@@ -6,7 +10,8 @@ use view::theme::*;
 
 use view::event::OnKeypress;
 use view::context::ContextMenu;
-use view::modal::{Modal, ModalPosition};
+use view::context::view::ContextMenuView;
+use view::modal::{Modal, ModalView, ModalPosition};
 
 #[derive(Debug)]
 pub struct Menubar {
@@ -16,25 +21,19 @@ pub struct Menubar {
 
 #[derive(Debug)]
 pub struct MenubarItem {
-    pub name: String,
-    pub items: Modal<ContextMenu>
+    pub caption: String,
+    pub modal: Modal<ContextMenu>
 }
 
-impl View<Core> for MenubarItem {
-    fn width(&self, core: &Core) -> usize {
-        self.name.len() + 2
-    }
+#[derive(Debug)]
+pub struct MenubarItemView<'a> {
+    pub caption: &'a str,
+    pub is_focused: bool,
+    pub modal: ModalView<'a, ContextMenuView<'a>>
+}
 
-    fn height(&self, core: &Core) -> usize {
-        1
-    }
-
-    fn render(&self, core: &Core, canvas: Canvas) {
-        // info!("render {}, {:?}", self.name, canvas)
-        canvas.char(' ', 0, 0);
-        canvas.text(&*self.name, 0, 1);
-        canvas.char(' ', 0, self.name.len() + 1);
-    }
+pub struct MenubarView<'a> {
+    views: Vec<MenubarItemView<'a>>
 }
 
 impl Menubar {
@@ -42,10 +41,10 @@ impl Menubar {
         let mut items = Vec::new();
         for item in core.package_repository.get_menu("default/Main.sublime-menu") {
             match item {
-                MenuItem::Group(name, menu) => {
+                MenuItem::Group(caption, menu) => {
                     items.push(MenubarItem {
-                        name: name.clone(),
-                        items: Modal::new(ContextMenu::new(menu), ModalPosition::UnderLeft)
+                        caption: caption.clone(),
+                        modal: Modal::new(ContextMenu::new(menu), ModalPosition::UnderLeft)
                     });
                 },
                 _ => error!("Incorrect menu item")
@@ -54,16 +53,10 @@ impl Menubar {
         Menubar {focused: None, items: items}
     }
 
-    fn focused(&mut self, core: &Core, mut canvas: Canvas) -> Option<(&mut MenubarItem, Canvas)> {
+    fn focused(&mut self, core: &Core, mut canvas: Canvas) -> Option<&mut MenubarItem> {
         match self.focused {
             Some(index) => {
-                // FIXME: if canvas is less then needed, return None instead of item canvas
-                for item in self.items.iter().take(index) {
-                    canvas.cut_left(item.width(core));
-                }
-                let ref mut item = self.items[index];
-                let item_canvas = canvas.cut_left(item.width(core));
-                Some((item, item_canvas))
+                Some(self.items.index_mut(index))
             },
             None => None
         }
@@ -75,8 +68,8 @@ impl Menubar {
         }
         self.focused = Some(match self.focused {
             Some(index) => {
-                self.items[index].items.content.unfocus();
-                self.items[index].items.hide();
+                self.items[index].modal.content.unfocus();
+                self.items[index].modal.hide();
                 (index + self.items.len() - 1) % self.items.len()
             },
             _ => self.items.len() - 1
@@ -89,8 +82,8 @@ impl Menubar {
         }
         self.focused = Some(match self.focused {
             Some(index) => {
-                self.items[index].items.content.unfocus();
-                self.items[index].items.hide();
+                self.items[index].modal.content.unfocus();
+                self.items[index].modal.hide();
                 (index + 1) % self.items.len()
             },
             None => 0
@@ -99,31 +92,65 @@ impl Menubar {
 
 }
 
-impl View<Core> for Menubar {
-    fn width(&self, core: &Core) -> usize {
-        sum_width(core, self.items.iter())
+impl<'a> Widget<'a> for Menubar {
+    type Context = Core;
+    type View = MenubarView<'a>;
+
+    fn view(&'a self, core: &Core) -> MenubarView<'a> {
+        let views = self.items.iter().enumerate().map(|(i, item)| MenubarItemView {
+            caption: &item.caption,
+            is_focused: Some(i) == self.focused,
+            modal: item.modal.view(core)
+        }).collect();
+        MenubarView { views: views }
+    }
+}
+
+impl<'a> View for MenubarItemView<'a> {
+    fn width(&self) -> usize {
+        self.caption.width() + 2
     }
 
-    fn height(&self, core: &Core) -> usize {
+    fn height(&self) -> usize {
         1
     }
 
-    fn render(&self, core: &Core, mut canvas: Canvas) {
+    fn render(&self, canvas: Canvas) {
+        canvas.style(if self.is_focused {
+            MENUBAR_SELECTED_STYLE
+        } else {
+            MENUBAR_STYLE
+        });
+        canvas.char(' ', 0, 0);
+        canvas.text(self.caption, 0, 1);
+        canvas.char(' ', 0, self.caption.width() + 1);
+        if self.is_focused {
+            self.modal.render(canvas)
+        }
+    }
+}
+
+impl<'a> View for MenubarView<'a> {
+    fn width(&self) -> usize {
+        let mut r = 0;
+        for v in self.views.iter() {
+            r += v.width();
+        }
+        return r;
+    }
+
+    fn height(&self) -> usize {
+        1
+    }
+
+    fn render(&self, mut canvas: Canvas) {
         canvas.style(MENUBAR_STYLE);
-        for (i, item) in self.items.iter().enumerate() {
-            let w = item.width(core);
+        for (i, item) in self.views.iter().enumerate() {
+            let w = item.width();
             if w > canvas.width() {
                 break;
             }
-            let item_canvas = canvas.cut_left(w);
-            if self.focused == Some(i) {
-                item_canvas.style(MENUBAR_SELECTED_STYLE);
-                item.render(core, item_canvas);
-                item.items.view(core).render(item_canvas);
-                item_canvas.style(MENUBAR_STYLE);
-            } else {
-                item.render(core, item_canvas);
-            }
+            item.render(canvas.cut_left(w))
         }
         canvas.fill();
     }
@@ -133,8 +160,8 @@ impl OnKeypress for Menubar {
     type Context = Core;
 
     fn on_keypress(&mut self, core: &Core, canvas: Canvas, key: Key) -> bool {
-        if let Some((child, canvas)) = self.focused(core, canvas) {
-            if child.items.on_keypress(core, canvas, key) {
+        if let Some(child) = self.focused(core, canvas) {
+            if child.modal.on_keypress(core, canvas, key) {
                 return true;
             }
         }
@@ -143,7 +170,7 @@ impl OnKeypress for Menubar {
             Key::Right => self.focus_next(),
             _ => return false
         }
-        self.render(core, canvas);
+        self.view(core).render(canvas);
         return true;
     }
 }

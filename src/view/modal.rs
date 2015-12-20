@@ -25,7 +25,7 @@ pub struct Modal<T> {
 }
 
 #[derive(Debug)]
-pub struct ModalView<'a, T: NewView> {
+pub struct ModalView<'a, T: View> {
     position: ModalPosition,
     panel: &'a Cell<Option<(PANEL, Canvas)>>,
     view: T
@@ -61,7 +61,7 @@ impl<'a, T: Widget<'a>> Widget<'a> for Modal<T> {
     }
 }
 
-impl<'a, T: NewView> NewView for ModalView<'a, T> {
+impl<'a, T: View> View for ModalView<'a, T> {
     fn width(&self) -> usize {
         self.view.width()
     }
