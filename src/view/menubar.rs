@@ -60,13 +60,13 @@ impl Menubar {
         }
     }
 
-    fn focus_prev(&mut self) {
+    fn focus_prev(&mut self, core: &Core) {
         if self.items.is_empty() {
             return;
         }
         self.focused = Some(match self.focused {
             Some(index) => {
-                self.items[index].modal.content.unfocus();
+                self.items[index].modal.content.unfocus(core);
                 self.items[index].modal.hide();
                 (index + self.items.len() - 1) % self.items.len()
             },
@@ -74,13 +74,13 @@ impl Menubar {
         })
     }
 
-    fn focus_next(&mut self) {
+    fn focus_next(&mut self, core: &Core) {
         if self.items.is_empty() {
             return;
         }
         self.focused = Some(match self.focused {
             Some(index) => {
-                self.items[index].modal.content.unfocus();
+                self.items[index].modal.content.unfocus(core);
                 self.items[index].modal.hide();
                 (index + 1) % self.items.len()
             },
@@ -91,10 +91,10 @@ impl Menubar {
 }
 
 impl<'a> Widget<'a> for Menubar {
-    type Context = Core;
+    type Context = &'a Core;
     type View = MenubarView<'a>;
 
-    fn view(&'a self, core: &Core) -> MenubarView<'a> {
+    fn view(&'a self, core: &'a Core) -> MenubarView<'a> {
         let views = self.items.iter().enumerate().map(|(i, item)| MenubarItemView {
             caption: &item.caption,
             modal: if Some(i) == self.focused {
@@ -113,8 +113,8 @@ impl<'a> Widget<'a> for Menubar {
             }
         }
         match key {
-            Key::Left => self.focus_prev(),
-            Key::Right => self.focus_next(),
+            Key::Left => self.focus_prev(core),
+            Key::Right => self.focus_next(core),
             _ => return false
         }
         self.view(core).render(canvas);

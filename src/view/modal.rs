@@ -50,7 +50,7 @@ impl<'a, T: Widget<'a>> Widget<'a> for Modal<T> {
     type Context = T::Context;
     type View = ModalView<'a, T::View>;
 
-    fn view(&'a self, context: &Self::Context) -> Self::View {
+    fn view(&'a self, context: Self::Context) -> Self::View {
         ModalView {
             position: self.position,
             panel: &self.panel,
@@ -58,13 +58,22 @@ impl<'a, T: Widget<'a>> Widget<'a> for Modal<T> {
         }
     }
 
-    fn on_keypress(&mut self, core: &Self::Context, base: Canvas, key: Key) -> bool {
+    fn on_keypress(&'a mut self, core: Self::Context, base: Canvas, key: Key) -> bool {
         let r = self.content.on_keypress(core, self.panel.get().unwrap().1, key);
         if r {
             update_panels();
             doupdate();
         }
         r
+    }
+
+    fn focus(&mut self, context: Self::Context) {
+        self.content.focus(context);
+    }
+
+    fn unfocus(&mut self, context: Self::Context) {
+        self.content.unfocus(context);
+        self.hide();
     }
 }
 
