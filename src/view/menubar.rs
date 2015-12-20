@@ -27,8 +27,7 @@ pub struct MenubarItem {
 #[derive(Debug)]
 pub struct MenubarItemView<'a> {
     pub caption: &'a str,
-    pub is_focused: bool,
-    pub modal: ModalView<'a, ContextMenuView<'a>>
+    pub modal: Option<ModalView<'a, ContextMenuView<'a>>>
 }
 
 pub struct MenubarView<'a> {
@@ -52,7 +51,7 @@ impl Menubar {
         Menubar {focused: None, items: items}
     }
 
-    fn focused(&mut self, core: &Core, mut canvas: Canvas) -> Option<&mut MenubarItem> {
+    fn focused(&mut self) -> Option<&mut MenubarItem> {
         match self.focused {
             Some(index) => {
                 Some(self.items.index_mut(index))
@@ -98,14 +97,17 @@ impl<'a> Widget<'a> for Menubar {
     fn view(&'a self, core: &Core) -> MenubarView<'a> {
         let views = self.items.iter().enumerate().map(|(i, item)| MenubarItemView {
             caption: &item.caption,
-            is_focused: Some(i) == self.focused,
-            modal: item.modal.view(core)
+            modal: if Some(i) == self.focused {
+                Some(item.modal.view(core))
+            } else {
+                None
+            }
         }).collect();
         MenubarView { views: views }
     }
 
     fn on_keypress(&mut self, core: &Core, canvas: Canvas, key: Key) -> bool {
-        if let Some(child) = self.focused(core, canvas) {
+        if let Some(child) = self.focused() {
             if child.modal.on_keypress(core, canvas, key) {
                 return true;
             }
@@ -120,6 +122,20 @@ impl<'a> Widget<'a> for Menubar {
     }
 }
 
+impl<'a> MenubarItemView<'a> {
+    fn is_focused(&self) -> bool {
+        self.modal.is_some()
+    }
+
+    fn style(&self) -> Style {
+        if self.is_focused() {
+            MENUBAR_SELECTED_STYLE
+        } else {
+            MENUBAR_STYLE
+        }
+    }
+}
+
 impl<'a> View for MenubarItemView<'a> {
     fn width(&self) -> usize {
         self.caption.width() + 2
@@ -130,16 +146,12 @@ impl<'a> View for MenubarItemView<'a> {
     }
 
     fn render(&self, canvas: Canvas) {
-        canvas.style(if self.is_focused {
-            MENUBAR_SELECTED_STYLE
-        } else {
-            MENUBAR_STYLE
-        });
+        canvas.style(self.style());
         canvas.char(' ', 0, 0);
         canvas.text(self.caption, 0, 1);
         canvas.char(' ', 0, self.caption.width() + 1);
-        if self.is_focused {
-            self.modal.render(canvas)
+        if let Some(ref modal) = self.modal {
+            modal.render(canvas)
         }
     }
 }
@@ -158,14 +170,14 @@ impl<'a> View for MenubarView<'a> {
     }
 
     fn render(&self, mut canvas: Canvas) {
-        canvas.style(MENUBAR_STYLE);
-        for (i, item) in self.views.iter().enumerate() {
-            let w = item.width();
+        for view in self.views.iter() {
+            let w = view.width();
             if w > canvas.width() {
                 break;
             }
-            item.render(canvas.cut_left(w))
+            view.render(canvas.cut_left(w))
         }
+        canvas.style(MENUBAR_STYLE);
         canvas.fill();
     }
 }

@@ -1,7 +1,4 @@
-use std::fmt::Debug;
-
 use toolkit::canvas::Canvas;
-use toolkit::draw::*;
 use core::keymap::Key;
 
 pub trait Widget<'a> {
