@@ -1,17 +1,9 @@
-use std::io::Write;
-use std::ops::IndexMut;
 use unicode_width::UnicodeWidthStr;
 
-use core::Core;
-use view::window::Window;
-use view::modal::{Modal, ModalView, ModalPosition};
-use core::command::Command;
-use core::keymap::{Key, Hotkey, HotkeySequence};
-use core::menu::{Menu, MenuItem};
+use view::modal::ModalView;
 
 use toolkit::*;
 use view::theme::*;
-use view::event::OnKeypress;
 
 #[derive(Debug)]
 pub struct ContextMenuView<'a> {

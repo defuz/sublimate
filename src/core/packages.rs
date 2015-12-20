@@ -1,7 +1,7 @@
 use weakjson::from_str;
 use std::io::Read;
 use std::fs::File;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 
 use core::settings::{Settings, FromSettings};
 use core::menu::Menu;

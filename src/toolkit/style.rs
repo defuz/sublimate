@@ -1,4 +1,4 @@
-use ncurses::{attr_get, attr_t, A_NORMAL};
+use ncurses::{attr_get, attr_t};
 
 pub struct Color(pub u8);
 
@@ -17,9 +17,9 @@ impl ColorPair {
 pub struct ColorPair(pub u8);
 
 impl Color {
-    pub fn rgb(rgb: u64) -> Color {
-        Color(0)
-    }
+    // pub fn rgb(rgb: u64) -> Color {
+    //     Color(0)
+    // }
 
     pub fn grayscale(index: u8) -> Color {
         assert!(index <= 23);

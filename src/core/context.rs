@@ -1,7 +1,5 @@
 use regex;
 
-use std::borrow::Borrow;
-
 use core::settings::{Settings, ParseSettings};
 use core::Core;
 use self::ParseContextError::*;
@@ -9,7 +7,7 @@ use self::ParseContextError::*;
 pub type Context = Vec<ContextRule>;
 
 #[derive(Debug, Clone)]
-enum ContextRule {
+pub enum ContextRule {
     /// Returns `true` if the autocomplete list is visible.
     AutoCompleteVisibleEqual(bool),
     /// Returns `true` if a next snippet field is available.
@@ -41,7 +39,7 @@ enum ContextRule {
 }
 
 #[derive(Debug, Clone)]
-enum Operator<T> {
+pub enum Operator<T> {
     /// Test for equality.
     Equal(T),
     NotEqual(T),

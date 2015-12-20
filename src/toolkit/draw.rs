@@ -1,5 +1,3 @@
-use toolkit::style::Style;
-
 pub trait Drawing {
     fn char(&self, c: char, x: usize, y: usize);
 

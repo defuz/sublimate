@@ -1,4 +1,4 @@
-use std::cmp::{min, max};
+use std::cmp::min;
 
 use toolkit::style::Style;
 use toolkit::draw::*;

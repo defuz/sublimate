@@ -2,7 +2,6 @@ use std::fmt::Debug;
 
 use toolkit::canvas::Canvas;
 use toolkit::draw::*;
-use toolkit::style::Style;
 
 pub trait View<C>: Debug where C: Debug {
     fn width(&self, context: &C) -> usize;

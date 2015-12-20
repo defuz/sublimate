@@ -166,7 +166,7 @@ impl Display for Key {
             /// Functional keys
             Key::F(num) => write!(fmt, "F{}", num),
             /// Single character keys
-            Key::Char(mut c) => {
+            Key::Char(c) => {
                 if c == ' ' {
                     fmt.write_str("Space")
                 } else {
@@ -258,7 +258,7 @@ impl FromStr for Key {
                 } else if s.starts_with("keypad") {
                     // Keypad digits
                     match u8::from_str(&s[6..]) {
-                        Ok(i) if 0 <= i && i <= 9 => Key::Keypad(i),
+                        Ok(i) if i <= 9 => Key::Keypad(i),
                         _ => return Err(IncorrectKey(s.to_string())),
                     }
                 } else if s.starts_with("browser_") {
@@ -327,7 +327,7 @@ impl ParseSettings for HotkeyBinding {
             _ => return Err(BindingIsNotObject),
         };
 
-        let mut arr = match obj.remove("keys") {
+        let arr = match obj.remove("keys") {
             Some(Settings::Array(arr)) => arr,
             _ => return Err(HotkeySequenceIsNotArray),
         };
@@ -384,7 +384,7 @@ impl FromSettings for Keymap {
         for settings in arr {
             match HotkeyBinding::parse_settings(settings) {
                 Ok(binding) => keymap.push(binding),
-                Err(err) => {
+                Err(_) => {
                     // TODO: warning
                 }
             }

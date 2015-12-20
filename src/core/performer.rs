@@ -1,5 +1,4 @@
-use std::collections::hash_map::Entry::*;
-use std::collections::hash_map::HashMap;
+use std::collections::HashMap;
 
 use core::Core;
 use core::command::Command;

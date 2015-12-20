@@ -1,11 +1,7 @@
 use std::cell::Cell;
-use std::fmt::Debug;
-use vec_map::VecMap;
-use std::marker::PhantomData;
 
 use ncurses::{newwin, new_panel, PANEL, del_panel, update_panels, doupdate};
 
-use core::Core;
 use core::keymap::Key;
 
 use toolkit::*;

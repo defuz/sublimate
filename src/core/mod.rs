@@ -8,7 +8,6 @@ pub mod keymap;
 pub mod context;
 pub mod performer;
 
-use core::menu::Menu;
 use core::project::Project;
 use core::packages::PackageRepository;
 use core::performer::HotkeyPerformer;

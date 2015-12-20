@@ -1,16 +1,12 @@
-use std::io::Write;
 use std::ops::IndexMut;
-use unicode_width::UnicodeWidthStr;
 
 use core::Core;
-use view::window::Window;
 use view::modal::{Modal, ModalPosition};
 use core::command::Command;
-use core::keymap::{Key, Hotkey, HotkeySequence};
+use core::keymap::Key;
 use core::menu::{Menu, MenuItem};
 
 use toolkit::*;
-use view::theme::*;
 use view::event::OnKeypress;
 
 mod view;
@@ -24,7 +20,7 @@ pub struct ContextMenu {
 }
 
 #[derive(Debug)]
-pub enum ContextMenuItem {
+enum ContextMenuItem {
     Divider,
     Button(Button),
     Group(Group),
@@ -179,7 +175,7 @@ impl OnKeypress for ContextMenu {
     fn on_keypress(&mut self, core: &Core, canvas: Canvas, key: Key) -> bool {
         let processed = match self.focused() {
             Some(&mut ContextMenuItem::Group(ref mut group)) if group.is_opened =>
-                group.modal.content.on_keypress(core, canvas, key),
+                group.modal.on_keypress(core, canvas, key),
             _ => false
         };
         if processed {

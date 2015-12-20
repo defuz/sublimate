@@ -1,11 +1,9 @@
 use toolkit::*;
 use core::Core;
 use core::keymap::Key;
-use core::menu::{Menu, MenuItem};
-use core::command::Command;
+use core::menu::MenuItem;
 use view::theme::*;
 
-use view::window::Window;
 use view::event::OnKeypress;
 use view::context::ContextMenu;
 use view::modal::{Modal, ModalPosition};

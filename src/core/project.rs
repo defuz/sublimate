@@ -36,7 +36,7 @@ impl Project {
 
     pub fn open(path: &str) -> Project {
         Project {
-            path: None,
+            path: Some(path.to_string()),
             folders: Vec::new(),
             settings: None,
             build_systems: Vec::new()

@@ -12,7 +12,7 @@ pub enum MenuItem {
     Divider,
 }
 
-enum ParseMenuError {
+pub enum ParseMenuError {
     ItemIsNotObject,
     CaptionIsNotString,
     CaptionIsNotDefinedForGroup,
@@ -75,7 +75,7 @@ impl FromSettings for Menu {
         for settings in arr {
             match MenuItem::parse_settings(settings) {
                 Ok(item) => menu.push(item),
-                Err(err) => {
+                Err(_) => {
                     // TODO: warning
                 }
             }
