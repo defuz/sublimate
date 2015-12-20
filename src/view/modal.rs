@@ -6,8 +6,6 @@ use core::keymap::Key;
 
 use toolkit::*;
 
-use view::event::OnKeypress;
-
 #[derive(Debug, Clone, Copy)]
 pub enum ModalPosition {
     AboveLeft,
@@ -59,6 +57,15 @@ impl<'a, T: Widget<'a>> Widget<'a> for Modal<T> {
             view: self.content.view(context)
         }
     }
+
+    fn on_keypress(&mut self, core: &Self::Context, base: Canvas, key: Key) -> bool {
+        let r = self.content.on_keypress(core, self.panel.get().unwrap().1, key);
+        if r {
+            update_panels();
+            doupdate();
+        }
+        r
+    }
 }
 
 impl<'a, T: View> View for ModalView<'a, T> {
@@ -79,19 +86,6 @@ impl<'a, T: View> View for ModalView<'a, T> {
         self.view.render(canvas);
         update_panels();
         doupdate();
-    }
-}
-
-impl<T: OnKeypress> OnKeypress for Modal<T> {
-    type Context = <T as OnKeypress>::Context;
-
-    fn on_keypress(&mut self, core: &Self::Context, base: Canvas, key: Key) -> bool {
-        let r = self.content.on_keypress(core, self.panel.get().unwrap().1, key);
-        if r {
-            update_panels();
-            doupdate();
-        }
-        r
     }
 }
 

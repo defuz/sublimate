@@ -4,7 +4,6 @@ use core::Core;
 use core::keymap::Key;
 
 use view::menubar::Menubar;
-use view::event::OnKeypress;
 
 #[derive(Debug)]
 pub struct Window {

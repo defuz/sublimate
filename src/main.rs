@@ -28,7 +28,6 @@ use core::keymap::Key;
 use view::window::Window;
 use toolkit::*;
 use view::theme::PALETTE;
-use view::event::OnKeypress;
 
 fn main() {
 

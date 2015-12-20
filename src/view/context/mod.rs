@@ -7,7 +7,6 @@ use core::keymap::Key;
 use core::menu::{Menu, MenuItem};
 
 use toolkit::*;
-use view::event::OnKeypress;
 
 pub mod view;
 
@@ -167,10 +166,6 @@ impl<'a> Widget<'a> for ContextMenu {
 
         ContextMenuView { views: views }
     }
-}
-
-impl OnKeypress for ContextMenu {
-    type Context = Core;
 
     fn on_keypress(&mut self, core: &Core, canvas: Canvas, key: Key) -> bool {
         let processed = match self.focused() {

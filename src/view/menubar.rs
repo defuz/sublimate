@@ -8,7 +8,6 @@ use core::keymap::Key;
 use core::menu::MenuItem;
 use view::theme::*;
 
-use view::event::OnKeypress;
 use view::context::ContextMenu;
 use view::context::view::ContextMenuView;
 use view::modal::{Modal, ModalView, ModalPosition};
@@ -104,6 +103,21 @@ impl<'a> Widget<'a> for Menubar {
         }).collect();
         MenubarView { views: views }
     }
+
+    fn on_keypress(&mut self, core: &Core, canvas: Canvas, key: Key) -> bool {
+        if let Some(child) = self.focused(core, canvas) {
+            if child.modal.on_keypress(core, canvas, key) {
+                return true;
+            }
+        }
+        match key {
+            Key::Left => self.focus_prev(),
+            Key::Right => self.focus_next(),
+            _ => return false
+        }
+        self.view(core).render(canvas);
+        return true;
+    }
 }
 
 impl<'a> View for MenubarItemView<'a> {
@@ -153,24 +167,5 @@ impl<'a> View for MenubarView<'a> {
             item.render(canvas.cut_left(w))
         }
         canvas.fill();
-    }
-}
-
-impl OnKeypress for Menubar {
-    type Context = Core;
-
-    fn on_keypress(&mut self, core: &Core, canvas: Canvas, key: Key) -> bool {
-        if let Some(child) = self.focused(core, canvas) {
-            if child.modal.on_keypress(core, canvas, key) {
-                return true;
-            }
-        }
-        match key {
-            Key::Left => self.focus_prev(),
-            Key::Right => self.focus_next(),
-            _ => return false
-        }
-        self.view(core).render(canvas);
-        return true;
     }
 }

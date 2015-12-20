@@ -2,12 +2,14 @@ use std::fmt::Debug;
 
 use toolkit::canvas::Canvas;
 use toolkit::draw::*;
+use core::keymap::Key;
 
 pub trait Widget<'a> {
     type Context;
     type View: View + 'a;
 
     fn view(&'a self, context: &Self::Context) -> Self::View;
+    fn on_keypress(&mut self, context: &Self::Context, canvas: Canvas, key: Key) -> bool;
 }
 
 pub trait View {
