@@ -19,7 +19,7 @@ pub struct Menubar {
 #[derive(Debug)]
 pub struct MenubarItem {
     pub name: String,
-    pub items: Modal<Core, ContextMenu>
+    pub items: Modal<ContextMenu>
 }
 
 impl View<Core> for MenubarItem {
@@ -121,7 +121,7 @@ impl View<Core> for Menubar {
             if self.focused == Some(i) {
                 item_canvas.style(MENUBAR_SELECTED_STYLE);
                 item.render(core, item_canvas);
-                item.items.render(core, item_canvas);
+                item.items.view(core).render(item_canvas);
                 item_canvas.style(MENUBAR_STYLE);
             } else {
                 item.render(core, item_canvas);
@@ -131,7 +131,9 @@ impl View<Core> for Menubar {
     }
 }
 
-impl OnKeypress<Core> for Menubar {
+impl OnKeypress for Menubar {
+    type Context = Core;
+
     fn on_keypress(&mut self, core: &Core, canvas: Canvas, key: Key) -> bool {
         if let Some((child, canvas)) = self.focused(core, canvas) {
             if child.items.on_keypress(core, canvas, key) {

@@ -10,6 +10,19 @@ pub trait View<C>: Debug where C: Debug {
     fn render(&self, context: &C, canvas: Canvas);
 }
 
+pub trait Widget<'a> {
+    type Context;
+    type View: NewView + 'a;
+
+    fn view(&'a self, context: &Self::Context) -> Self::View;
+}
+
+pub trait NewView {
+    fn width(&self) -> usize;
+    fn height(&self) -> usize;
+    fn render(&self, canvas: Canvas);
+}
+
 pub fn sum_width<'c, C, V, I>(context: &C, views: I) -> usize
     where V: View<C> + 'c,
           I: Iterator<Item = &'c V>,

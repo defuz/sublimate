@@ -1,4 +1,5 @@
 use std::str::FromStr;
+use std::iter::IntoIterator;
 use std::fmt::{Display, Formatter, Write, Error as FormatterError};
 
 use core::command::{Command, ParseCommandError};
@@ -17,7 +18,10 @@ pub struct HotkeyBinding {
     pub context: Context
 }
 
-pub type HotkeySequence = Vec<Hotkey>;
+#[derive(Debug, Clone, Hash, PartialEq, Eq, Default)]
+pub struct HotkeySequence {
+    vec: Vec<Hotkey>
+}
 
 #[derive(Debug, Clone, Copy, Hash, PartialEq, Eq)]
 pub struct Hotkey {
@@ -91,6 +95,15 @@ pub enum ParseHotkeyBindingError {
 pub enum ParseHotkeyError {
     IncorrectKey(String),
     IncorrectModifier(String),
+}
+
+impl IntoIterator for HotkeySequence {
+    type Item = Hotkey;
+    type IntoIter = ::std::vec::IntoIter<Hotkey>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.vec.into_iter()
+    }
 }
 
 impl Display for Modifiers {
@@ -167,6 +180,20 @@ impl Display for Key {
 impl Display for Hotkey {
     fn fmt(&self, fmt: &mut Formatter) -> Result<(), FormatterError> {
         write!(fmt, "{}{}", self.modifiers, self.key)
+    }
+}
+
+impl Display for HotkeySequence {
+    fn fmt(&self, fmt: &mut Formatter) -> Result<(), FormatterError> {
+        let mut comma = false;
+        for key in self.vec.iter() {
+            if comma {
+                try!(fmt.write_str(", "));
+            }
+            comma = true;
+            try!(key.fmt(fmt));
+        }
+        Ok(())
     }
 }
 
@@ -337,7 +364,7 @@ impl ParseSettings for HotkeyBinding {
         // TODO: check that obj is empty
 
         Ok(HotkeyBinding {
-            hotkeys: hotkeys,
+            hotkeys: HotkeySequence { vec: hotkeys },
             command: command,
             context: context
         })

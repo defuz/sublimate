@@ -12,7 +12,7 @@ use toolkit::*;
 
 use view::event::OnKeypress;
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub enum ModalPosition {
     AboveLeft,
     AboveRight,
@@ -22,30 +22,26 @@ pub enum ModalPosition {
 }
 
 #[derive(Debug)]
-pub struct Modal<C: Debug, V: View<C>> {
+pub struct Modal<T> {
     position: ModalPosition,
-    _phantom: PhantomData<C>,
     panel: Cell<Option<(PANEL, Canvas)>>,
-    pub content: V
+    pub content: T
 }
 
-impl<C, V> Modal<C, V> where C: Debug, V: View<C> {
-    pub fn new(content: V, position: ModalPosition) -> Modal<C, V> {
+#[derive(Debug)]
+pub struct ModalView<'a, T: NewView> {
+    position: ModalPosition,
+    panel: &'a Cell<Option<(PANEL, Canvas)>>,
+    view: T
+}
+
+impl<T> Modal<T> {
+    pub fn new(content: T, position: ModalPosition) -> Modal<T> {
         Modal {
             position: position,
-            _phantom: PhantomData,
             panel: Cell::new(None),
             content: content
         }
-    }
-
-    pub fn render(&self, context: &C, base: Canvas) {
-        self.hide();
-        let (canvas, panel) = self.position.get_window(base, self.content.width(context), self.content.height(context));
-        self.panel.set(Some((panel, canvas)));
-        self.content.render(context, canvas);
-        update_panels();
-        doupdate();
     }
 
     pub fn hide(&self) {
@@ -54,11 +50,46 @@ impl<C, V> Modal<C, V> where C: Debug, V: View<C> {
             self.panel.set(None)
         }
     }
-
 }
 
-impl<C, V> OnKeypress<C> for Modal<C, V> where C: Debug, V: View<C>+OnKeypress<C> {
-    fn on_keypress(&mut self, core: &C, base: Canvas, key: Key) -> bool {
+impl<'a, T: Widget<'a>> Widget<'a> for Modal<T> {
+    type Context = T::Context;
+    type View = ModalView<'a, T::View>;
+
+    fn view(&'a self, context: &Self::Context) -> Self::View {
+        ModalView {
+            position: self.position,
+            panel: &self.panel,
+            view: self.content.view(context)
+        }
+    }
+}
+
+impl<'a, T: NewView> NewView for ModalView<'a, T> {
+    fn width(&self) -> usize {
+        self.view.width()
+    }
+
+    fn height(&self) -> usize {
+        self.view.height()
+    }
+
+    fn render(&self, base: Canvas) {
+        if let Some((panel, _)) = self.panel.get() {
+            del_panel(panel);
+        }
+        let (canvas, panel) = self.position.get_window(base, self.width(), self.height());
+        self.panel.set(Some((panel, canvas)));
+        self.view.render(canvas);
+        update_panels();
+        doupdate();
+    }
+}
+
+impl<T: OnKeypress> OnKeypress for Modal<T> {
+    type Context = <T as OnKeypress>::Context;
+
+    fn on_keypress(&mut self, core: &Self::Context, base: Canvas, key: Key) -> bool {
         let r = self.content.on_keypress(core, self.panel.get().unwrap().1, key);
         if r {
             update_panels();

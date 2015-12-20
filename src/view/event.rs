@@ -1,6 +1,7 @@
 use toolkit::Canvas;
 use core::keymap::Key;
 
-pub trait OnKeypress<C> {
-    fn on_keypress(&mut self, context: &C, canvas: Canvas, key: Key) -> bool;
+pub trait OnKeypress {
+    type Context;
+    fn on_keypress(&mut self, context: &Self::Context, canvas: Canvas, key: Key) -> bool;
 }
