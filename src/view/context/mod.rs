@@ -1,5 +1,3 @@
-use std::ops::IndexMut;
-
 use core::Core;
 use view::modal::{Modal, ModalPosition};
 use core::command::Command;
@@ -174,7 +172,10 @@ impl ContextMenu {
     }
 
     fn focused(&mut self) -> Option<&mut ContextMenuItem> {
-        self.focused.map(move |index| self.items.index_mut(index))
+        match self.focused {
+            Some(index) => Some(&mut self.items[index]),
+            None => None
+        }
     }
 
     fn focus_prev(&mut self, core: &Core) {
@@ -239,7 +240,7 @@ impl<'a> Widget<'a> for ContextMenu {
             self.view(core).render(canvas);
             return true
         }
-        return false;
+        return false
     }
 
     fn focus(&mut self, core: &Core) {

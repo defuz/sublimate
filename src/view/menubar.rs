@@ -1,5 +1,3 @@
-use std::ops::IndexMut;
-
 use unicode_width::UnicodeWidthStr;
 
 use toolkit::*;
@@ -54,7 +52,7 @@ impl Menubar {
     fn focused(&mut self) -> Option<&mut MenubarItem> {
         match self.focused {
             Some(index) => {
-                Some(self.items.index_mut(index))
+                Some(&mut self.items[index])
             },
             None => None
         }
@@ -62,12 +60,11 @@ impl Menubar {
 
     fn focus_prev(&mut self, core: &Core) {
         if self.items.is_empty() {
-            return;
+            return
         }
         self.focused = Some(match self.focused {
             Some(index) => {
-                self.items[index].modal.content.unfocus(core);
-                self.items[index].modal.hide();
+                self.items[index].modal.unfocus(core);
                 (index + self.items.len() - 1) % self.items.len()
             },
             _ => self.items.len() - 1
@@ -76,12 +73,11 @@ impl Menubar {
 
     fn focus_next(&mut self, core: &Core) {
         if self.items.is_empty() {
-            return;
+            return
         }
         self.focused = Some(match self.focused {
             Some(index) => {
-                self.items[index].modal.content.unfocus(core);
-                self.items[index].modal.hide();
+                self.items[index].modal.unfocus(core);
                 (index + 1) % self.items.len()
             },
             None => 0
@@ -109,7 +105,7 @@ impl<'a> Widget<'a> for Menubar {
     fn on_keypress(&mut self, core: &Core, canvas: Canvas, key: Key) -> bool {
         if let Some(child) = self.focused() {
             if child.modal.on_keypress(core, canvas, key) {
-                return true;
+                return true
             }
         }
         match key {
@@ -162,7 +158,7 @@ impl<'a> View for MenubarView<'a> {
         for v in self.views.iter() {
             r += v.width();
         }
-        return r;
+        return r
     }
 
     fn height(&self) -> usize {
@@ -173,7 +169,7 @@ impl<'a> View for MenubarView<'a> {
         for view in self.views.iter() {
             let w = view.width();
             if w > canvas.width() {
-                break;
+                break
             }
             view.render(canvas.cut_left(w))
         }

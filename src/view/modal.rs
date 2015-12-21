@@ -19,7 +19,7 @@ pub enum ModalPosition {
 pub struct Modal<T> {
     position: ModalPosition,
     panel: Cell<Option<(PANEL, Canvas)>>,
-    pub content: T
+    content: T
 }
 
 #[derive(Debug)]
