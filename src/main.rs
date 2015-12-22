@@ -19,6 +19,7 @@ extern crate ncurses;
 
 extern crate rustc_serialize;
 extern crate weakjson;
+extern crate plist;
 
 
 use ncurses::*;
@@ -85,16 +86,32 @@ fn main() {
     //     doupdate();
     // }
 
-    let mut window = Window::new(Core::load());
-    window.render(Canvas::screen());
+    mouseinterval(0);
+    mousemask((ALL_MOUSE_EVENTS | REPORT_MOUSE_POSITION) as u64, None);
+
     loop {
-        if let Some(key) = Key::from_keycode(getch()) {
-            if key == Key::Enter {
-                break;
-            }
-            window.on_keypress(Canvas::screen(), key);
+        let c = getch();
+        if c == 10 {
+            break
+        }
+        if c == KEY_MOUSE {
+            let mut e = MEVENT {id: 0, x: 0, y: 0, z: 0, bstate: 0};
+            getmouse(&mut e);
+            println!("id={}, x={}, y={}, z={}, bstate={}", e.id, e.x, e.y, e.z, e.bstate);
         }
     }
+
+
+    // let mut window = Window::new(Core::load());
+    // window.render(Canvas::screen());
+    // loop {
+    //     if let Some(key) = Key::from_keycode(getch()) {
+    //         if key == Key::Enter {
+    //             break;
+    //         }
+    //         window.on_keypress(Canvas::screen(), key);
+    //     }
+    // }
 
 
     // println!("{:?}", window);

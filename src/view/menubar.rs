@@ -3,7 +3,7 @@ use unicode_width::UnicodeWidthStr;
 use toolkit::*;
 use core::Core;
 use core::keymap::Key;
-use core::menu::MenuItem;
+use core::menu::{Menu, MenuItem};
 use view::theme::*;
 
 use view::context::ContextMenu;
@@ -33,13 +33,13 @@ pub struct MenubarView<'a> {
 }
 
 impl Menubar {
-    pub fn new(core: &Core) -> Menubar {
+    pub fn new(menu: Menu) -> Menubar {
         let mut items = Vec::new();
-        for item in core.package_repository.get_menu("default/Main.sublime-menu") {
+        for item in menu {
             match item {
                 MenuItem::Group(caption, menu) => {
                     items.push(MenubarItem {
-                        caption: caption.clone(),
+                        caption: caption,
                         modal: Modal::new(ContextMenu::new(menu), ModalPosition::UnderLeft)
                     });
                 },

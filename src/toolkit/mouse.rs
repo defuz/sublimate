@@ -1,0 +1,8 @@
+
+// enum MouseButton {
+
+// }
+
+// struct MouseEvent {
+
+// }

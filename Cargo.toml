@@ -6,7 +6,7 @@ authors = ["Ivan Ivaschenko <defuz@me.com>"]
 
 [dependencies]
 regex = "0.1.41"
-ncurses = {git = "https://github.com/defuz/ncurses-rs.git" }
+ncurses = "*"
 bitflags = "0.3.2"
 weakjson = "0.0.7"
 rustc-serialize = "0.3.16"
@@ -14,6 +14,7 @@ unicode-width = "0.1.3"
 vec_map = "0.3.0"
 log = "0.3"
 env_logger = "0.3"
+plist = "0.0.10"
 
 [features]
 default = ["ncurses/panel"]

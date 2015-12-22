@@ -7,6 +7,7 @@ pub mod command;
 pub mod keymap;
 pub mod context;
 pub mod performer;
+pub mod color_scheme;
 
 use core::project::Project;
 use core::packages::PackageRepository;
