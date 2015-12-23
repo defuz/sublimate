@@ -4,7 +4,7 @@ use std::io::Read;
 use plist::{PlistEvent, ParserError};
 use plist::xml::StreamingParser;
 
-use core::settings::{FromPlist, ParsePlist};
+use core::settings::{FromPlist, ParsePlist, Plist, PlistError};
 
 use self::ParseColorSchemeError::*;
 
@@ -127,11 +127,11 @@ pub enum ParseColorSchemeError {
     IncorrectSyntax,
     UndefinedSettings,
     UndefinedScopeSettings,
-    Parse(ParserError)
+    Parse(PlistError)
 }
 
-impl From<ParserError> for ParseColorSchemeError {
-    fn from(error: ParserError) -> ParseColorSchemeError {
+impl From<PlistError> for ParseColorSchemeError {
+    fn from(error: PlistError) -> ParseColorSchemeError {
         Parse(error)
     }
 }
@@ -199,55 +199,15 @@ impl FromStr for Color {
     }
 }
 
-macro_rules! next {
-    ($parser:expr) => {
-        try!(try!($parser.next().ok_or(IncorrectSyntax)))
-    }
-}
-
-macro_rules! eat {
-    ($parser:expr, $pat:pat) => {
-        match next!($parser) {
-            $pat => (),
-            _ => return Err(IncorrectSyntax)
-        };
-    }
-}
-
-macro_rules! parse_key {
-    ($parser:expr => $expr:expr) => {
-        match next!($parser) {
-            PlistEvent::EndDictionary => $expr,
-            PlistEvent::StringValue(key) => key,
-            _ => return Err(IncorrectSyntax)
-        }
-    }
-}
-
-macro_rules! parse_str {
-    ($parser:expr) => {
-        match next!($parser) {
-            PlistEvent::StringValue(value) => value,
-            _ => return Err(IncorrectSyntax)
-        }
-    }
-}
-
-fn parse_dictionary<R: Read>(parser: &mut StreamingParser<R>)
-    -> Result<Vec<(String, String)>, ParseColorSchemeError> {
-    let mut r = Vec::new();
-    loop {
-        r.push((parse_key!(parser => break), parse_str!(parser)));
-    };
-    Ok(r)
-}
-
-impl<R: Read> ParsePlist<R> for ColorSchemeScope {
+impl ParsePlist for ColorSchemeScope {
     type Error = ParseColorSchemeError;
 
-    fn parse_plist(parser: &mut StreamingParser<R>) -> Result<ColorSchemeScope, Self::Error> {
+    fn parse_plist(plist: &mut Plist) -> Result<ColorSchemeScope, Self::Error> {
         let mut scope_settings = ColorSchemeScope::default();
-        for (key, value) in try!(parse_dictionary(parser)) {
+        plist.parse_dict_start();
+        while try!(plist.parse_dict_continue()) {
+            let key = try!(plist.parse_string());
+            let value = try!(plist.parse_string());
             match &key[..] {
                 "scope"      => scope_settings.scope      = value,
                 "fontStyle"  => scope_settings.font_style = try!(FontStyle::from_str(&value)),
@@ -263,12 +223,15 @@ impl<R: Read> ParsePlist<R> for ColorSchemeScope {
     }
 }
 
-impl<R: Read> ParsePlist<R> for ColorSchemeSettings {
+impl ParsePlist for ColorSchemeSettings {
     type Error = ParseColorSchemeError;
 
-    fn parse_plist(parser: &mut StreamingParser<R>) -> Result<ColorSchemeSettings, Self::Error> {
+    fn parse_plist(plist: &mut Plist) -> Result<ColorSchemeSettings, Self::Error> {
         let mut settings = ColorSchemeSettings::default();
-        for (key, value) in try!(parse_dictionary(parser)) {
+        plist.parse_dict_start();
+        while try!(plist.parse_dict_continue()) {
+            let key = try!(plist.parse_string());
+            let value = try!(plist.parse_string());
             match &key[..] {
                 "foreground" =>
                     settings.foreground = try!(Color::from_str(&value)),
@@ -325,42 +288,47 @@ impl<R: Read> ParsePlist<R> for ColorSchemeSettings {
     }
 }
 
-impl<R: Read> ParsePlist<R> for ColorScheme {
+impl ParsePlist for ColorScheme {
     type Error = ParseColorSchemeError;
 
-    fn parse_plist(parser: &mut StreamingParser<R>) -> Result<ColorScheme, Self::Error> {
-        eat!(parser, PlistEvent::StartPlist);
-        eat!(parser, PlistEvent::StartDictionary(..));
+    fn parse_plist(plist: &mut Plist) -> Result<ColorScheme, Self::Error> {
         let mut scheme = None;
-        loop {
-            let key = parse_key!(parser => break);
+        try!(plist.parse_document_start());
+        try!(plist.parse_dict_start());
+        while try!(plist.parse_dict_continue()) {
+            let key = try!(plist.parse_string());
             if &key[..] == "settings" {
                 if scheme.is_some() {
                     return Err(IncorrectSyntax);
                 }
-                eat!(parser, PlistEvent::StartArray(..));
-                // parse settings item
-                eat!(parser, PlistEvent::StartDictionary(..));
-                let key = parse_key!(parser => break);
-                if &key[..] != "settings" {
-                    return Err(IncorrectSyntax);
-                }
-                eat!(parser, PlistEvent::StartDictionary(..));
-                let settings = try!(ColorSchemeSettings::parse_plist(parser));
+                let mut settings = None;
                 let mut scopes = Vec::new();
-                loop {
-                    match next!(parser) {
-                        PlistEvent::EndDictionary => break,
-                        PlistEvent::StartDictionary(..) => {
-                            scopes.push(try!(ColorSchemeScope::parse_plist(parser)))
+                try!(plist.parse_array_start());
+                while try!(plist.parse_array_continue()) {
+                    if let None = settings {
+                        plist.parse_dict_start();
+                        while try!(plist.parse_dict_continue()) {
+                            let key = try!(plist.parse_string());
+                            if &key[..] != "settings" {
+                                return Err(IncorrectSyntax)
+                            };
+                            if let Some(..) = settings {
+                                return Err(IncorrectSyntax)
+                            }
+                            settings = Some(try!(ColorSchemeSettings::parse_plist(plist)));
                         }
-                        _ => return Err(IncorrectSyntax)
+                    } else {
+                        scopes.push(try!(ColorSchemeScope::parse_plist(plist)));
                     }
                 }
-                scheme = Some(ColorScheme { settings: settings, scopes: scopes });
+                if let Some(settings) = settings {
+                    scheme = Some(ColorScheme { settings: settings, scopes: scopes });
+                } else {
+                    return Err(IncorrectSyntax);
+                }
             }
         }
-        eat!(parser, PlistEvent::EndPlist);
+        try!(plist.parse_document_end());
         match scheme {
             Some(scheme) => Ok(scheme),
             None => Err(IncorrectSyntax)

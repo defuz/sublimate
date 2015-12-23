@@ -6,7 +6,7 @@ use weakjson;
 use rustc_serialize::json::ParserError;
 use plist::xml::StreamingParser;
 
-use core::settings::{Settings, FromSettings, FromPlist, ParsePlist};
+use core::settings::{Settings, FromSettings, FromPlist, ParsePlist, Plist};
 use core::menu::Menu;
 use core::keymap::Keymap;
 use core::color_scheme::ColorScheme;
@@ -48,9 +48,9 @@ impl PackageRepository {
         Ok(try!(weakjson::from_reader(&mut reader as &mut Read)))
     }
 
-    pub fn read_plist(&self, path: &Path) -> Result<StreamingParser<BufReader<File>>, PackageError> {
+    pub fn read_plist(&self, path: &Path) -> Result<Plist, PackageError> {
         let reader = try!(self.read_file(path));
-        Ok(StreamingParser::new(reader))
+        Ok(Plist::new(reader))
     }
 
     pub fn get_menu<P: AsRef<Path>>(&self, path: P) -> Menu {
