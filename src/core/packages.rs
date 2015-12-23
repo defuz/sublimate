@@ -6,6 +6,7 @@ use core::settings::{Settings, SettingsError, read_json, read_plist, FromSetting
 use core::menu::Menu;
 use core::keymap::Keymap;
 use core::color_scheme::ColorScheme;
+use core::syntax_definition::SyntaxDefinition;
 
 #[derive(Debug)]
 pub struct PackageRepository {
@@ -68,6 +69,16 @@ impl PackageRepository {
                 Err(..) => ColorScheme::default()
             },
             Err(..) => ColorScheme::default()
+        }
+    }
+
+    pub fn get_syntax_definition<P: AsRef<Path>>(&self, path: P) -> SyntaxDefinition {
+        match self.read_plist(path.as_ref()) {
+            Ok(settings) => match SyntaxDefinition::parse_settings(settings) {
+                Ok(syntax_definition) => syntax_definition,
+                Err(..) => SyntaxDefinition::default()
+            },
+            Err(..) => SyntaxDefinition::default()
         }
     }
 }

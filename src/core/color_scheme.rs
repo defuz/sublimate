@@ -6,6 +6,7 @@ use self::ParseColorSchemeError::*;
 
 #[derive(Default)]
 pub struct ColorScheme {
+    name: Option<String>,
     settings: ColorSchemeSettings,
     scopes: Vec<ColorSchemeScope>
 }
@@ -337,6 +338,11 @@ impl ParseSettings for ColorScheme {
             Settings::Object(obj) => obj,
             _ => return Err(IncorrectSyntax)
         };
+        let name = match obj.remove("name") {
+            Some(Settings::String(name)) => Some(name),
+            None => None,
+            _ => return Err(IncorrectSyntax)
+        };
         let items = match obj.remove("settings") {
             Some(Settings::Array(items)) => items,
             _ => return Err(IncorrectSyntax)
@@ -369,6 +375,7 @@ impl ParseSettings for ColorScheme {
             }
         }
         Ok(ColorScheme {
+            name: name,
             settings: settings.unwrap_or_else(ColorSchemeSettings::default),
             scopes: scopes
         })

@@ -8,6 +8,7 @@ pub mod keymap;
 pub mod context;
 pub mod performer;
 pub mod color_scheme;
+pub mod syntax_definition;
 
 use core::project::Project;
 use core::packages::PackageRepository;
