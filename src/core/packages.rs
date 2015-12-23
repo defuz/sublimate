@@ -6,7 +6,7 @@ use core::settings::{Settings, SettingsError, read_json, read_plist, FromSetting
 use core::menu::Menu;
 use core::keymap::Keymap;
 use core::color_scheme::ColorScheme;
-use core::syntax_definition::SyntaxDefinition;
+use core::syntax::SyntaxDefinition;
 
 #[derive(Debug)]
 pub struct PackageRepository {

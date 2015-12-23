@@ -1,6 +1,7 @@
 use std::str::FromStr;
 
 use core::settings::{ParseSettings, Settings};
+use core::syntax::{SyntaxScopeSelector, ParseSyntaxScopeError};
 
 use self::ParseColorSchemeError::*;
 
@@ -85,7 +86,7 @@ pub struct ColorSchemeSettings {
 #[derive(Default)]
 pub struct ColorSchemeScope {
     /// Target scope name.
-    scope: String,
+    scope: SyntaxScopeSelector,
     /// Style of the font.
     font_style: FontStyle,
     /// Foreground color.
@@ -126,7 +127,14 @@ pub enum ParseColorSchemeError {
     UndefinedScopeSettings,
     ColorShemeScopeIsNotObject,
     ColorShemeSettingsIsNotObject,
-    ScopeSelectorIsNotString
+    ScopeSelectorIsNotString,
+    ScopeParse(ParseSyntaxScopeError)
+}
+
+impl From<ParseSyntaxScopeError> for ParseColorSchemeError {
+    fn from(error: ParseSyntaxScopeError) -> ParseColorSchemeError {
+        ScopeParse(error)
+    }
 }
 
 impl Default for UnderlineOption {
@@ -234,7 +242,7 @@ impl ParseSettings for ColorSchemeScope {
             _ => return Err(ColorShemeScopeIsNotObject),
         };
         let scope = match obj.remove("scope") {
-            Some(Settings::String(value)) => value,
+            Some(Settings::String(value)) => try!(SyntaxScopeSelector::from_str(&value)),
             _ => return Err(ScopeSelectorIsNotString),
         };
         let font_style = match obj.remove("fontStyle") {

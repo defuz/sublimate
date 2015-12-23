@@ -4,6 +4,7 @@ use std::collections::BTreeMap;
 
 use core::settings::{Settings, ParseSettings};
 
+use super::scope::{SyntaxScope, ParseSyntaxScopeError};
 use self::ParseSyntaxDefinitonError::*;
 
 #[derive(Debug, Default)]
@@ -14,7 +15,7 @@ pub struct SyntaxDefinition {
     name: String,
     /// Name of the topmost scope for this syntax definition. Either `source.<lang>` or
     /// `text.<lang>.` Use source for programming languages and text for markup and everything else.
-    scope_name: String,
+    scope_name: SyntaxScope,
     /// This is a list of file extensions (without the leading dot). When opening files of these
     /// types, Sublime Text will automatically activate this syntax definition for them. Optional.
     file_types: Vec<String>,
@@ -38,13 +39,13 @@ pub enum Pattern {
 
 #[derive(Debug)]
 pub struct MatchPattern {
-    name: Option<String>,
+    name: Option<SyntaxScope>,
     content: RegexPattern,
 }
 
 #[derive(Debug)]
 pub struct ScopeMatchPattern {
-    name: Option<String>,
+    name: Option<SyntaxScope>,
     content_name: Option<String>,
     begin: RegexPattern,
     end: RegexPattern,
@@ -81,12 +82,19 @@ pub enum ParseSyntaxDefinitonError {
     IncorrectSyntaxName,
     IncorrectSyntaxScope,
     IncorrectFileTypes,
-    RegexParse(RegexError)
+    RegexParse(RegexError),
+    ScopeParse(ParseSyntaxScopeError)
 }
 
 impl From<RegexError> for ParseSyntaxDefinitonError {
     fn from(error: RegexError) -> ParseSyntaxDefinitonError {
         RegexParse(error)
+    }
+}
+
+impl From<ParseSyntaxScopeError> for ParseSyntaxDefinitonError {
+    fn from(error: ParseSyntaxScopeError) -> ParseSyntaxDefinitonError {
+        ScopeParse(error)
     }
 }
 
@@ -151,7 +159,7 @@ impl ParseSettings for Pattern {
                     None => Captures::default()
                 };
                 let name = match obj.remove("name") {
-                    Some(Settings::String(s)) => Some(s),
+                    Some(Settings::String(s)) => Some(try!(SyntaxScope::from_str(&s))),
                     None => None,
                     _ => return Err(IncorrectName)
                 };
@@ -169,7 +177,7 @@ impl ParseSettings for Pattern {
         }
         // parse scope match pattern
         let name = match obj.remove("name") {
-            Some(Settings::String(s)) => Some(s),
+            Some(Settings::String(s)) => Some(try!(SyntaxScope::from_str(&s))),
             None => None,
             _ => return Err(IncorrectName)
         };
@@ -270,7 +278,7 @@ impl ParseSettings for SyntaxDefinition {
             _ => return Err(IncorrectSyntaxName)
         };
         let scope_name = match obj.remove("scopeName") {
-            Some(Settings::String(name)) => name,
+            Some(Settings::String(name)) => try!(SyntaxScope::from_str(&name)),
             _ => return Err(IncorrectSyntaxScope)
         };
         let file_types = match obj.remove("fileTypes") {
