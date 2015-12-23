@@ -43,7 +43,7 @@ pub struct ColorSchemeSettings {
     tags_foreground: Color,
     /// Controls certain options when the caret is next to a tag.
     /// Only applied when the match_tags setting is set to `true`.
-    tagsOptions: UnderlineOption,
+    tags_options: UnderlineOption,
 
     /// Background color of regions matching the current search.
     find_highlight: Color,
@@ -170,7 +170,7 @@ impl FromStr for FontStyle {
     fn from_str(s: &str) -> Result<FontStyle, Self::Err> {
         let mut font_style = FontStyle::empty();
         for i in s.split(' ') {
-            font_style.insert(match s {
+            font_style.insert(match i {
                 "bold" => FONT_STYLE_BOLD,
                 "underline" => FONT_STYLE_UNDERLNINE,
                 "italic" => FONT_STYLE_ITALIC,
@@ -267,7 +267,7 @@ impl ParseSettings for ColorSchemeSettings {
     fn parse_settings(json: Settings) -> Result<ColorSchemeSettings, Self::Error> {
         let mut settings = ColorSchemeSettings::default();
 
-        let mut obj = match json {
+        let obj = match json {
             Settings::Object(obj) => obj,
             _ => return Err(ColorShemeSettingsIsNotObject),
         };
@@ -295,7 +295,7 @@ impl ParseSettings for ColorSchemeSettings {
                 "tagsForeground" =>
                     settings.tags_foreground = try!(Color::parse_settings(value)),
                 "tagsOptions" =>
-                    settings.tagsOptions = try!(UnderlineOption::parse_settings(value)),
+                    settings.tags_options = try!(UnderlineOption::parse_settings(value)),
                 "findHighlight" =>
                     settings.find_highlight = try!(Color::parse_settings(value)),
                 "findHighlightForeground" =>
@@ -337,36 +337,40 @@ impl ParseSettings for ColorScheme {
             Settings::Object(obj) => obj,
             _ => return Err(IncorrectSyntax)
         };
-        let mut items = match obj.remove("settings") {
+        let items = match obj.remove("settings") {
             Some(Settings::Array(items)) => items,
             _ => return Err(IncorrectSyntax)
         };
-        let mut iter = items.into_iter();
-        let settings = iter.next().and_then(|settings| {
-            let mut obj = match settings {
+        let mut settings = None;
+        let mut scopes = Vec::new();
+        for json in items {
+            let mut obj = match json {
                 Settings::Object(obj) => obj,
-                _ => return None
+                _ => continue
             };
             match obj.remove("settings") {
-                Some(settings) => match ColorSchemeSettings::parse_settings(settings) {
-                    Ok(settings) => Some(settings),
+                Some(json) => {
+                    settings = settings.or_else(||
+                        match ColorSchemeSettings::parse_settings(json) {
+                            Ok(settings) => Some(settings),
+                            Err(..) => {
+                                // TODO: error
+                                None
+                            }
+                        }
+                    );
+                }
+                None => match ColorSchemeScope::parse_settings(Settings::Object(obj)) {
+                    Ok(scope) => scopes.push(scope),
                     Err(..) => {
                         // TODO: error
-                        None
                     }
-                },
-                _ => None
-            }
-        }).unwrap_or_else(ColorSchemeSettings::default);
-        let mut scopes = Vec::new();
-        for json in iter {
-            match ColorSchemeScope::parse_settings(json) {
-                Ok(scope) => scopes.push(scope),
-                Err(..) => {
-                    // TODO: error
                 }
             }
         }
-        Ok(ColorScheme { settings: settings, scopes: scopes })
+        Ok(ColorScheme {
+            settings: settings.unwrap_or_else(ColorSchemeSettings::default),
+            scopes: scopes
+        })
     }
 }
