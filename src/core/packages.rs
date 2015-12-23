@@ -5,7 +5,7 @@ use std::path::{Path, PathBuf};
 use core::settings::{Settings, SettingsError, read_json, read_plist, FromSettings, ParseSettings};
 use core::menu::Menu;
 use core::keymap::Keymap;
-use core::color_scheme::ColorScheme;
+use core::color_scheme::{ColorScheme, ParseColorSchemeError};
 use core::syntax::SyntaxDefinition;
 
 #[derive(Debug)]
@@ -13,14 +13,22 @@ pub struct PackageRepository {
     path: PathBuf
 }
 
+#[derive(Debug)]
 enum PackageError {
-    Settings(SettingsError),
+    ReadSettings(SettingsError),
+    ParseColorScheme(ParseColorSchemeError),
     Io(IoError)
 }
 
 impl From<SettingsError> for PackageError {
     fn from(error: SettingsError) -> PackageError {
-        PackageError::Settings(error)
+        PackageError::ReadSettings(error)
+    }
+}
+
+impl From<ParseColorSchemeError> for PackageError {
+    fn from(error: ParseColorSchemeError) -> PackageError {
+        PackageError::ParseColorScheme(error)
     }
 }
 
@@ -62,14 +70,8 @@ impl PackageRepository {
         }
     }
 
-    pub fn get_color_scheme<P: AsRef<Path>>(&self, path: P) -> ColorScheme {
-        match self.read_plist(path.as_ref()) {
-            Ok(settings) => match ColorScheme::parse_settings(settings) {
-                Ok(color_scheme) => color_scheme,
-                Err(..) => ColorScheme::default()
-            },
-            Err(..) => ColorScheme::default()
-        }
+    pub fn get_color_scheme<P: AsRef<Path>>(&self, path: P) -> Result<ColorScheme, PackageError> {
+        Ok(try!(ColorScheme::parse_settings(try!(self.read_plist(path.as_ref())))))
     }
 
     pub fn get_syntax_definition<P: AsRef<Path>>(&self, path: P) -> SyntaxDefinition {

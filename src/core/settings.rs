@@ -18,6 +18,7 @@ pub trait ParseSettings : Sized {
     fn parse_settings(settings: Settings) -> Result<Self, Self::Error>;
 }
 
+#[derive(Debug)]
 pub enum SettingsError {
     Plist(PlistError),
     Json(JsonError)

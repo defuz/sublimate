@@ -67,6 +67,7 @@ pub enum Include {
     FromSyntax(String)
 }
 
+#[derive(Debug)]
 pub enum ParseSyntaxDefinitonError {
     IncorrectInclude,
     CapturesIsNotObject,

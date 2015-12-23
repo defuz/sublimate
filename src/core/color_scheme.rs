@@ -1,18 +1,19 @@
 use std::str::FromStr;
 
 use core::settings::{ParseSettings, Settings};
-use core::syntax::{SyntaxScopeSelector, ParseSyntaxScopeError};
+use core::syntax::{SyntaxScopeSelectors, ParseSyntaxScopeError};
 
 use self::ParseColorSchemeError::*;
 
-#[derive(Default)]
+#[derive(Debug, Default)]
 pub struct ColorScheme {
     name: Option<String>,
+    author: Option<String>,
     settings: ColorSchemeSettings,
     scopes: Vec<ColorSchemeScope>
 }
 
-#[derive(Default)]
+#[derive(Debug, Default)]
 pub struct ColorSchemeSettings {
     /// Foreground color for the view.
     foreground: Color,
@@ -83,10 +84,10 @@ pub struct ColorSchemeSettings {
     highlight_foreground: Color
 }
 
-#[derive(Default)]
+#[derive(Debug, Default)]
 pub struct ColorSchemeScope {
     /// Target scope name.
-    scope: SyntaxScopeSelector,
+    scope: SyntaxScopeSelectors,
     /// Style of the font.
     font_style: FontStyle,
     /// Foreground color.
@@ -95,7 +96,7 @@ pub struct ColorSchemeScope {
     background: Option<Color>
 }
 
-#[derive(Default)]
+#[derive(Debug, Default)]
 pub struct Color {
     r: u8,
     g: u8,
@@ -111,6 +112,7 @@ bitflags! {
     }
 }
 
+#[derive(Debug)]
 pub enum UnderlineOption {
     None,
     Underline,
@@ -118,16 +120,19 @@ pub enum UnderlineOption {
     SquigglyUnderline
 }
 
+#[derive(Debug)]
 pub enum ParseColorSchemeError {
     IncorrectUnderlineOption,
-    IncorrectFontStyle,
+    IncorrectFontStyle(String),
     IncorrectColor,
     IncorrectSyntax,
+    IncorrectSettings,
     UndefinedSettings,
-    UndefinedScopeSettings,
+    UndefinedScopeSettings(String),
     ColorShemeScopeIsNotObject,
     ColorShemeSettingsIsNotObject,
-    ScopeSelectorIsNotString,
+    ScopeSelectorIsNotString(String),
+    DuplicateSettings,
     ScopeParse(ParseSyntaxScopeError)
 }
 
@@ -168,7 +173,7 @@ impl ParseSettings for UnderlineOption {
     fn parse_settings(settings: Settings) -> Result<UnderlineOption, Self::Error> {
         match settings {
             Settings::String(value) => Ok(try!(UnderlineOption::from_str(&value))),
-            _ => Err(IncorrectFontStyle)
+            _ => Err(IncorrectUnderlineOption)
         }
     }
 }
@@ -176,14 +181,14 @@ impl ParseSettings for UnderlineOption {
 impl FromStr for FontStyle {
     type Err = ParseColorSchemeError;
 
-    fn from_str(s: &str) -> Result<FontStyle, Self::Err> {
+    fn from_str(mut s: &str) -> Result<FontStyle, Self::Err> {
         let mut font_style = FontStyle::empty();
-        for i in s.split(' ') {
+        for i in s.split_whitespace() {
             font_style.insert(match i {
                 "bold" => FONT_STYLE_BOLD,
                 "underline" => FONT_STYLE_UNDERLNINE,
                 "italic" => FONT_STYLE_ITALIC,
-                _ => return Err(IncorrectFontStyle),
+                s => return Err(IncorrectFontStyle(s.to_owned())),
             })
         }
         Ok(font_style)
@@ -196,7 +201,7 @@ impl ParseSettings for FontStyle {
     fn parse_settings(settings: Settings) -> Result<FontStyle, Self::Error> {
         match settings {
             Settings::String(value) => Ok(try!(FontStyle::from_str(&value))),
-            _ => Err(IncorrectFontStyle)
+            c => Err(IncorrectFontStyle(c.to_string()))
         }
     }
 }
@@ -228,7 +233,7 @@ impl ParseSettings for Color {
     fn parse_settings(settings: Settings) -> Result<Color, Self::Error> {
         match settings {
             Settings::String(value) => Ok(try!(Color::from_str(&value))),
-            _ => Err(IncorrectFontStyle)
+            _ => Err(IncorrectColor)
         }
     }
 }
@@ -242,12 +247,17 @@ impl ParseSettings for ColorSchemeScope {
             _ => return Err(ColorShemeScopeIsNotObject),
         };
         let scope = match obj.remove("scope") {
-            Some(Settings::String(value)) => try!(SyntaxScopeSelector::from_str(&value)),
-            _ => return Err(ScopeSelectorIsNotString),
+            Some(Settings::String(value)) => try!(SyntaxScopeSelectors::from_str(&value)),
+            _ => return Err(ScopeSelectorIsNotString(format!("{:?}", obj))),
+        };
+        let mut obj = match obj.remove("settings") {
+            Some(Settings::Object(obj)) => obj,
+            _ => return Err(IncorrectSettings)
         };
         let font_style = match obj.remove("fontStyle") {
             Some(Settings::String(value)) => try!(FontStyle::from_str(&value)),
-            _ => return Err(IncorrectFontStyle),
+            None => FontStyle::empty(),
+            Some(c) => return Err(IncorrectFontStyle(c.to_string())),
         };
         let foreground = match obj.remove("foreground") {
             Some(Settings::String(value)) => Some(try!(Color::from_str(&value))),
@@ -331,7 +341,8 @@ impl ParseSettings for ColorSchemeSettings {
                     settings.highlight = try!(Color::parse_settings(value)),
                 "highlightForeground" =>
                     settings.highlight_foreground = try!(Color::parse_settings(value)),
-                _ => return Err(UndefinedScopeSettings)
+                "invisibles" => (), // ignored
+                _ => return Err(UndefinedScopeSettings(key))
             }
         };
         Ok(settings)
@@ -351,40 +362,39 @@ impl ParseSettings for ColorScheme {
             None => None,
             _ => return Err(IncorrectSyntax)
         };
+        let author = match obj.remove("author") {
+            Some(Settings::String(author)) => Some(author),
+            None => None,
+            _ => return Err(IncorrectSyntax)
+        };
         let items = match obj.remove("settings") {
             Some(Settings::Array(items)) => items,
             _ => return Err(IncorrectSyntax)
         };
-        let mut settings = None;
-        let mut scopes = Vec::new();
-        for json in items {
-            let mut obj = match json {
-                Settings::Object(obj) => obj,
-                _ => continue
-            };
-            match obj.remove("settings") {
-                Some(json) => {
-                    settings = settings.or_else(||
-                        match ColorSchemeSettings::parse_settings(json) {
-                            Ok(settings) => Some(settings),
-                            Err(..) => {
-                                // TODO: error
-                                None
-                            }
-                        }
-                    );
+        let mut iter = items.into_iter();
+        let settings = match iter.next() {
+            Some(Settings::Object(mut obj)) => {
+                match obj.remove("settings") {
+                    Some(settings) => try!(ColorSchemeSettings::parse_settings(settings)),
+                    None => return Err(UndefinedSettings)
                 }
-                None => match ColorSchemeScope::parse_settings(Settings::Object(obj)) {
-                    Ok(scope) => scopes.push(scope),
-                    Err(..) => {
-                        // TODO: error
-                    }
+            },
+            _ => return Err(UndefinedSettings)
+        };
+        let mut scopes = Vec::new();
+        for json in iter {
+            match ColorSchemeScope::parse_settings(json) {
+                Ok(scope) => scopes.push(scope),
+                Err(..) => {
+                    // TODO: warning
                 }
             }
+
         }
         Ok(ColorScheme {
             name: name,
-            settings: settings.unwrap_or_else(ColorSchemeSettings::default),
+            author: author,
+            settings: settings,
             scopes: scopes
         })
     }

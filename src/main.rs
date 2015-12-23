@@ -33,21 +33,21 @@ use view::theme::PALETTE;
 
 fn main() {
 
-    setlocale(LcCategory::all, "en_US.utf-8");
+    // setlocale(LcCategory::all, "en_US.utf-8");
 
-    initscr();
+    // initscr();
 
-    noecho();
-    keypad(stdscr, true);
-    curs_set(CURSOR_VISIBILITY::CURSOR_INVISIBLE);
-    raw();
+    // noecho();
+    // keypad(stdscr, true);
+    // curs_set(CURSOR_VISIBILITY::CURSOR_INVISIBLE);
+    // raw();
 
-    start_color();
-    use_default_colors();
+    // start_color();
+    // use_default_colors();
 
-    for (i, &(ref fg, ref bg)) in PALETTE.iter().enumerate() {
-        init_pair(i as i16, fg.to_term(), bg.to_term());
-    }
+    // for (i, &(ref fg, ref bg)) in PALETTE.iter().enumerate() {
+    //     init_pair(i as i16, fg.to_term(), bg.to_term());
+    // }
 
     // env_logger::init().unwrap();
 
@@ -87,20 +87,24 @@ fn main() {
     //     doupdate();
     // }
 
-    mouseinterval(0);
-    mousemask((ALL_MOUSE_EVENTS | REPORT_MOUSE_POSITION) as u64, None);
+    // mouseinterval(0);
+    // mousemask((ALL_MOUSE_EVENTS | REPORT_MOUSE_POSITION) as u64, None);
 
-    loop {
-        let c = getch();
-        if c == 10 {
-            break
-        }
-        if c == KEY_MOUSE {
-            let mut e = MEVENT {id: 0, x: 0, y: 0, z: 0, bstate: 0};
-            getmouse(&mut e);
-            println!("id={}, x={}, y={}, z={}, bstate={}", e.id, e.x, e.y, e.z, e.bstate);
-        }
-    }
+    // loop {
+    //     let c = getch();
+    //     if c == 10 {
+    //         break
+    //     }
+    //     if c == KEY_MOUSE {
+    //         let mut e = MEVENT {id: 0, x: 0, y: 0, z: 0, bstate: 0};
+    //         getmouse(&mut e);
+    //         println!("id={}, x={}, y={}, z={}, bstate={}", e.id, e.x, e.y, e.z, e.bstate);
+    //     }
+    // }
+
+    let core = Core::load();
+    let theme = core.package_repository.get_color_scheme("Color Scheme - Default/Twilight.tmTheme");
+    println!("{:?}", theme);
 
 
     // let mut window = Window::new(Core::load());
@@ -167,5 +171,5 @@ fn main() {
     // }
 
     // Terminate ncurses.
-    endwin();
+    // endwin();
 }

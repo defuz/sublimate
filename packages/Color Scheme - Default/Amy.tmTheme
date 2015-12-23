@@ -456,6 +456,8 @@
 		<dict>
 			<key>name</key>
 			<string>Library function</string>
+			<key>scope</key>
+			<string>support.function</string>
 			<key>settings</key>
 			<dict>
 				<key>background</key>
