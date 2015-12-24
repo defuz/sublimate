@@ -103,8 +103,9 @@ fn main() {
     // }
 
     let core = Core::load();
-    let theme = core.package_repository.get_color_scheme("Color Scheme - Default/Twilight.tmTheme");
-    println!("{:?}", theme);
+    // let theme = core.package_repository.get_color_scheme("Color Scheme - Default/Twilight.tmTheme");
+    let syntax = core.package_repository.get_syntax_definition("Rust/Rust.tmLanguage");
+    println!("{:?}", syntax);
 
 
     // let mut window = Window::new(Core::load());

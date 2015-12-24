@@ -6,7 +6,7 @@ use core::settings::{Settings, SettingsError, read_json, read_plist, FromSetting
 use core::menu::Menu;
 use core::keymap::Keymap;
 use core::color_scheme::{ColorScheme, ParseColorSchemeError};
-use core::syntax::SyntaxDefinition;
+use core::syntax::{SyntaxDefinition, ParseSyntaxDefinitonError};
 
 #[derive(Debug)]
 pub struct PackageRepository {
@@ -17,6 +17,7 @@ pub struct PackageRepository {
 enum PackageError {
     ReadSettings(SettingsError),
     ParseColorScheme(ParseColorSchemeError),
+    ParseSyntaxDefinition(ParseSyntaxDefinitonError),
     Io(IoError)
 }
 
@@ -29,6 +30,12 @@ impl From<SettingsError> for PackageError {
 impl From<ParseColorSchemeError> for PackageError {
     fn from(error: ParseColorSchemeError) -> PackageError {
         PackageError::ParseColorScheme(error)
+    }
+}
+
+impl From<ParseSyntaxDefinitonError> for PackageError {
+    fn from(error: ParseSyntaxDefinitonError) -> PackageError {
+        PackageError::ParseSyntaxDefinition(error)
     }
 }
 
@@ -74,13 +81,7 @@ impl PackageRepository {
         Ok(try!(ColorScheme::parse_settings(try!(self.read_plist(path.as_ref())))))
     }
 
-    pub fn get_syntax_definition<P: AsRef<Path>>(&self, path: P) -> SyntaxDefinition {
-        match self.read_plist(path.as_ref()) {
-            Ok(settings) => match SyntaxDefinition::parse_settings(settings) {
-                Ok(syntax_definition) => syntax_definition,
-                Err(..) => SyntaxDefinition::default()
-            },
-            Err(..) => SyntaxDefinition::default()
-        }
+    pub fn get_syntax_definition<P: AsRef<Path>>(&self, path: P) -> Result<SyntaxDefinition, PackageError> {
+        Ok(try!(SyntaxDefinition::parse_settings(try!(self.read_plist(path.as_ref())))))
     }
 }

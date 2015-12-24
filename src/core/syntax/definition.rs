@@ -1,11 +1,13 @@
 use std::str::FromStr;
-use regex::{Regex, Error as RegexError};
+use regex::{Error as RegexError};
 use std::collections::BTreeMap;
 
 use core::settings::{Settings, ParseSettings};
 
 use super::scope::{SyntaxScope, ParseSyntaxScopeError};
 use self::ParseSyntaxDefinitonError::*;
+
+type Regex = String; // FIXME: remove this bulshit
 
 #[derive(Debug, Default)]
 pub struct SyntaxDefinition {
@@ -58,7 +60,7 @@ pub struct RegexPattern {
     captures: Captures
 }
 
-pub type Captures = BTreeMap<usize, String>;
+pub type Captures = BTreeMap<usize, SyntaxScope>;
 
 #[derive(Debug)]
 pub enum Include {
@@ -125,8 +127,12 @@ impl ParseSettings for Captures {
                 Ok(index) => index,
                 Err(..) => return Err(IncorrectCaptureIndex)
             };
-            let scope = match value {
-                Settings::String(scope) => scope,
+            let mut obj = match value {
+                Settings::Object(obj) => obj,
+                _ => return Err(IncorrectCaptureValue)
+            };
+            let scope = match obj.remove("name") {
+                Some(Settings::String(s)) => try!(SyntaxScope::from_str(&s)),
                 _ => return Err(IncorrectCaptureValue)
             };
             captures.insert(index, scope);
@@ -154,7 +160,7 @@ impl ParseSettings for Pattern {
         match obj.remove("match") {
             // parse match pattern
             Some(Settings::String(r)) => {
-                let regex = try!(Regex::new(&r));
+                let regex = r;
                 let captures = match obj.remove("captures") {
                     Some(settings) => try!(Captures::parse_settings(settings)),
                     None => Captures::default()
@@ -188,11 +194,11 @@ impl ParseSettings for Pattern {
             _ => return Err(IncorrectName)
         };
         let begin_regex = match obj.remove("begin") {
-            Some(Settings::String(s)) => try!(Regex::new(&s)),
+            Some(Settings::String(s)) => s,
             _ => return Err(IncorrectRegex)
         };
         let end_regex = match obj.remove("end") {
-            Some(Settings::String(s)) => try!(Regex::new(&s)),
+            Some(Settings::String(s)) => s,
             _ => return Err(IncorrectRegex)
         };
         let begin_captures = match obj.remove("beginCaptures") {
@@ -256,9 +262,9 @@ impl ParseSettings for Repository {
                 _ => return Err(IncorrectRepository)
             };
             let patterns = if obj.len() == 1 && obj.contains_key("patterns") {
-                vec![try!(Pattern::parse_settings(obj.remove("patterns").unwrap()))]
+                try!(Patterns::parse_settings(obj.remove("patterns").unwrap()))
             } else {
-                try!(Patterns::parse_settings(Settings::Object(obj)))
+                vec![try!(Pattern::parse_settings(Settings::Object(obj)))]
             };
             repository.insert(key, patterns);
         }
