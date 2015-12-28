@@ -1,4 +1,4 @@
-use regex;
+use oniguruma::{Regex, Error as RegexError};
 
 use core::settings::{Settings, ParseSettings};
 use core::Core;
@@ -6,7 +6,7 @@ use self::ParseContextError::*;
 
 pub type Context = Vec<ContextRule>;
 
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub enum ContextRule {
     /// Returns `true` if the autocomplete list is visible.
     AutoCompleteVisibleEqual(bool),
@@ -38,14 +38,14 @@ pub enum ContextRule {
     Setting(String, Operator<Settings>),
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub enum Operator<T> {
     /// Test for equality.
     Equal(T),
     NotEqual(T),
     /// Match against a regular expression.
-    RegexContains(regex::Regex),
-    NotRegexContains(regex::Regex),
+    RegexContains(Regex),
+    NotRegexContains(Regex),
 }
 
 pub enum ParseContextError {
@@ -54,7 +54,7 @@ pub enum ParseContextError {
     IncorrectKey,
     IncorrectOperatorOrOperand,
     IncorrectMatchAllValue,
-    RegexError(regex::Error),
+    RegexParse(RegexError),
 }
 
 impl ParseSettings for ContextRule {
@@ -110,14 +110,14 @@ impl ParseSettings for ContextRule {
                 ("equal", operand) => Operator::Equal(operand),
                 ("not_equal", operand) => Operator::NotEqual(operand),
                 (op, Settings::String(pattern)) => {
-                    let operator_builder: fn(regex::Regex) -> Operator<Settings> = match op {
+                    let operator_builder: fn(Regex) -> Operator<Settings> = match op {
                         "regex_contains" => Operator::RegexContains,
                         "not_regex_contains" => Operator::NotRegexContains,
                         _ => return Err(IncorrectOperatorOrOperand),
                     };
-                    let regex = match regex::Regex::new(&pattern) {
+                    let regex = match Regex::new(&pattern) {
                         Ok(regex) => regex,
-                        Err(err) => return Err(RegexError(err)),
+                        Err(err) => return Err(RegexParse(err)),
                     };
                     operator_builder(regex)
                 }
@@ -161,14 +161,14 @@ impl ParseSettings for ContextRule {
                         ("equal", Settings::String(operand)) => Operator::Equal(operand),
                         ("not_equal", Settings::String(operand)) => Operator::NotEqual(operand),
                         (op, Settings::String(pattern)) => {
-                            let operator_builder: fn(regex::Regex) -> Operator<String> = match op {
+                            let operator_builder: fn(Regex) -> Operator<String> = match op {
                                 "regex_contains" => Operator::RegexContains,
                                 "not_regex_contains" => Operator::NotRegexContains,
                                 _ => return Err(IncorrectOperatorOrOperand),
                             };
-                            let regex = match regex::Regex::new(&pattern) {
+                            let regex = match Regex::new(&pattern) {
                                 Ok(regex) => regex,
-                                Err(err) => return Err(RegexError(err)),
+                                Err(err) => return Err(RegexParse(err)),
                             };
                             operator_builder(regex)
                         }
@@ -208,8 +208,8 @@ impl Operator<String> {
         match *self {
             Operator::Equal(ref operand) => v == operand,
             Operator::NotEqual(ref operand) => v != operand,
-            Operator::RegexContains(ref operand) => operand.is_match(v),
-            Operator::NotRegexContains(ref operand) => !operand.is_match(v),
+            Operator::RegexContains(ref operand) => /*operand.is_match(v)*/ true,
+            Operator::NotRegexContains(ref operand) => !/*operand.is_match(v)*/ true,
         }
     }
 }
@@ -220,11 +220,11 @@ impl Operator<Settings> {
             Operator::Equal(ref operand) => v == operand,
             Operator::NotEqual(ref operand) => v != operand,
             Operator::RegexContains(ref operand) => match *v {
-                Settings::String(ref v) => operand.is_match(v),
+                Settings::String(ref v) => /*operand.is_match(v)*/ true,
                 _ => false,
             },
             Operator::NotRegexContains(ref operand) => match *v {
-                Settings::String(ref v) => !operand.is_match(v),
+                Settings::String(ref v) => !/*operand.is_match(v)*/ true,
                 _ => false,
             },
         }

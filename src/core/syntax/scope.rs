@@ -1,17 +1,17 @@
 use std::str::FromStr;
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Clone)]
 pub struct SyntaxScope {
     name: String
 }
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Clone)]
 pub struct SyntaxScopeSelector {
     path: Vec<SyntaxScope>,
     exclude: Option<SyntaxScope>
 }
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Clone)]
 pub struct SyntaxScopeSelectors {
     selectors: Vec<SyntaxScopeSelector>
 }

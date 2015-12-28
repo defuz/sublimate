@@ -1,5 +1,5 @@
 use std::str::FromStr;
-use regex::{Error as RegexError};
+use oniguruma::{Error as RegexError, Regex};
 use std::collections::BTreeMap;
 
 use core::settings::{Settings, ParseSettings};
@@ -7,26 +7,24 @@ use core::settings::{Settings, ParseSettings};
 use super::scope::{SyntaxScope, ParseSyntaxScopeError};
 use self::ParseSyntaxDefinitonError::*;
 
-type Regex = String; // FIXME: remove this bulshit
-
 #[derive(Debug, Default)]
 pub struct SyntaxDefinition {
     /// Descriptive name for the syntax definition. Shows up in the syntax definition dropdown menu
     /// located in the bottom right of the Sublime Text interface. It’s usually the name of the
     /// programming language or equivalent.
-    name: String,
+    pub name: String,
     /// Name of the topmost scope for this syntax definition. Either `source.<lang>` or
     /// `text.<lang>.` Use source for programming languages and text for markup and everything else.
-    scope_name: SyntaxScope,
+    pub scope_name: SyntaxScope,
     /// This is a list of file extensions (without the leading dot). When opening files of these
     /// types, Sublime Text will automatically activate this syntax definition for them. Optional.
-    file_types: Vec<String>,
+    pub file_types: Vec<String>,
     /// Array of patterns to match against the buffer’s text.
-    patterns: Patterns,
+    pub patterns: Patterns,
     /// Array of patterns abstracted out from the patterns element. Useful to keep the syntax
     /// definition tidy as well as for specialized uses like recursive patterns or re-using
     /// the same pattern. Optional.
-    repository: Repository,
+    pub repository: Repository,
 }
 
 pub type Patterns = Vec<Pattern>;
@@ -36,28 +34,30 @@ pub type Repository = BTreeMap<String, Patterns>;
 pub enum Pattern {
     Match(MatchPattern),
     ScopeMatch(ScopeMatchPattern),
+    ContextId(usize),
     Include(Include)
 }
 
 #[derive(Debug)]
 pub struct MatchPattern {
-    name: Option<SyntaxScope>,
-    content: RegexPattern,
+    pub name: Option<SyntaxScope>,
+    pub content: RegexPattern,
 }
 
 #[derive(Debug)]
 pub struct ScopeMatchPattern {
-    name: Option<SyntaxScope>,
-    content_name: Option<String>,
-    begin: RegexPattern,
-    end: RegexPattern,
-    patterns: Patterns
+    pub name: Option<SyntaxScope>,
+    pub content_name: Option<SyntaxScope>,
+    pub begin: RegexPattern,
+    pub end: RegexPattern,
+    pub patterns: Patterns
 }
 
 #[derive(Debug)]
 pub struct RegexPattern {
-    regex: Regex,
-    captures: Captures
+    pub regex: String,
+    pub captures_len: usize,
+    pub captures_map: Captures
 }
 
 pub type Captures = BTreeMap<usize, SyntaxScope>;
@@ -98,6 +98,17 @@ impl From<RegexError> for ParseSyntaxDefinitonError {
 impl From<ParseSyntaxScopeError> for ParseSyntaxDefinitonError {
     fn from(error: ParseSyntaxScopeError) -> ParseSyntaxDefinitonError {
         ScopeParse(error)
+    }
+}
+
+impl RegexPattern {
+    fn new(regex: String, captures: Captures) -> Result<RegexPattern, ParseSyntaxDefinitonError> {
+        let captures_len = 0; // todo: Regex::new(regex).captures_len(),
+        Ok(RegexPattern {
+            regex: regex,
+            captures_len: captures_len,
+            captures_map: captures
+        })
     }
 }
 
@@ -173,10 +184,7 @@ impl ParseSettings for Pattern {
 
                 return Ok(Pattern::Match(MatchPattern {
                     name: name,
-                    content: RegexPattern {
-                        regex: regex,
-                        captures: captures
-                    }
+                    content: try!(RegexPattern::new(regex, captures))
                 }))
             },
             None => (),
@@ -189,7 +197,7 @@ impl ParseSettings for Pattern {
             _ => return Err(IncorrectName)
         };
         let content_name = match obj.remove("contentName") {
-            Some(Settings::String(s)) => Some(s),
+            Some(Settings::String(s)) => Some(try!(SyntaxScope::from_str(&s))),
             None => None,
             _ => return Err(IncorrectName)
         };
@@ -217,14 +225,8 @@ impl ParseSettings for Pattern {
         Ok(Pattern::ScopeMatch(ScopeMatchPattern {
             name: name,
             content_name: content_name,
-            begin: RegexPattern {
-                regex: begin_regex,
-                captures: begin_captures
-            },
-            end: RegexPattern {
-                regex: end_regex,
-                captures: end_captures
-            },
+            begin: try!(RegexPattern::new(begin_regex, begin_captures)),
+            end: try!(RegexPattern::new(end_regex, end_captures)),
             patterns: patterns
         }))
 

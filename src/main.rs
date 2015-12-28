@@ -12,9 +12,8 @@ extern crate bitflags;
 extern crate log;
 extern crate env_logger;
 
-extern crate regex;
+extern crate oniguruma;
 extern crate unicode_width;
-extern crate vec_map;
 
 extern crate ncurses;
 
@@ -102,10 +101,23 @@ fn main() {
     //     }
     // }
 
-    let core = Core::load();
-    // let theme = core.package_repository.get_color_scheme("Color Scheme - Default/Twilight.tmTheme");
-    let syntax = core.package_repository.get_syntax_definition("Rust/Rust.tmLanguage");
-    println!("{:?}", syntax);
+    // let core = Core::load();
+    // // let theme = core.package_repository.get_color_scheme("Color Scheme - Default/Twilight.tmTheme");
+    // let syntax = core.package_repository.get_syntax_definition("Rust/Rust.tmLanguage");
+    // println!("{:?}", syntax);
+    use oniguruma::Regex;
+
+    let pattern = "(?<f.a.b>a+(b+))|(?<s.a.b>c+(d+))";
+    let text = "- cd aaabbb -";
+    let regex = Regex::new(pattern).unwrap();
+    for (i, pos) in regex.captures(text).unwrap().iter_pos().enumerate() {
+        match pos {
+            Some((beg, end)) =>
+                println!("{}: {}-{}, {:?}", i, beg, end, &text[beg..end]),
+            None =>
+                println!("{}: none", i)
+        }
+    }
 
 
     // let mut window = Window::new(Core::load());
