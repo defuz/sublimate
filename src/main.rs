@@ -25,7 +25,7 @@ extern crate plist;
 use ncurses::*;
 
 use core::Core;
-use core::keymap::Key;
+use core::bindings::Key;
 use view::window::Window;
 use toolkit::*;
 use view::theme::PALETTE;

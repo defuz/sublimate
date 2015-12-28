@@ -2,8 +2,9 @@ use std::collections::HashMap;
 
 use core::Core;
 use core::command::Command;
-use core::keymap::{Keymap, Hotkey, HotkeySequence};
-use core::context::{Context, Evaluate};
+
+use super::keymap::{Keymap, Hotkey, HotkeySequence};
+use super::context::{Context, Evaluate};
 
 type PerformerNodeId = usize;
 

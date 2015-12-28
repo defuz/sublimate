@@ -1,5 +1,5 @@
 use toolkit::canvas::Canvas;
-use core::keymap::Key;
+use core::bindings::Key;
 
 pub trait Widget<'a> {
     type Context;

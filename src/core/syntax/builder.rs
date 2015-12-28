@@ -1,4 +1,4 @@
-use oniguruma::Regex;
+use core::regex::{Regex, RegexError};
 
 use super::scope::SyntaxScope;
 
@@ -6,7 +6,7 @@ use super::parser::{
     Parser, ParserMatch, ScopeCommand, ContextCommand, ParserContext
 };
 use super::definition::{
-    SyntaxDefinition, Pattern, Patterns, Include, MatchPattern,
+    Syntax, Pattern, Patterns, Include, MatchPattern,
     ScopeMatchPattern, Captures, RegexPattern
 };
 
@@ -16,10 +16,10 @@ struct ParserBuilder {
 }
 
 struct ParserContextBuilder<'a> {
-    parser_builder: &'a ParserBuilder,
-    syntax: &'a SyntaxDefinition,
     matches: Vec<ParserMatch>,
-    regex: String
+    regex: String,
+    syntax: &'a Syntax,
+    scopes: &'a [ScopeMatchPattern]
 }
 
 impl ScopeCommand {
@@ -39,16 +39,19 @@ impl ScopeCommand {
 }
 
 impl<'a> ParserContextBuilder<'a> {
-    fn new(parser_builder: &'a ParserBuilder, syntax: &'a SyntaxDefinition) -> ParserContextBuilder<'a> {
+    fn new(syntax: &'a Syntax,
+           scopes: &'a [ScopeMatchPattern]) -> ParserContextBuilder<'a> {
         ParserContextBuilder {
             matches: Vec::new(),
             regex: String::new(),
-            parser_builder: parser_builder,
             syntax: syntax,
+            scopes: scopes
         }
     }
 
-    fn push(&mut self, before: ScopeCommand, after: ScopeCommand, command: ContextCommand, pattern: &RegexPattern) {
+    fn push(&mut self,
+            before: ScopeCommand, after: ScopeCommand,
+            command: ContextCommand, pattern: &RegexPattern) {
         self.matches.push(ParserMatch {
             before: before,
             after: after,
@@ -87,7 +90,7 @@ impl<'a> ParserContextBuilder<'a> {
         let patterns = match *include {
             Include::FromSelf => &self.syntax.patterns,
             Include::FromRepository(ref name) => &self.syntax.repository[name], // todo: check index
-            Include::FromSyntax(ref name) => unimplemented!()
+            Include::FromSyntax(ref name) => unimplemented!() // todo: implement
         };
         self.push_patterns(patterns);
     }
@@ -96,10 +99,7 @@ impl<'a> ParserContextBuilder<'a> {
         for pattern in patterns {
             match *pattern {
                 Pattern::Match(ref pattern) => self.push_match(pattern),
-                Pattern::ContextId(id) => {
-                    let pattern = self.parser_builder.get_scope(id);
-                    self.push_scope_begin(id, pattern);
-                },
+                Pattern::ContextId(id) => self.push_scope_begin(id, &self.scopes[id]),
                 Pattern::Include(ref include) => self.push_include(include),
                 Pattern::ScopeMatch(..) => unreachable!("Scope match shoud be identified before")
             }
@@ -122,7 +122,7 @@ impl ParserBuilder {
         }
     }
 
-    fn build(mut self, syntax: &mut SyntaxDefinition) -> Parser {
+    fn build(mut self, syntax: &mut Syntax) -> Parser {
         // identificate context scopes
         self.identificate_patterns(&mut syntax.patterns);
         for (_, patterns) in syntax.repository.iter_mut() {
@@ -141,15 +141,15 @@ impl ParserBuilder {
         }
     }
 
-    fn build_scope<'a>(&'a self, pattern: &ScopeMatchPattern, syntax: &'a SyntaxDefinition) -> ParserContext {
-        let mut builder = ParserContextBuilder::new(self, syntax);
+    fn build_scope(&self, pattern: &ScopeMatchPattern, syntax: &Syntax) -> ParserContext {
+        let mut builder = ParserContextBuilder::new(syntax, &self.scopes);
         builder.push_patterns(&pattern.patterns);
         builder.push_scope_end(pattern);
         builder.build()
     }
 
-    fn build_root<'a>(&'a self, patterns: &Patterns, syntax: &'a SyntaxDefinition) -> ParserContext {
-        let mut builder = ParserContextBuilder::new(self, syntax);
+    fn build_root(&self, patterns: &Patterns, syntax: &Syntax) -> ParserContext {
+        let mut builder = ParserContextBuilder::new(syntax, &self.scopes);
         builder.push_patterns(patterns);
         builder.build()
     }
@@ -165,9 +165,5 @@ impl ParserBuilder {
                 };
             }
         }
-    }
-
-    fn get_scope(&self, id: usize) -> &ScopeMatchPattern {
-        &self.scopes[id]
     }
 }

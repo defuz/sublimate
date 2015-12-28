@@ -1,14 +1,14 @@
 use std::str::FromStr;
-use oniguruma::{Error as RegexError, Regex};
 use std::collections::BTreeMap;
 
 use core::settings::{Settings, ParseSettings};
+use core::regex::{Regex, RegexError};
 
 use super::scope::{SyntaxScope, ParseSyntaxScopeError};
-use self::ParseSyntaxDefinitonError::*;
+use self::ParseSyntaxError::*;
 
 #[derive(Debug, Default)]
-pub struct SyntaxDefinition {
+pub struct Syntax {
     /// Descriptive name for the syntax definition. Shows up in the syntax definition dropdown menu
     /// located in the bottom right of the Sublime Text interface. It’s usually the name of the
     /// programming language or equivalent.
@@ -70,7 +70,7 @@ pub enum Include {
 }
 
 #[derive(Debug)]
-pub enum ParseSyntaxDefinitonError {
+pub enum ParseSyntaxError {
     IncorrectInclude,
     CapturesIsNotObject,
     IncorrectCaptureIndex,
@@ -89,20 +89,20 @@ pub enum ParseSyntaxDefinitonError {
     ScopeParse(ParseSyntaxScopeError)
 }
 
-impl From<RegexError> for ParseSyntaxDefinitonError {
-    fn from(error: RegexError) -> ParseSyntaxDefinitonError {
+impl From<RegexError> for ParseSyntaxError {
+    fn from(error: RegexError) -> ParseSyntaxError {
         RegexParse(error)
     }
 }
 
-impl From<ParseSyntaxScopeError> for ParseSyntaxDefinitonError {
-    fn from(error: ParseSyntaxScopeError) -> ParseSyntaxDefinitonError {
+impl From<ParseSyntaxScopeError> for ParseSyntaxError {
+    fn from(error: ParseSyntaxScopeError) -> ParseSyntaxError {
         ScopeParse(error)
     }
 }
 
 impl RegexPattern {
-    fn new(regex: String, captures: Captures) -> Result<RegexPattern, ParseSyntaxDefinitonError> {
+    fn new(regex: String, captures: Captures) -> Result<RegexPattern, ParseSyntaxError> {
         let captures_len = 0; // todo: Regex::new(regex).captures_len(),
         Ok(RegexPattern {
             regex: regex,
@@ -125,9 +125,9 @@ impl From<String> for Include {
 }
 
 impl ParseSettings for Captures {
-    type Error = ParseSyntaxDefinitonError;
+    type Error = ParseSyntaxError;
 
-    fn parse_settings(settings: Settings) -> Result<Captures, ParseSyntaxDefinitonError> {
+    fn parse_settings(settings: Settings) -> Result<Captures, ParseSyntaxError> {
         let obj = match settings {
             Settings::Object(obj) => obj,
             _ => return Err(CapturesIsNotObject)
@@ -153,9 +153,9 @@ impl ParseSettings for Captures {
 }
 
 impl ParseSettings for Pattern {
-    type Error = ParseSyntaxDefinitonError;
+    type Error = ParseSyntaxError;
 
-    fn parse_settings(settings: Settings) -> Result<Pattern, ParseSyntaxDefinitonError> {
+    fn parse_settings(settings: Settings) -> Result<Pattern, ParseSyntaxError> {
         let mut obj = match settings {
             Settings::Object(obj) => obj,
             _ => return Err(PatternIsNotObject)
@@ -234,9 +234,9 @@ impl ParseSettings for Pattern {
 }
 
 impl ParseSettings for Patterns {
-    type Error = ParseSyntaxDefinitonError;
+    type Error = ParseSyntaxError;
 
-    fn parse_settings(settings: Settings) -> Result<Patterns, ParseSyntaxDefinitonError> {
+    fn parse_settings(settings: Settings) -> Result<Patterns, ParseSyntaxError> {
         let mut arr = match settings {
             Settings::Array(arr) => arr,
             _ => return Err(IncorrectPatterns),
@@ -250,9 +250,9 @@ impl ParseSettings for Patterns {
 }
 
 impl ParseSettings for Repository {
-    type Error = ParseSyntaxDefinitonError;
+    type Error = ParseSyntaxError;
 
-    fn parse_settings(settings: Settings) -> Result<Repository, ParseSyntaxDefinitonError> {
+    fn parse_settings(settings: Settings) -> Result<Repository, ParseSyntaxError> {
         let obj = match settings {
             Settings::Object(obj) => obj,
             _ => return Err(IncorrectRepository)
@@ -274,10 +274,10 @@ impl ParseSettings for Repository {
     }
 }
 
-impl ParseSettings for SyntaxDefinition {
-    type Error = ParseSyntaxDefinitonError;
+impl ParseSettings for Syntax {
+    type Error = ParseSyntaxError;
 
-    fn parse_settings(settings: Settings) -> Result<SyntaxDefinition, ParseSyntaxDefinitonError> {
+    fn parse_settings(settings: Settings) -> Result<Syntax, ParseSyntaxError> {
         let mut obj = match settings {
             Settings::Object(obj) => obj,
             _ => return Err(SyntaxIsNotObject)
@@ -312,7 +312,7 @@ impl ParseSettings for SyntaxDefinition {
             Some(settings) => try!(Repository::parse_settings(settings)),
             None => Repository::default()
         };
-        Ok(SyntaxDefinition {
+        Ok(Syntax {
             name: name,
             scope_name: scope_name,
             file_types: file_types,

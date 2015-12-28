@@ -2,7 +2,7 @@ use std::cell::Cell;
 
 use ncurses::{newwin, new_panel, PANEL, del_panel, update_panels, doupdate};
 
-use core::keymap::Key;
+use core::bindings::Key;
 
 use toolkit::*;
 

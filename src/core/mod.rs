@@ -4,15 +4,14 @@ mod project;
 mod packages;
 mod build;
 pub mod command;
-pub mod keymap;
-pub mod context;
-pub mod performer;
 pub mod color_scheme;
 pub mod syntax;
+pub mod regex;
+pub mod bindings;
 
 use core::project::Project;
 use core::packages::PackageRepository;
-use core::performer::HotkeyPerformer;
+use core::bindings::HotkeyPerformer;
 
 #[derive(Debug)]
 pub struct Core {

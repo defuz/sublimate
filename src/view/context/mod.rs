@@ -1,7 +1,7 @@
 use core::Core;
 use view::modal::{Modal, ModalPosition};
 use core::command::Command;
-use core::keymap::Key;
+use core::bindings::Key;
 use core::menu::{Menu, MenuItem};
 
 use toolkit::*;

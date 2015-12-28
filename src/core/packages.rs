@@ -4,9 +4,9 @@ use std::path::{Path, PathBuf};
 
 use core::settings::{Settings, SettingsError, read_json, read_plist, FromSettings, ParseSettings};
 use core::menu::Menu;
-use core::keymap::Keymap;
+use core::bindings::Keymap;
 use core::color_scheme::{ColorScheme, ParseColorSchemeError};
-use core::syntax::{SyntaxDefinition, ParseSyntaxDefinitonError};
+use core::syntax::{Syntax, ParseSyntaxError};
 
 #[derive(Debug)]
 pub struct PackageRepository {
@@ -17,7 +17,7 @@ pub struct PackageRepository {
 enum PackageError {
     ReadSettings(SettingsError),
     ParseColorScheme(ParseColorSchemeError),
-    ParseSyntaxDefinition(ParseSyntaxDefinitonError),
+    ParseSyntax(ParseSyntaxError),
     Io(IoError)
 }
 
@@ -33,9 +33,9 @@ impl From<ParseColorSchemeError> for PackageError {
     }
 }
 
-impl From<ParseSyntaxDefinitonError> for PackageError {
-    fn from(error: ParseSyntaxDefinitonError) -> PackageError {
-        PackageError::ParseSyntaxDefinition(error)
+impl From<ParseSyntaxError> for PackageError {
+    fn from(error: ParseSyntaxError) -> PackageError {
+        PackageError::ParseSyntax(error)
     }
 }
 
@@ -81,7 +81,7 @@ impl PackageRepository {
         Ok(try!(ColorScheme::parse_settings(try!(self.read_plist(path.as_ref())))))
     }
 
-    pub fn get_syntax_definition<P: AsRef<Path>>(&self, path: P) -> Result<SyntaxDefinition, PackageError> {
-        Ok(try!(SyntaxDefinition::parse_settings(try!(self.read_plist(path.as_ref())))))
+    pub fn get_syntax<P: AsRef<Path>>(&self, path: P) -> Result<Syntax, PackageError> {
+        Ok(try!(Syntax::parse_settings(try!(self.read_plist(path.as_ref())))))
     }
 }

@@ -1,7 +1,7 @@
-use oniguruma::{Regex, Error as RegexError};
-
+use core::regex::{Regex, RegexError};
 use core::settings::{Settings, ParseSettings};
 use core::Core;
+
 use self::ParseContextError::*;
 
 pub type Context = Vec<ContextRule>;

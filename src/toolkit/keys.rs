@@ -1,4 +1,4 @@
-use core::keymap::Key;
+use core::bindings::Key;
 
 // Ctrl AZ: 1 - 26
 // az 97 122

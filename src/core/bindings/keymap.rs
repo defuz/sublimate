@@ -3,8 +3,9 @@ use std::iter::IntoIterator;
 use std::fmt::{Display, Formatter, Write, Error as FormatterError};
 
 use core::command::{Command, ParseCommandError};
-use core::context::{Context, ParseContextError};
 use core::settings::{Settings, FromSettings, ParseSettings};
+
+use super::context::{Context, ParseContextError};
 
 use self::ParseHotkeyError::*;
 use self::ParseHotkeyBindingError::*;

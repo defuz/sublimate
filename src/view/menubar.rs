@@ -2,7 +2,7 @@ use unicode_width::UnicodeWidthStr;
 
 use toolkit::*;
 use core::Core;
-use core::keymap::Key;
+use core::bindings::Key;
 use core::menu::{Menu, MenuItem};
 use view::theme::*;
 

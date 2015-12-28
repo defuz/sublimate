@@ -1,7 +1,7 @@
 use toolkit::*;
 use core::Core;
 
-use core::keymap::Key;
+use core::bindings::Key;
 
 use view::menubar::Menubar;
 
