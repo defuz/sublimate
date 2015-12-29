@@ -1,5 +1,7 @@
 use std::str::FromStr;
 
+pub type Rank = u64;
+
 #[derive(Debug, Default, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub struct SyntaxScope {
     name: String
@@ -70,5 +72,40 @@ impl FromStr for SyntaxScopeSelectors {
         Ok(SyntaxScopeSelectors {
             selectors: selectors
         })
+    }
+}
+
+impl SyntaxScope {
+    pub fn rank(&self) -> Rank {
+        self.name.split('.').count() as u64 + 1
+    }
+
+    pub fn matched(&self, scope: &str) -> bool {
+        scope.starts_with(&self.name) &&
+        (self.name.len() == scope.len() || scope[self.name.len()..].starts_with('.'))
+    }
+}
+
+impl SyntaxScopeSelector {
+    pub fn rank(&self) -> Rank {
+        let mut rank = 0;
+        for scope in self.path.iter().rev() { // todo: do we need rev?
+            rank <<= 4;
+            rank += scope.rank();
+        }
+        rank
+    }
+
+    pub fn matched(&self, path: &[SyntaxScope]) -> bool {
+        let mut iter = path.iter();
+        for scope in &self.path {
+            while let Some(s) = iter.next() {
+                if scope.matched(&s.name) {
+                    continue
+                }
+            }
+            return false
+        }
+        true
     }
 }
