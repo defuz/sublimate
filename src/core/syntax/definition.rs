@@ -103,7 +103,7 @@ impl From<ParseSyntaxScopeError> for ParseSyntaxError {
 
 impl RegexPattern {
     fn new(regex: String, captures: Captures) -> Result<RegexPattern, ParseSyntaxError> {
-        let captures_len = 0; // todo: Regex::new(regex).captures_len(),
+        let captures_len = try!(Regex::new(&regex)).captures_len();
         Ok(RegexPattern {
             regex: regex,
             captures_len: captures_len,

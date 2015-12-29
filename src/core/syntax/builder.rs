@@ -3,7 +3,7 @@ use core::regex::{Regex, RegexError};
 use super::scope::SyntaxScope;
 
 use super::parser::{
-    Parser, ParserMatch, ScopeCommand, ContextCommand, ParserContext
+    Parser, ParserMatch, ScopeCommand, ContextCommand, ParserContext, ContextId
 };
 use super::definition::{
     Syntax, Pattern, Patterns, Include, MatchPattern,
@@ -73,7 +73,7 @@ impl<'a> ParserContextBuilder<'a> {
         self.push(before, after, ContextCommand::Noop, &pattern.content);
     }
 
-    fn push_scope_begin(&mut self, id: usize, pattern: &ScopeMatchPattern) {
+    fn push_scope_begin(&mut self, id: ContextId, pattern: &ScopeMatchPattern) {
         let before = ScopeCommand::push_or_noop(&pattern.name);
         let after = ScopeCommand::push_or_noop(&pattern.content_name);
         self.push(before, after, ContextCommand::Push(id), &pattern.begin);

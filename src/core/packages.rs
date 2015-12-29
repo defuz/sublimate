@@ -46,8 +46,8 @@ impl From<IoError> for PackageError {
 }
 
 impl PackageRepository {
-    pub fn open(path: &str) -> PackageRepository {
-        PackageRepository { path: PathBuf::from(path) }
+    pub fn open(path: PathBuf) -> PackageRepository {
+        PackageRepository { path: path }
     }
 
     pub fn read_file(&self, path: &Path) -> Result<BufReader<File>, PackageError> {

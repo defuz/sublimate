@@ -1,1 +1,1 @@
-pub use oniguruma::{Regex, Error as RegexError};
+pub use oniguruma::{Regex, Region, Error as RegexError, OPTION_NONE};
