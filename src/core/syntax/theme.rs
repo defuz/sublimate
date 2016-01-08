@@ -1,107 +1,107 @@
 use std::str::FromStr;
 
 use core::settings::{ParseSettings, Settings};
-use core::syntax::{SyntaxScopeSelectors, ParseSyntaxScopeError};
+use core::syntax::{ScopeSelectors, ParseScopeError};
 
-use self::ParseColorSchemeError::*;
+use self::ParseThemeError::*;
 
 #[derive(Debug, Default)]
-pub struct ColorScheme {
-    name: Option<String>,
-    author: Option<String>,
-    settings: ColorSchemeSettings,
-    scopes: Vec<ColorSchemeScope>
+pub struct Theme {
+    pub name: Option<String>,
+    pub author: Option<String>,
+    pub settings: ThemeSettings,
+    pub scopes: Vec<ThemeScope>
 }
 
 #[derive(Debug, Default)]
-pub struct ColorSchemeSettings {
+pub struct ThemeSettings {
     /// Foreground color for the view.
-    foreground: Color,
+    pub foreground: Color,
     /// Backgound color of the view.
-    background: Color,
+    pub background: Color,
     /// Color of the caret.
-    caret: Color,
+    pub caret: Color,
     /// Color of the line the caret is in.
     /// Only used when the `higlight_line` setting is set to `true`.
-    line_highlight: Color,
+    pub line_highlight: Color,
 
     /// Color of bracketed sections of text when the caret is in a bracketed section.
     /// Only applied when the `match_brackets` setting is set to `true`.
-    bracket_contents_foreground: Color,
+    pub bracket_contents_foreground: Color,
     /// Controls certain options when the caret is in a bracket section.
     /// Only applied when the `match_brackets` setting is set to `true`.
-    bracket_contents_options: UnderlineOption,
+    pub bracket_contents_options: UnderlineOption,
     /// Foreground color of the brackets when the caret is next to a bracket.
     /// Only applied when the `match_brackets` setting is set to `true`.
-    brackets_foreground: Color,
+    pub brackets_foreground: Color,
     /// Background color of the brackets when the caret is next to a bracket.
     /// Only applied when the `match_brackets` setting is set to `true`.
-    brackets_background: Color,
+    pub brackets_background: Color,
     /// Controls certain options when the caret is next to a bracket.
     /// Only applied when the match_brackets setting is set to `true`.
-    brackets_options: UnderlineOption,
+    pub brackets_options: UnderlineOption,
 
     /// Color of tags when the caret is next to a tag.
     /// Only used when the `match_tags` setting is set to `true`.
-    tags_foreground: Color,
+    pub tags_foreground: Color,
     /// Controls certain options when the caret is next to a tag.
     /// Only applied when the match_tags setting is set to `true`.
-    tags_options: UnderlineOption,
+    pub tags_options: UnderlineOption,
 
     /// Background color of regions matching the current search.
-    find_highlight: Color,
+    pub find_highlight: Color,
     /// Background color of regions matching the current search.
-    find_highlight_foreground: Color,
+    pub find_highlight_foreground: Color,
 
     /// Background color of the gutter.
-    gutter: Color,
+    pub gutter: Color,
     /// Foreground color of the gutter.
-    gutter_foreground: Color,
+    pub gutter_foreground: Color,
 
     /// Color of the selection regions.
-    selection: Color,
+    pub selection: Color,
     /// Background color of the selection regions.
-    selection_background: Color,
+    pub selection_background: Color,
     /// Color of the selection regions border.
-    selection_border: Color,
+    pub selection_border: Color,
     /// Color of inactive selections (inactive view).
-    inactive_selection: Color,
+    pub inactive_selection: Color,
 
     /// Color of the guides displayed to indicate nesting levels.
-    guide: Color,
+    pub guide: Color,
     /// Color of the guide lined up with the caret.
     /// Only applied if the `indent_guide_options` setting is set to `draw_active`.
-    active_guide: Color,
+    pub active_guide: Color,
     /// Color of the current guide’s parent guide level.
     /// Only used if the `indent_guide_options` setting is set to `draw_active`.
-    stack_guide: Color,
+    pub stack_guide: Color,
 
     /// Background color for regions added via `sublime.add_regions()`
     /// with the `sublime.DRAW_OUTLINED` flag added.
-    highlight: Color,
+    pub highlight: Color,
     /// Foreground color for regions added via `sublime.add_regions()`
     /// with the `sublime.DRAW_OUTLINED` flag added.
-    highlight_foreground: Color
+    pub highlight_foreground: Color
 }
 
 #[derive(Debug, Default)]
-pub struct ColorSchemeScope {
+pub struct ThemeScope {
     /// Target scope name.
-    scope: SyntaxScopeSelectors,
+    pub scope: ScopeSelectors,
     /// Style of the font.
-    font_style: FontStyle,
+    pub font_style: FontStyle,
     /// Foreground color.
-    foreground: Option<Color>,
+    pub foreground: Option<Color>,
     /// Background color.
-    background: Option<Color>
+    pub background: Option<Color>
 }
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Clone, Copy)]
 pub struct Color {
     r: u8,
     g: u8,
     b: u8,
-    a: u8
+    a: u8 // todo: remove alpha?
 }
 
 bitflags! {
@@ -121,7 +121,7 @@ pub enum UnderlineOption {
 }
 
 #[derive(Debug)]
-pub enum ParseColorSchemeError {
+pub enum ParseThemeError {
     IncorrectUnderlineOption,
     IncorrectFontStyle(String),
     IncorrectColor,
@@ -133,11 +133,11 @@ pub enum ParseColorSchemeError {
     ColorShemeSettingsIsNotObject,
     ScopeSelectorIsNotString(String),
     DuplicateSettings,
-    ScopeParse(ParseSyntaxScopeError)
+    ScopeParse(ParseScopeError)
 }
 
-impl From<ParseSyntaxScopeError> for ParseColorSchemeError {
-    fn from(error: ParseSyntaxScopeError) -> ParseColorSchemeError {
+impl From<ParseScopeError> for ParseThemeError {
+    fn from(error: ParseScopeError) -> ParseThemeError {
         ScopeParse(error)
     }
 }
@@ -155,7 +155,7 @@ impl Default for FontStyle {
 }
 
 impl FromStr for UnderlineOption {
-    type Err = ParseColorSchemeError;
+    type Err = ParseThemeError;
 
     fn from_str(s: &str) -> Result<UnderlineOption, Self::Err> {
         Ok(match s {
@@ -168,7 +168,7 @@ impl FromStr for UnderlineOption {
 }
 
 impl ParseSettings for UnderlineOption {
-    type Error = ParseColorSchemeError;
+    type Error = ParseThemeError;
 
     fn parse_settings(settings: Settings) -> Result<UnderlineOption, Self::Error> {
         match settings {
@@ -179,7 +179,7 @@ impl ParseSettings for UnderlineOption {
 }
 
 impl FromStr for FontStyle {
-    type Err = ParseColorSchemeError;
+    type Err = ParseThemeError;
 
     fn from_str(mut s: &str) -> Result<FontStyle, Self::Err> {
         let mut font_style = FontStyle::empty();
@@ -196,7 +196,7 @@ impl FromStr for FontStyle {
 }
 
 impl ParseSettings for FontStyle {
-    type Error = ParseColorSchemeError;
+    type Error = ParseThemeError;
 
     fn parse_settings(settings: Settings) -> Result<FontStyle, Self::Error> {
         match settings {
@@ -207,7 +207,7 @@ impl ParseSettings for FontStyle {
 }
 
 impl FromStr for Color {
-    type Err = ParseColorSchemeError;
+    type Err = ParseThemeError;
 
     fn from_str(s: &str) -> Result<Color, Self::Err> {
         let mut chars = s.chars();
@@ -228,7 +228,7 @@ impl FromStr for Color {
 }
 
 impl ParseSettings for Color {
-    type Error = ParseColorSchemeError;
+    type Error = ParseThemeError;
 
     fn parse_settings(settings: Settings) -> Result<Color, Self::Error> {
         match settings {
@@ -238,16 +238,16 @@ impl ParseSettings for Color {
     }
 }
 
-impl ParseSettings for ColorSchemeScope {
-    type Error = ParseColorSchemeError;
+impl ParseSettings for ThemeScope {
+    type Error = ParseThemeError;
 
-    fn parse_settings(settings: Settings) -> Result<ColorSchemeScope, Self::Error> {
+    fn parse_settings(settings: Settings) -> Result<ThemeScope, Self::Error> {
         let mut obj = match settings {
             Settings::Object(obj) => obj,
             _ => return Err(ColorShemeScopeIsNotObject),
         };
         let scope = match obj.remove("scope") {
-            Some(Settings::String(value)) => try!(SyntaxScopeSelectors::from_str(&value)),
+            Some(Settings::String(value)) => try!(ScopeSelectors::from_str(&value)),
             _ => return Err(ScopeSelectorIsNotString(format!("{:?}", obj))),
         };
         let mut obj = match obj.remove("settings") {
@@ -270,7 +270,7 @@ impl ParseSettings for ColorSchemeScope {
             _ => return Err(IncorrectColor),
         };
 
-        Ok(ColorSchemeScope {
+        Ok(ThemeScope {
             scope: scope,
             font_style: font_style,
             foreground: foreground,
@@ -280,11 +280,11 @@ impl ParseSettings for ColorSchemeScope {
 }
 
 
-impl ParseSettings for ColorSchemeSettings {
-    type Error = ParseColorSchemeError;
+impl ParseSettings for ThemeSettings {
+    type Error = ParseThemeError;
 
-    fn parse_settings(json: Settings) -> Result<ColorSchemeSettings, Self::Error> {
-        let mut settings = ColorSchemeSettings::default();
+    fn parse_settings(json: Settings) -> Result<ThemeSettings, Self::Error> {
+        let mut settings = ThemeSettings::default();
 
         let obj = match json {
             Settings::Object(obj) => obj,
@@ -349,10 +349,10 @@ impl ParseSettings for ColorSchemeSettings {
     }
 }
 
-impl ParseSettings for ColorScheme {
-    type Error = ParseColorSchemeError;
+impl ParseSettings for Theme {
+    type Error = ParseThemeError;
 
-    fn parse_settings(settings: Settings) -> Result<ColorScheme, Self::Error> {
+    fn parse_settings(settings: Settings) -> Result<Theme, Self::Error> {
         let mut obj = match settings {
             Settings::Object(obj) => obj,
             _ => return Err(IncorrectSyntax)
@@ -375,7 +375,7 @@ impl ParseSettings for ColorScheme {
         let settings = match iter.next() {
             Some(Settings::Object(mut obj)) => {
                 match obj.remove("settings") {
-                    Some(settings) => try!(ColorSchemeSettings::parse_settings(settings)),
+                    Some(settings) => try!(ThemeSettings::parse_settings(settings)),
                     None => return Err(UndefinedSettings)
                 }
             },
@@ -383,7 +383,7 @@ impl ParseSettings for ColorScheme {
         };
         let mut scopes = Vec::new();
         for json in iter {
-            match ColorSchemeScope::parse_settings(json) {
+            match ThemeScope::parse_settings(json) {
                 Ok(scope) => scopes.push(scope),
                 Err(..) => {
                     // TODO: warning
@@ -391,7 +391,7 @@ impl ParseSettings for ColorScheme {
             }
 
         }
-        Ok(ColorScheme {
+        Ok(Theme {
             name: name,
             author: author,
             settings: settings,

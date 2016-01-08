@@ -4,7 +4,6 @@ mod project;
 mod packages;
 mod build;
 pub mod command;
-pub mod color_scheme;
 pub mod syntax;
 pub mod regex;
 pub mod bindings;

@@ -1,6 +1,6 @@
 use core::regex::{Regex, RegexError};
 
-use super::scope::SyntaxScope;
+use super::scope::Scope;
 
 use super::parser::{
     Parser, ParserMatch, ScopeCommand, ContextCommand, ParserContext, ContextId
@@ -23,14 +23,14 @@ struct ParserContextBuilder<'a> {
 }
 
 impl ScopeCommand {
-    fn push_or_noop(scope: &Option<SyntaxScope>) -> ScopeCommand {
+    fn push_or_noop(scope: &Option<Scope>) -> ScopeCommand {
         match *scope {
             Some(ref s) => ScopeCommand::Push(s.to_owned()),
             None => ScopeCommand::Noop
         }
     }
 
-    fn pop_or_noop(scope: &Option<SyntaxScope>) -> ScopeCommand {
+    fn pop_or_noop(scope: &Option<Scope>) -> ScopeCommand {
         match *scope {
             Some(..) => ScopeCommand::Pop,
             None => ScopeCommand::Noop

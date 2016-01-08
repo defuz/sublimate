@@ -1,6 +1,6 @@
 use core::regex::{Regex, Region, OPTION_NONE};
 
-use super::scope::{SyntaxScope, SyntaxScopePath};
+use super::scope::{Scope, ScopePath};
 use super::definition::Captures;
 
 pub type ContextId = usize;
@@ -24,7 +24,7 @@ pub struct ParserMatch {
 
 #[derive(Clone)]
 pub enum ScopeCommand {
-    Push(SyntaxScope),
+    Push(Scope),
     Pop,
     Noop
 }
@@ -40,14 +40,14 @@ struct ParserState<'a> {
     pos: usize,
     text: &'a str,
     region: &'a mut Region,
-    scope_path: SyntaxScopePath,
+    scope_path: ScopePath,
     context_path: Vec<ContextId>,
     changes: Vec<(usize, ParserStateChange)>
 }
 
 #[derive(PartialEq, Eq, PartialOrd, Ord)]
 enum ParserStateChange {
-    Push(SyntaxScope),
+    Push(Scope),
     Pop
 }
 
