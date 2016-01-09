@@ -1,4 +1,4 @@
-use core::regex::{Regex, RegexError};
+use core::regex::Regex;
 
 use super::scope::Scope;
 
@@ -7,7 +7,7 @@ use super::parser::{
 };
 use super::definition::{
     Syntax, Pattern, Patterns, Include, MatchPattern,
-    ScopeMatchPattern, Captures, RegexPattern
+    ScopeMatchPattern, RegexPattern
 };
 
 struct ParserBuilder {
@@ -90,7 +90,7 @@ impl<'a> ParserContextBuilder<'a> {
         let patterns = match *include {
             Include::FromSelf => &self.syntax.patterns,
             Include::FromRepository(ref name) => &self.syntax.repository[name], // todo: check index
-            Include::FromSyntax(ref name) => unimplemented!() // todo: implement
+            Include::FromSyntax(_) => unimplemented!() // todo: implement
         };
         self.push_patterns(patterns);
     }

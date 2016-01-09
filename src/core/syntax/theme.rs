@@ -186,7 +186,7 @@ impl ParseSettings for UnderlineOption {
 impl FromStr for FontStyle {
     type Err = ParseThemeError;
 
-    fn from_str(mut s: &str) -> Result<FontStyle, Self::Err> {
+    fn from_str(s: &str) -> Result<FontStyle, Self::Err> {
         let mut font_style = FontStyle::empty();
         for i in s.split_whitespace() {
             font_style.insert(match i {

@@ -7,7 +7,7 @@ pub use rustc_serialize::json::Json as Settings;
 pub use rustc_serialize::json::Array as SettingsArray;
 pub use rustc_serialize::json::Object as SettingsObject;
 
-type PlistError = (); /// FIXME: change this bullshit
+pub type PlistError = (); /// FIXME: change this bullshit
 
 pub trait FromSettings : Sized {
     fn from_settings(settings: Settings) -> Self;

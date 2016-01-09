@@ -1,6 +1,4 @@
-use std::collections::HashMap;
-
-use super::scope::{Scope, ScopeSelector, ScopeTree, Rank};
+use super::scope::{Scope, ScopeTree};
 use super::theme::{Style, Theme, ThemeSettings, Color, FontStyle};
 
 struct Highlighter {

@@ -22,13 +22,13 @@ extern crate weakjson;
 extern crate plist;
 
 
-use ncurses::*;
+// use ncurses::*;
 
-use core::Core;
-use core::bindings::Key;
-use view::window::Window;
-use toolkit::*;
-use view::theme::PALETTE;
+// use core::Core;
+// use core::bindings::Key;
+// use view::window::Window;
+// use toolkit::*;
+// use view::theme::PALETTE;
 
 fn main() {
 

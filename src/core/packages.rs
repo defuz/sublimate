@@ -1,4 +1,4 @@
-use std::io::{Read, Error as IoError, BufReader};
+use std::io::{Error as IoError, BufReader};
 use std::fs::File;
 use std::path::{Path, PathBuf};
 
@@ -13,7 +13,7 @@ pub struct PackageRepository {
 }
 
 #[derive(Debug)]
-enum PackageError {
+pub enum PackageError {
     ReadSettings(SettingsError),
     ParseTheme(ParseThemeError),
     ParseSyntax(ParseSyntaxError),
@@ -50,7 +50,7 @@ impl PackageRepository {
     }
 
     pub fn read_file(&self, path: &Path) -> Result<BufReader<File>, PackageError> {
-        let mut reader = try!(File::open(self.path.join(path)));
+        let reader = try!(File::open(self.path.join(path)));
         Ok(BufReader::new(reader))
     }
 

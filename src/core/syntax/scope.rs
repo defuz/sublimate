@@ -26,7 +26,7 @@ impl FromStr for Scope {
     type Err = ParseScopeError;
 
     fn from_str(s: &str) -> Result<Scope, ParseScopeError> {
-        let mut name = s.trim().to_lowercase();
+        let name = s.trim().to_lowercase();
         for c in name.chars() {
             match c {
                 'a' ... 'z' | '0' ... '9' | '-' | '.' => (),
@@ -63,7 +63,7 @@ impl FromStr for ScopeSelector {
 impl FromStr for ScopeSelectors {
     type Err = ParseScopeError;
 
-    fn from_str(mut s: &str) -> Result<ScopeSelectors, ParseScopeError> {
+    fn from_str(s: &str) -> Result<ScopeSelectors, ParseScopeError> {
         let mut selectors = Vec::new();
         for selector in s.split(',') {
             selectors.push(try!(ScopeSelector::from_str(selector)))
@@ -74,42 +74,9 @@ impl FromStr for ScopeSelectors {
     }
 }
 
-impl Scope {
-    pub fn rank(&self) -> Rank {
-        self.name.split('.').count() as u64 + 1
-    }
-
-    pub fn matched(&self, scope: &str) -> bool {
-        scope.starts_with(&self.name) &&
-        (self.name.len() == scope.len() || scope[self.name.len()..].starts_with('.'))
-    }
-}
-
 impl ScopeSelector {
     pub fn path(&self) -> &[Scope] {
         &self.path
-    }
-
-    pub fn rank(&self) -> Rank { // todo: implement Ord and PartialOrd instead of rank()
-        let mut rank = 0;
-        for scope in self.path.iter().rev() {
-            rank <<= 4;
-            rank += scope.rank();
-        }
-        rank << 4 * (16 - self.path.len())
-    }
-
-    pub fn matched(&self, path: &[Scope]) -> bool {
-        let mut iter = path.iter();
-        for scope in &self.path {
-            while let Some(s) = iter.next() {
-                if scope.matched(&s.name) {
-                    continue
-                }
-            }
-            return false
-        }
-        true
     }
 }
 

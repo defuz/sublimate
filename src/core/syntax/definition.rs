@@ -237,7 +237,7 @@ impl ParseSettings for Patterns {
     type Error = ParseSyntaxError;
 
     fn parse_settings(settings: Settings) -> Result<Patterns, ParseSyntaxError> {
-        let mut arr = match settings {
+        let arr = match settings {
             Settings::Array(arr) => arr,
             _ => return Err(IncorrectPatterns),
         };

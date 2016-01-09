@@ -36,7 +36,7 @@ pub enum ContextCommand {
     Noop
 }
 
-struct ParserState<'a> {
+pub struct ParserState<'a> {
     pos: usize,
     text: &'a str,
     region: &'a mut Region,

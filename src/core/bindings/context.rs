@@ -208,8 +208,8 @@ impl Operator<String> {
         match *self {
             Operator::Equal(ref operand) => v == operand,
             Operator::NotEqual(ref operand) => v != operand,
-            Operator::RegexContains(ref operand) => /*operand.is_match(v)*/ true,
-            Operator::NotRegexContains(ref operand) => !/*operand.is_match(v)*/ true,
+            Operator::RegexContains(ref operand) => operand.is_match(v),
+            Operator::NotRegexContains(ref operand) => !operand.is_match(v),
         }
     }
 }
@@ -220,11 +220,11 @@ impl Operator<Settings> {
             Operator::Equal(ref operand) => v == operand,
             Operator::NotEqual(ref operand) => v != operand,
             Operator::RegexContains(ref operand) => match *v {
-                Settings::String(ref v) => /*operand.is_match(v)*/ true,
+                Settings::String(ref v) => operand.is_match(v),
                 _ => false,
             },
             Operator::NotRegexContains(ref operand) => match *v {
-                Settings::String(ref v) => !/*operand.is_match(v)*/ true,
+                Settings::String(ref v) => !operand.is_match(v),
                 _ => false,
             },
         }
@@ -235,9 +235,8 @@ pub trait Evaluate {
     fn evaluate(&self, core: &Core) -> bool;
 }
 
-
 impl Evaluate for ContextRule {
-    fn evaluate(&self, core: &Core) -> bool {
+    fn evaluate(&self, _: &Core) -> bool {
         // TODO: implement this
         false
     }
