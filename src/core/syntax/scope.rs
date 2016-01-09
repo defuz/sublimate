@@ -1,4 +1,5 @@
 use std::str::FromStr;
+use std::collections::BTreeMap;
 
 pub type Rank = u64;
 
@@ -7,11 +8,9 @@ pub struct Scope {
     name: String
 }
 
-pub type ScopePath = Vec<Scope>;
-
 #[derive(Debug, Default, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub struct ScopeSelector {
-    path: ScopePath,
+    path: Vec<Scope>,
     exclude: Option<Scope>
 }
 
@@ -87,6 +86,10 @@ impl Scope {
 }
 
 impl ScopeSelector {
+    pub fn path(&self) -> &[Scope] {
+        &self.path
+    }
+
     pub fn rank(&self) -> Rank { // todo: implement Ord and PartialOrd instead of rank()
         let mut rank = 0;
         for scope in self.path.iter().rev() {
@@ -107,5 +110,89 @@ impl ScopeSelector {
             return false
         }
         true
+    }
+}
+
+pub struct ScopeTree<T: Clone> {
+    subscopes: BTreeMap<String, ScopeTree<T>>,
+    parents: BTreeMap<String, ScopeTree<T>>,
+    value: Option<T>
+}
+
+impl<T: Clone> ScopeTree<T> {
+    pub fn new() -> ScopeTree<T> {
+        ScopeTree {
+            subscopes: BTreeMap::new(),
+            parents: BTreeMap::new(),
+            value: None
+        }
+    }
+
+    fn get(&self, key: &str, is_parent: bool) -> Option<&ScopeTree<T>> {
+        if is_parent {
+            self.parents.get(key)
+        } else {
+            self.subscopes.get(key)
+        }
+    }
+
+    fn get_or_create(&mut self, key: &str, is_parent: bool) -> &mut ScopeTree<T> {
+        if is_parent {
+            self.parents.entry(key.to_owned()).or_insert_with(ScopeTree::new)
+        } else {
+            self.subscopes.entry(key.to_owned()).or_insert_with(ScopeTree::new)
+        }
+    }
+
+    fn add_subpath(&mut self, path: &[Scope], depth: usize, shift: usize, value: T) {
+        let part = &path[depth].name[shift..];
+        if part.is_empty() {
+            if depth == 0 {
+                // TODO: warning: reassigned style
+                self.value = Some(value)
+            } else {
+                self.add_subpath(path, depth - 1, 0, value);
+            }
+        } else {
+            let next_shift = part.find('.').unwrap_or(part.len());
+            let key = &part[shift..next_shift];
+            let node = self.get_or_create(key, shift == 0);
+            node.add_subpath(path, depth, next_shift, value);
+        }
+    }
+
+    pub fn add(&mut self, path: &[Scope], value: T) {
+        self.add_subpath(path, path.len(), 0, value)
+    }
+
+    fn find_subpath(&self, path: &[Scope], depth: usize, shift: usize) -> Option<T> {
+        let part = &path[depth].name[shift..];
+        if part.is_empty() {
+            if depth == 0 {
+                self.value.clone()
+            } else {
+                self.find_subpath(path, depth - 1, 0)
+            }
+        } else {
+            let next_shift = part.find('.').unwrap_or(part.len());
+            let key = &part[shift..next_shift];
+            if let Some(node) = self.get(key, shift == 0) {
+                let r = node.find_subpath(path, depth, next_shift);
+                if r.is_some() {
+                    return r
+                }
+            }
+            for d in (0..depth).rev() {
+                let r = self.find_subpath(path, d, 0);
+                if r.is_some() {
+                    return r
+                }
+            }
+            self.value.clone()
+        }
+    }
+
+    pub fn find(&self, path: &[Scope]) -> Option<T> {
+        self.find_subpath(path, path.len(), 0)
     }
 }

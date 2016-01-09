@@ -10,7 +10,7 @@ pub struct Theme {
     pub name: Option<String>,
     pub author: Option<String>,
     pub settings: ThemeSettings,
-    pub scopes: Vec<ThemeScope>
+    pub scopes: Vec<ThemeItem>
 }
 
 #[derive(Debug, Default)]
@@ -85,15 +85,20 @@ pub struct ThemeSettings {
 }
 
 #[derive(Debug, Default)]
-pub struct ThemeScope {
+pub struct ThemeItem {
     /// Target scope name.
     pub scope: ScopeSelectors,
-    /// Style of the font.
-    pub font_style: FontStyle,
+    pub style: Style
+}
+
+#[derive(Debug, Default)]
+pub struct Style {
     /// Foreground color.
     pub foreground: Option<Color>,
     /// Background color.
-    pub background: Option<Color>
+    pub background: Option<Color>,
+    /// Style of the font.
+    pub font_style: Option<FontStyle>
 }
 
 #[derive(Debug, Default, Clone, Copy)]
@@ -238,25 +243,17 @@ impl ParseSettings for Color {
     }
 }
 
-impl ParseSettings for ThemeScope {
+impl ParseSettings for Style {
     type Error = ParseThemeError;
 
-    fn parse_settings(settings: Settings) -> Result<ThemeScope, Self::Error> {
+    fn parse_settings(settings: Settings) -> Result<Style, Self::Error> {
         let mut obj = match settings {
             Settings::Object(obj) => obj,
             _ => return Err(ColorShemeScopeIsNotObject),
         };
-        let scope = match obj.remove("scope") {
-            Some(Settings::String(value)) => try!(ScopeSelectors::from_str(&value)),
-            _ => return Err(ScopeSelectorIsNotString(format!("{:?}", obj))),
-        };
-        let mut obj = match obj.remove("settings") {
-            Some(Settings::Object(obj)) => obj,
-            _ => return Err(IncorrectSettings)
-        };
         let font_style = match obj.remove("fontStyle") {
-            Some(Settings::String(value)) => try!(FontStyle::from_str(&value)),
-            None => FontStyle::empty(),
+            Some(Settings::String(value)) => Some(try!(FontStyle::from_str(&value))),
+            None => None,
             Some(c) => return Err(IncorrectFontStyle(c.to_string())),
         };
         let foreground = match obj.remove("foreground") {
@@ -270,15 +267,29 @@ impl ParseSettings for ThemeScope {
             _ => return Err(IncorrectColor),
         };
 
-        Ok(ThemeScope {
-            scope: scope,
-            font_style: font_style,
-            foreground: foreground,
-            background: background
-        })
+        Ok(Style { foreground: foreground, background: background, font_style: font_style })
     }
 }
 
+impl ParseSettings for ThemeItem {
+    type Error = ParseThemeError;
+
+    fn parse_settings(settings: Settings) -> Result<ThemeItem, Self::Error> {
+        let mut obj = match settings {
+            Settings::Object(obj) => obj,
+            _ => return Err(ColorShemeScopeIsNotObject),
+        };
+        let scope = match obj.remove("scope") {
+            Some(Settings::String(value)) => try!(ScopeSelectors::from_str(&value)),
+            _ => return Err(ScopeSelectorIsNotString(format!("{:?}", obj))),
+        };
+        let style = match obj.remove("settings") {
+            Some(settings) => try!(Style::parse_settings(settings)),
+            None => return Err(IncorrectSettings)
+        };
+        Ok(ThemeItem { scope: scope, style: style })
+    }
+}
 
 impl ParseSettings for ThemeSettings {
     type Error = ParseThemeError;
@@ -383,7 +394,7 @@ impl ParseSettings for Theme {
         };
         let mut scopes = Vec::new();
         for json in iter {
-            match ThemeScope::parse_settings(json) {
+            match ThemeItem::parse_settings(json) {
                 Ok(scope) => scopes.push(scope),
                 Err(..) => {
                     // TODO: warning

@@ -1,6 +1,6 @@
 use core::regex::{Regex, Region, OPTION_NONE};
 
-use super::scope::{Scope, ScopePath};
+use super::scope::Scope;
 use super::definition::Captures;
 
 pub type ContextId = usize;
@@ -40,7 +40,7 @@ struct ParserState<'a> {
     pos: usize,
     text: &'a str,
     region: &'a mut Region,
-    scope_path: ScopePath,
+    scope_path: Vec<Scope>,
     context_path: Vec<ContextId>,
     changes: Vec<(usize, ParserStateChange)>
 }

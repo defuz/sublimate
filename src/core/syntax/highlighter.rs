@@ -1,74 +1,46 @@
-use std::cell::RefCell;
 use std::collections::HashMap;
 
-use super::scope::{Scope, ScopePath, ScopeSelector, Rank};
-use super::theme::{Theme, ThemeSettings, Color, FontStyle};
+use super::scope::{Scope, ScopeSelector, ScopeTree, Rank};
+use super::theme::{Style, Theme, ThemeSettings, Color, FontStyle};
 
 struct Highlighter {
     settings: ThemeSettings,
-    variants: Vec<HighlightVariant>,
-    cache: RefCell<HashMap<ScopePath, Style>>
-}
-
-struct HighlightVariant {
-    rank: Rank,
-    selector: ScopeSelector,
-    font_style: FontStyle,
-    foreground: Option<Color>,
-    background: Option<Color>
-}
-
-#[derive(Clone, Copy)]
-struct Style {
-    font_style: FontStyle,
-    foreground: Color,
-    background: Color
+    foreground_tree: ScopeTree<Color>,
+    background_tree: ScopeTree<Color>,
+    font_style_tree: ScopeTree<FontStyle>,
 }
 
 impl Highlighter {
     fn new(theme: Theme) -> Highlighter {
-        let mut variants = Vec::new();
+        let mut foreground_tree = ScopeTree::new();
+        let mut background_tree = ScopeTree::new();
+        let mut font_style_tree = ScopeTree::new();
         for scope in theme.scopes {
             for selector in scope.scope.selectors {
-                let rank = selector.rank();
-                variants.push(HighlightVariant {
-                    selector: selector,
-                    rank: rank,
-                    font_style: scope.font_style,
-                    foreground: scope.foreground,
-                    background: scope.background
-                })
+                if let Some(foreground) = scope.style.foreground {
+                    foreground_tree.add(selector.path(), foreground);
+                }
+                if let Some(background) = scope.style.background {
+                    background_tree.add(selector.path(), background);
+                }
+                if let Some(font_style) = scope.style.font_style {
+                    font_style_tree.add(selector.path(), font_style);
+                }
             }
         }
         Highlighter {
             settings: theme.settings,
-            variants: variants,
-            cache: RefCell::new(HashMap::new())
+            foreground_tree: foreground_tree,
+            background_tree: background_tree,
+            font_style_tree: font_style_tree
         }
-    }
-
-    fn eval_style(&self, path: &[Scope]) -> Style {
-        let mut rank = 0;
-        let mut style = Style {
-            font_style: FontStyle::empty(),
-            foreground: self.settings.foreground,
-            background: self.settings.background
-        };
-        for v in &self.variants {
-            if v.rank > rank && v.selector.matched(path) {
-                variants.push(v)
-            }
-        }
-        variants.sort_by(|i, j| j.rank.cmp(&i.rank));
     }
 
     fn get_style(&self, path: &[Scope]) -> Style {
-        let mut cache = self.cache.borrow_mut();
-        if let Some(style) = cache.get(path) {
-            return *style
+        Style {
+            foreground: self.foreground_tree.find(path),
+            background: self.background_tree.find(path),
+            font_style: self.font_style_tree.find(path),
         }
-        let style = self.eval_style(path);
-        cache.insert(path.to_vec(), style);
-        return style
     }
 }
