@@ -58,7 +58,7 @@ impl<'a, T: Widget<'a>> Widget<'a> for Modal<T> {
         }
     }
 
-    fn on_keypress(&'a mut self, core: Self::Context, base: Canvas, key: Key) -> bool {
+    fn on_keypress(&'a mut self, core: Self::Context, _: Canvas, key: Key) -> bool {
         let r = self.content.on_keypress(core, self.panel.get().unwrap().1, key);
         if r {
             update_panels();

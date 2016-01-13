@@ -16,10 +16,55 @@ impl ColorPair {
 
 pub struct ColorPair(pub u8);
 
+const BLACK : Color = Color(16);
+const WHITE : Color = Color(231);
+
+fn color_chanel_256_to_6(x: u8) -> (u8, u8) {
+    match x {
+        0x00...0x2F => (0, x - 0x00),
+        0x2F...0x5F => (1, 0x5F - x),
+        0x5F...0x73 => (1, x - 0x5F),
+        0x73...0x87 => (2, 0x87 - x),
+        0x87...0x9B => (2, x - 0x87),
+        0x9B...0xAF => (3, 0xAF - x),
+        0xAF...0xC3 => (3, x - 0xAF),
+        0xC3...0xD7 => (4, 0xD7 - x),
+        0xD7...0xEB => (4, x - 0xD7),
+        0xEB...0xFF => (5, 0xFF - x),
+        _ => unreachable!()
+    }
+}
+
 impl Color {
-    // pub fn rgb(rgb: u64) -> Color {
-    //     Color(0)
-    // }
+    pub fn from_rgb256(r: u8, g: u8, b: u8) -> Color {
+        // find color in color cube
+        let (r6, r6diff) = color_chanel_256_to_6(r);
+        let (g6, g6diff) = color_chanel_256_to_6(g);
+        let (b6, b6diff) = color_chanel_256_to_6(b);
+        let cube_diff = r6diff + g6diff + b6diff;
+        // find color in grayscale palette
+        let value = ((r as u16 + g as u16 + b as u16) / 3) as u8;
+        let (gray_color, origin_value) = match value {
+            0x00...0x04 => (BLACK, 0x00),
+            0x04...0xF4 => {
+                let index = (value - 0x04) / 10;
+                (Color::grayscale(index), 0x08 + index * 0xA)
+            }
+            0xF4...0xFF => (WHITE, 0xff),
+            _ => unreachable!(),
+        };
+        let gray_diff = (origin_value - r) + (origin_value - g) + (origin_value - b);
+        // compare best match and return
+        if gray_diff < cube_diff {
+            gray_color
+        } else {
+            Color::color_cube(r6, g6, b6)
+        }
+    }
+
+    fn color_cube(r: u8, g: u8, b: u8) -> Color {
+        Color(16 + r * 36 + g * 6 + b)
+    }
 
     pub fn grayscale(index: u8) -> Color {
         assert!(index <= 23);
@@ -38,10 +83,7 @@ bitflags! {
         const NORMAL    = 0,
         const BOLD      = 1 << (8 + 13),
         const UNDERLINE = 1 << (8 +  9),
-        // const ITALIC    = 0b00000100,
-        // const STRIKE    = 0b00001000,
-        const BLINK     = 1 << (8 + 11),
-        // const INVERT    = 0b00100000,
+        // todo: add italic, invert and blink
     }
 }
 

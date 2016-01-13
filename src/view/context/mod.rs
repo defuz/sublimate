@@ -104,12 +104,12 @@ impl<'a> Widget<'a> for Group {
         return false;
     }
 
-    fn focus(&mut self, (core, focused): Self::Context) {
+    fn focus(&mut self, (core, _): Self::Context) {
         self.is_opened = true;
         self.modal.focus(core);
     }
 
-    fn unfocus(&mut self, (core, focused): Self::Context) {
+    fn unfocus(&mut self, (core, _): Self::Context) {
         self.is_opened = false;
         self.modal.unfocus(core);
     }
