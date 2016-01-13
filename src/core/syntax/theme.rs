@@ -1,7 +1,10 @@
 use std::str::FromStr;
 
 use core::settings::{ParseSettings, Settings};
-use core::syntax::{ScopeSelectors, ParseScopeError};
+use core::syntax::{
+    ScopeSelectors, ParseScopeError, StyleModifier, Color, FontStyle,
+    FONT_STYLE_BOLD, FONT_STYLE_UNDERLINE, FONT_STYLE_ITALIC
+};
 
 use self::ParseThemeError::*;
 
@@ -16,105 +19,79 @@ pub struct Theme {
 #[derive(Debug, Default)]
 pub struct ThemeSettings {
     /// Foreground color for the view.
-    pub foreground: Color,
+    pub foreground: Option<Color>,
     /// Backgound color of the view.
-    pub background: Color,
+    pub background: Option<Color>,
     /// Color of the caret.
-    pub caret: Color,
+    pub caret: Option<Color>,
     /// Color of the line the caret is in.
     /// Only used when the `higlight_line` setting is set to `true`.
-    pub line_highlight: Color,
+    pub line_highlight: Option<Color>,
 
     /// Color of bracketed sections of text when the caret is in a bracketed section.
     /// Only applied when the `match_brackets` setting is set to `true`.
-    pub bracket_contents_foreground: Color,
+    pub bracket_contents_foreground: Option<Color>,
     /// Controls certain options when the caret is in a bracket section.
     /// Only applied when the `match_brackets` setting is set to `true`.
-    pub bracket_contents_options: UnderlineOption,
+    pub bracket_contents_options: Option<UnderlineOption>,
     /// Foreground color of the brackets when the caret is next to a bracket.
     /// Only applied when the `match_brackets` setting is set to `true`.
-    pub brackets_foreground: Color,
+    pub brackets_foreground: Option<Color>,
     /// Background color of the brackets when the caret is next to a bracket.
     /// Only applied when the `match_brackets` setting is set to `true`.
-    pub brackets_background: Color,
+    pub brackets_background: Option<Color>,
     /// Controls certain options when the caret is next to a bracket.
     /// Only applied when the match_brackets setting is set to `true`.
-    pub brackets_options: UnderlineOption,
+    pub brackets_options: Option<UnderlineOption>,
 
     /// Color of tags when the caret is next to a tag.
     /// Only used when the `match_tags` setting is set to `true`.
-    pub tags_foreground: Color,
+    pub tags_foreground: Option<Color>,
     /// Controls certain options when the caret is next to a tag.
     /// Only applied when the match_tags setting is set to `true`.
-    pub tags_options: UnderlineOption,
+    pub tags_options: Option<UnderlineOption>,
 
     /// Background color of regions matching the current search.
-    pub find_highlight: Color,
+    pub find_highlight: Option<Color>,
     /// Background color of regions matching the current search.
-    pub find_highlight_foreground: Color,
+    pub find_highlight_foreground: Option<Color>,
 
     /// Background color of the gutter.
-    pub gutter: Color,
+    pub gutter: Option<Color>,
     /// Foreground color of the gutter.
-    pub gutter_foreground: Color,
+    pub gutter_foreground: Option<Color>,
 
     /// Color of the selection regions.
-    pub selection: Color,
+    pub selection: Option<Color>,
     /// Background color of the selection regions.
-    pub selection_background: Color,
+    pub selection_background: Option<Color>,
     /// Color of the selection regions border.
-    pub selection_border: Color,
+    pub selection_border: Option<Color>,
     /// Color of inactive selections (inactive view).
-    pub inactive_selection: Color,
+    pub inactive_selection: Option<Color>,
 
     /// Color of the guides displayed to indicate nesting levels.
-    pub guide: Color,
+    pub guide: Option<Color>,
     /// Color of the guide lined up with the caret.
     /// Only applied if the `indent_guide_options` setting is set to `draw_active`.
-    pub active_guide: Color,
+    pub active_guide: Option<Color>,
     /// Color of the current guide’s parent guide level.
     /// Only used if the `indent_guide_options` setting is set to `draw_active`.
-    pub stack_guide: Color,
+    pub stack_guide: Option<Color>,
 
     /// Background color for regions added via `sublime.add_regions()`
     /// with the `sublime.DRAW_OUTLINED` flag added.
-    pub highlight: Color,
+    pub highlight: Option<Color>,
     /// Foreground color for regions added via `sublime.add_regions()`
     /// with the `sublime.DRAW_OUTLINED` flag added.
-    pub highlight_foreground: Color
+    pub highlight_foreground: Option<Color>
 }
 
 #[derive(Debug, Default)]
 pub struct ThemeItem {
     /// Target scope name.
     pub scope: ScopeSelectors,
-    pub style: Style
-}
-
-#[derive(Debug, Default)]
-pub struct Style {
-    /// Foreground color.
-    pub foreground: Option<Color>,
-    /// Background color.
-    pub background: Option<Color>,
-    /// Style of the font.
-    pub font_style: Option<FontStyle>
-}
-
-#[derive(Debug, Default, Clone, Copy)]
-pub struct Color {
-    r: u8,
-    g: u8,
-    b: u8,
-    a: u8 // todo: remove alpha?
-}
-
-bitflags! {
-    flags FontStyle: u8 {
-        const FONT_STYLE_BOLD = 1,
-        const FONT_STYLE_UNDERLNINE = 2,
-        const FONT_STYLE_ITALIC = 4,
-    }
+    pub style: StyleModifier
 }
 
 #[derive(Debug)]
@@ -191,7 +168,7 @@ impl FromStr for FontStyle {
         for i in s.split_whitespace() {
             font_style.insert(match i {
                 "bold" => FONT_STYLE_BOLD,
-                "underline" => FONT_STYLE_UNDERLNINE,
+                "underline" => FONT_STYLE_UNDERLINE,
                 "italic" => FONT_STYLE_ITALIC,
                 s => return Err(IncorrectFontStyle(s.to_owned())),
             })
@@ -243,10 +220,10 @@ impl ParseSettings for Color {
     }
 }
 
-impl ParseSettings for Style {
+impl ParseSettings for StyleModifier {
     type Error = ParseThemeError;
 
-    fn parse_settings(settings: Settings) -> Result<Style, Self::Error> {
+    fn parse_settings(settings: Settings) -> Result<StyleModifier, Self::Error> {
         let mut obj = match settings {
             Settings::Object(obj) => obj,
             _ => return Err(ColorShemeScopeIsNotObject),
@@ -267,7 +244,7 @@ impl ParseSettings for Style {
             _ => return Err(IncorrectColor),
         };
 
-        Ok(Style { foreground: foreground, background: background, font_style: font_style })
+        Ok(StyleModifier { foreground: foreground, background: background, font_style: font_style })
     }
 }
 
@@ -284,7 +261,7 @@ impl ParseSettings for ThemeItem {
             _ => return Err(ScopeSelectorIsNotString(format!("{:?}", obj))),
         };
         let style = match obj.remove("settings") {
-            Some(settings) => try!(Style::parse_settings(settings)),
+            Some(settings) => try!(StyleModifier::parse_settings(settings)),
             None => return Err(IncorrectSettings)
         };
         Ok(ThemeItem { scope: scope, style: style })
@@ -305,53 +282,53 @@ impl ParseSettings for ThemeSettings {
         for (key, value) in obj {
             match &key[..] {
                 "foreground" =>
-                    settings.foreground = try!(Color::parse_settings(value)),
+                    settings.foreground = Some(try!(Color::parse_settings(value))),
                 "background" =>
-                    settings.background = try!(Color::parse_settings(value)),
+                    settings.background = Some(try!(Color::parse_settings(value))),
                 "caret" =>
-                    settings.caret = try!(Color::parse_settings(value)),
+                    settings.caret = Some(try!(Color::parse_settings(value))),
                 "lineHighlight" =>
-                    settings.line_highlight = try!(Color::parse_settings(value)),
+                    settings.line_highlight = Some(try!(Color::parse_settings(value))),
                 "bracketContentsForeground" =>
-                    settings.bracket_contents_foreground = try!(Color::parse_settings(value)),
+                    settings.bracket_contents_foreground = Some(try!(Color::parse_settings(value))),
                 "bracketContentsOptions" =>
-                    settings.bracket_contents_options = try!(UnderlineOption::parse_settings(value)),
+                    settings.bracket_contents_options = Some(try!(UnderlineOption::parse_settings(value))),
                 "bracketsForeground" =>
-                    settings.brackets_foreground = try!(Color::parse_settings(value)),
+                    settings.brackets_foreground = Some(try!(Color::parse_settings(value))),
                 "bracketsBackground" =>
-                    settings.brackets_background = try!(Color::parse_settings(value)),
+                    settings.brackets_background = Some(try!(Color::parse_settings(value))),
                 "bracketsOptions" =>
-                    settings.brackets_options = try!(UnderlineOption::parse_settings(value)),
+                    settings.brackets_options = Some(try!(UnderlineOption::parse_settings(value))),
                 "tagsForeground" =>
-                    settings.tags_foreground = try!(Color::parse_settings(value)),
+                    settings.tags_foreground = Some(try!(Color::parse_settings(value))),
                 "tagsOptions" =>
-                    settings.tags_options = try!(UnderlineOption::parse_settings(value)),
+                    settings.tags_options = Some(try!(UnderlineOption::parse_settings(value))),
                 "findHighlight" =>
-                    settings.find_highlight = try!(Color::parse_settings(value)),
+                    settings.find_highlight = Some(try!(Color::parse_settings(value))),
                 "findHighlightForeground" =>
-                    settings.find_highlight_foreground = try!(Color::parse_settings(value)),
+                    settings.find_highlight_foreground = Some(try!(Color::parse_settings(value))),
                 "gutter" =>
-                    settings.gutter = try!(Color::parse_settings(value)),
+                    settings.gutter = Some(try!(Color::parse_settings(value))),
                 "gutterForeground" =>
-                    settings.gutter_foreground = try!(Color::parse_settings(value)),
+                    settings.gutter_foreground = Some(try!(Color::parse_settings(value))),
                 "selection" =>
-                    settings.selection = try!(Color::parse_settings(value)),
+                    settings.selection = Some(try!(Color::parse_settings(value))),
                 "selectionBackground" =>
-                    settings.selection_background = try!(Color::parse_settings(value)),
+                    settings.selection_background = Some(try!(Color::parse_settings(value))),
                 "selectionBorder" =>
-                    settings.selection_border = try!(Color::parse_settings(value)),
+                    settings.selection_border = Some(try!(Color::parse_settings(value))),
                 "inactiveSelection" =>
-                    settings.inactive_selection = try!(Color::parse_settings(value)),
+                    settings.inactive_selection = Some(try!(Color::parse_settings(value))),
                 "guide" =>
-                    settings.guide = try!(Color::parse_settings(value)),
+                    settings.guide = Some(try!(Color::parse_settings(value))),
                 "activeGuide" =>
-                    settings.active_guide = try!(Color::parse_settings(value)),
+                    settings.active_guide = Some(try!(Color::parse_settings(value))),
                 "stackGuide" =>
-                    settings.stack_guide = try!(Color::parse_settings(value)),
+                    settings.stack_guide = Some(try!(Color::parse_settings(value))),
                 "highlight" =>
-                    settings.highlight = try!(Color::parse_settings(value)),
+                    settings.highlight = Some(try!(Color::parse_settings(value))),
                 "highlightForeground" =>
-                    settings.highlight_foreground = try!(Color::parse_settings(value)),
+                    settings.highlight_foreground = Some(try!(Color::parse_settings(value))),
                 "invisibles" => (), // ignored
                 _ => return Err(UndefinedScopeSettings(key))
             }

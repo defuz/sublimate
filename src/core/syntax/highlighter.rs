@@ -1,5 +1,6 @@
 use super::scope::{Scope, ScopeTree};
-use super::theme::{Style, Theme, ThemeSettings, Color, FontStyle};
+use super::theme::{Theme, ThemeSettings};
+use super::style::{Style, StyleModifier, Color, FontStyle, BLACK, WHITE};
 
 struct Highlighter {
     settings: ThemeSettings,
@@ -34,8 +35,16 @@ impl Highlighter {
         }
     }
 
-    fn get_style(&self, path: &[Scope]) -> Style {
+    fn get_default(&self) -> Style {
         Style {
+            foreground: self.settings.foreground.unwrap_or(WHITE),
+            background: self.settings.foreground.unwrap_or(BLACK),
+            font_style: FontStyle::empty()
+        }
+    }
+
+    fn get_style(&self, path: &[Scope]) -> StyleModifier {
+        StyleModifier {
             foreground: self.foreground_tree.find(path),
             background: self.background_tree.find(path),
             font_style: self.font_style_tree.find(path),
