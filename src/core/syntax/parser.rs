@@ -15,8 +15,8 @@ pub struct ParserContext {
 }
 
 pub struct ParserMatch {
-    pub before: ScopeCommand,
-    pub after: ScopeCommand,
+    pub before: Option<ScopeCommand>,
+    pub after: Option<ScopeCommand>,
     pub context: ContextCommand,
     pub captures_len: usize,
     pub captures_map: Captures
@@ -25,8 +25,7 @@ pub struct ParserMatch {
 #[derive(Clone)]
 pub enum ScopeCommand {
     Push(Scope),
-    Pop,
-    Noop
+    Pop
 }
 
 #[derive(Clone, Copy)]
@@ -42,36 +41,23 @@ pub struct ParserState<'a> {
     region: &'a mut Region,
     scope_path: Vec<Scope>,
     context_path: Vec<ContextId>,
-    changes: Vec<(usize, ParserStateChange)>
-}
-
-#[derive(PartialEq, Eq, PartialOrd, Ord)]
-enum ParserStateChange {
-    Push(Scope),
-    Pop
+    changes: Vec<(usize, ScopeCommand)>
 }
 
 impl<'a> ParserState<'a> {
     fn scope_change(&mut self, pos: usize, command: ScopeCommand) {
-        let change = match command {
-            ScopeCommand::Push(scope) => {
-                self.scope_path.push(scope.clone());
-                ParserStateChange::Push(scope)
-            },
-            ScopeCommand::Pop => {
-                self.scope_path.pop();
-                ParserStateChange::Pop
-            }
-            ScopeCommand::Noop => return
+        match command {
+            ScopeCommand::Push(ref scope) => self.scope_path.push(scope.clone()),
+            ScopeCommand::Pop => { self.scope_path.pop(); }
         };
         if self.changes.is_empty() {
-            self.changes.push((self.pos + pos, change))
+            self.changes.push((self.pos + pos, command))
         } else {
             let mut index = self.changes.len() - 1;
             while self.changes[index].0 > self.pos + pos && index > 0 {
                 index -= 1;
             }
-            self.changes.insert(index, (self.pos + pos, change))
+            self.changes.insert(index, (self.pos + pos, command))
         }
     }
 
@@ -104,15 +90,14 @@ impl<'a> ParserState<'a> {
         }
     }
 
-    fn apply_match(&mut self, parser_match: &ParserMatch, capture_index: usize) -> bool {
-        match self.region.pos(capture_index) {
-            Some((beg, end)) => {
-                self.scope_change(beg, parser_match.before.clone());
-                self.scope_change(end, parser_match.after.clone());
-                self.text_move(end);
-            }
-            None => return false
+    fn apply_match(&mut self, parser_match: &ParserMatch, capture_index: usize) -> Option<usize> {
+        let (beg, end) = match self.region.pos(capture_index) {
+            Some(range) => range,
+            None => return None
         };
+        if let Some(ref command) = parser_match.before {
+            self.scope_change(beg, command.clone());
+        }
         for (capture_id, scope) in &parser_match.captures_map {
             match self.region.pos(capture_index + *capture_id) {
                 Some((beg, end)) => {
@@ -122,8 +107,11 @@ impl<'a> ParserState<'a> {
                 None => ()
             }
         }
+        if let Some(ref command) = parser_match.after {
+            self.scope_change(end, command.clone());
+        }
         self.context_change(parser_match.context);
-        return true;
+        Some(end)
     }
 
     fn apply_context(&mut self, context: &ParserContext) -> bool {
@@ -135,7 +123,9 @@ impl<'a> ParserState<'a> {
         }
         let mut capture_index = 1;
         for parser_match in &context.matches {
-            if self.apply_match(&parser_match, capture_index) {
+            let r = self.apply_match(&parser_match, capture_index);
+            if let Some(shift) = r {
+                self.text_move(shift);
                 break
             }
             capture_index += parser_match.captures_len;
@@ -152,6 +142,5 @@ impl Parser {
                 break
             }
         }
-        state.changes.sort();
     }
 }

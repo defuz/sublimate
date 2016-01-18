@@ -23,17 +23,17 @@ struct ParserContextBuilder<'a> {
 }
 
 impl ScopeCommand {
-    fn push_or_noop(scope: &Option<Scope>) -> ScopeCommand {
+    fn push_or_noop(scope: &Option<Scope>) -> Option<ScopeCommand> {
         match *scope {
-            Some(ref s) => ScopeCommand::Push(s.to_owned()),
-            None => ScopeCommand::Noop
+            Some(ref s) => Some(ScopeCommand::Push(s.to_owned())),
+            None => None
         }
     }
 
-    fn pop_or_noop(scope: &Option<Scope>) -> ScopeCommand {
+    fn pop_or_noop(scope: &Option<Scope>) -> Option<ScopeCommand> {
         match *scope {
-            Some(..) => ScopeCommand::Pop,
-            None => ScopeCommand::Noop
+            Some(..) => Some(ScopeCommand::Pop),
+            None => None
         }
     }
 }
@@ -50,7 +50,7 @@ impl<'a> ParserContextBuilder<'a> {
     }
 
     fn push(&mut self,
-            before: ScopeCommand, after: ScopeCommand,
+            before: Option<ScopeCommand>, after: Option<ScopeCommand>,
             command: ContextCommand, pattern: &RegexPattern) {
         self.matches.push(ParserMatch {
             before: before,

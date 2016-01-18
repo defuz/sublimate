@@ -10,7 +10,10 @@ pub struct View {
 
 #[derive(Debug)]
 pub struct Line {
-    text: String
+    text: String,
+    // scope_path: Vec<Scope>,
+    // context_path: Vec<ContextId>,
+    // changes: Vec<(usize, ScopeCommand)>
 }
 
 impl Line {
