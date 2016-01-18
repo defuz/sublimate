@@ -53,16 +53,25 @@ enum ParserStateChange {
 
 impl<'a> ParserState<'a> {
     fn scope_change(&mut self, pos: usize, command: ScopeCommand) {
-        match command {
+        let change = match command {
             ScopeCommand::Push(scope) => {
                 self.scope_path.push(scope.clone());
-                self.changes.push((self.pos + pos, ParserStateChange::Push(scope)));
+                ParserStateChange::Push(scope)
             },
             ScopeCommand::Pop => {
                 self.scope_path.pop();
-                self.changes.push((self.pos + pos, ParserStateChange::Pop));
+                ParserStateChange::Pop
             }
-            ScopeCommand::Noop => ()
+            ScopeCommand::Noop => return
+        };
+        if self.changes.is_empty() {
+            self.changes.push((self.pos + pos, change))
+        } else {
+            let mut index = self.changes.len() - 1;
+            while self.changes[index].0 > self.pos + pos && index > 0 {
+                index -= 1;
+            }
+            self.changes.insert(index, (self.pos + pos, change))
         }
     }
 

@@ -1,5 +1,6 @@
 use ncurses::{attr_get, attr_t};
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub struct Color(pub u8);
 
 impl ColorPair {
@@ -14,6 +15,7 @@ impl ColorPair {
     }
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub struct ColorPair(pub u8);
 
 const BLACK : Color = Color(16);
