@@ -1,4 +1,4 @@
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub struct Style {
     /// Foreground color.
     pub foreground: Color,
@@ -8,7 +8,7 @@ pub struct Style {
     pub font_style: FontStyle
 }
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Clone, Copy)]
 pub struct StyleModifier {
     /// Foreground color.
     pub foreground: Option<Color>,
@@ -38,7 +38,7 @@ bitflags! {
 }
 
 impl Style {
-    fn apply(&self, modifier: StyleModifier) -> Style {
+    pub fn apply(&self, modifier: StyleModifier) -> Style {
         Style {
             foreground: modifier.foreground.unwrap_or(self.foreground),
             background: modifier.background.unwrap_or(self.background),

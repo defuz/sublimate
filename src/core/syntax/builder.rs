@@ -1,9 +1,9 @@
 use core::regex::Regex;
 
-use super::scope::Scope;
+use super::scope::ScopeCommand;
 
 use super::parser::{
-    Parser, ParserMatch, ScopeCommand, ContextCommand, ParserContext, ContextId
+    Parser, ParserMatch, ContextCommand, ParserContext, ContextId
 };
 use super::definition::{
     Syntax, Pattern, Patterns, Include, MatchPattern,
@@ -22,22 +22,6 @@ struct ParserContextBuilder<'a> {
     scopes: &'a [ScopeMatchPattern]
 }
 
-impl ScopeCommand {
-    fn push_or_noop(scope: &Option<Scope>) -> Option<ScopeCommand> {
-        match *scope {
-            Some(ref s) => Some(ScopeCommand::Push(s.to_owned())),
-            None => None
-        }
-    }
-
-    fn pop_or_noop(scope: &Option<Scope>) -> Option<ScopeCommand> {
-        match *scope {
-            Some(..) => Some(ScopeCommand::Pop),
-            None => None
-        }
-    }
-}
-
 impl<'a> ParserContextBuilder<'a> {
     fn new(syntax: &'a Syntax,
            scopes: &'a [ScopeMatchPattern]) -> ParserContextBuilder<'a> {
@@ -50,7 +34,7 @@ impl<'a> ParserContextBuilder<'a> {
     }
 
     fn push(&mut self,
-            before: Option<ScopeCommand>, after: Option<ScopeCommand>,
+            before: ScopeCommand, after: ScopeCommand,
             command: ContextCommand, pattern: &RegexPattern) {
         self.matches.push(ParserMatch {
             before: before,
@@ -136,9 +120,7 @@ impl ParserBuilder {
             self.contexts.push(context);
         }
 
-        Parser {
-            contexts: self.contexts
-        }
+        Parser::new(self.contexts)
     }
 
     fn build_scope(&self, pattern: &ScopeMatchPattern, syntax: &Syntax) -> ParserContext {

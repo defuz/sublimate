@@ -1,16 +1,16 @@
 use std::str::FromStr;
 use std::collections::BTreeMap;
 
-pub type Rank = u64;
-
 #[derive(Debug, Default, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct Scope {
     name: String
 }
 
+pub type ScopePath = Vec<Scope>;
+
 #[derive(Debug, Default, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub struct ScopeSelector {
-    path: Vec<Scope>,
+    path: ScopePath,
     exclude: Option<Scope>
 }
 
@@ -19,8 +19,31 @@ pub struct ScopeSelectors {
     pub selectors: Vec<ScopeSelector>
 }
 
+#[derive(Debug, Clone)]
+pub enum ScopeCommand {
+    Push(Scope),
+    Pop,
+    Noop
+}
+
 #[derive(Debug)]
 pub struct ParseScopeError(char);
+
+impl ScopeCommand {
+    pub fn push_or_noop(scope: &Option<Scope>) -> ScopeCommand {
+        match *scope {
+            Some(ref s) => ScopeCommand::Push(s.to_owned()),
+            None => ScopeCommand::Noop
+        }
+    }
+
+    pub fn pop_or_noop(scope: &Option<Scope>) -> ScopeCommand {
+        match *scope {
+            Some(..) => ScopeCommand::Pop,
+            None => ScopeCommand::Noop
+        }
+    }
+}
 
 impl FromStr for Scope {
     type Err = ParseScopeError;
