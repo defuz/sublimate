@@ -77,6 +77,9 @@ impl<'a> View for EditorView<'a> {
                 canvas.text(text, y, x);
                 x += text.width();
             }
+            for x in x..canvas.width() {
+                canvas.char(' ', y, x);
+            }
         }
     }
 }

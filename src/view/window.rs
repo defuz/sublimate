@@ -16,7 +16,7 @@ pub struct Window {
 impl Window {
     pub fn new(core: Core) -> Window {
         let menubar = Menubar::new(core.package_repository.get_menu("default/Main.sublime-menu"));
-        let editor = Editor::new(core.highlighter().unwrap(), ColorPalette::new(32, 255));
+        let editor = Editor::new(core.create_highlighter().unwrap(), ColorPalette::new(32, 255));
         Window {
             core: core,
             menubar: menubar,

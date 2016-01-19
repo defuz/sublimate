@@ -10,7 +10,7 @@ use super::definition::{
     ScopeMatchPattern, RegexPattern
 };
 
-struct ParserBuilder {
+pub struct ParserBuilder {
     scopes: Vec<ScopeMatchPattern>,
     contexts: Vec<ParserContext>,
 }
@@ -43,7 +43,7 @@ impl<'a> ParserContextBuilder<'a> {
             captures_len: pattern.captures_len,
             captures_map: pattern.captures_map.clone(),
         });
-        if !self.matches.is_empty() {
+        if !self.regex.is_empty() {
             self.regex.push('|');
         }
         self.regex.push('(');
@@ -64,8 +64,8 @@ impl<'a> ParserContextBuilder<'a> {
     }
 
     fn push_scope_end(&mut self, pattern: &ScopeMatchPattern) {
-        let before = ScopeCommand::pop_or_noop(&pattern.name);
-        let after = ScopeCommand::pop_or_noop(&pattern.content_name);
+        let before = ScopeCommand::pop_or_noop(&pattern.content_name);
+        let after = ScopeCommand::pop_or_noop(&pattern.name);
         self.push(before, after, ContextCommand::Pop, &pattern.end);
     }
 
@@ -83,7 +83,7 @@ impl<'a> ParserContextBuilder<'a> {
         for pattern in patterns {
             match *pattern {
                 Pattern::Match(ref pattern) => self.push_match(pattern),
-                Pattern::ContextId(id) => self.push_scope_begin(id, &self.scopes[id]),
+                Pattern::ContextId(id) => self.push_scope_begin(id, &self.scopes[id - 1]),
                 Pattern::Include(ref include) => self.push_include(include),
                 Pattern::ScopeMatch(..) => unreachable!("Scope match shoud be identified before")
             }
@@ -99,14 +99,14 @@ impl<'a> ParserContextBuilder<'a> {
 }
 
 impl ParserBuilder {
-    fn new() -> ParserBuilder {
+    pub fn new() -> ParserBuilder {
         ParserBuilder {
             scopes: Vec::new(),
             contexts: Vec::new()
         }
     }
 
-    fn build(mut self, syntax: &mut Syntax) -> Parser {
+    pub fn build(mut self, syntax: &mut Syntax) -> Parser {
         // identificate context scopes
         self.identificate_patterns(&mut syntax.patterns);
         for (_, patterns) in syntax.repository.iter_mut() {
@@ -139,7 +139,7 @@ impl ParserBuilder {
     fn identificate_patterns(&mut self, patterns: &mut Patterns) {
         for pattern in patterns.iter_mut() {
             if let Pattern::ScopeMatch(..) = *pattern {
-                let mut new = Pattern::ContextId(self.scopes.len());
+                let mut new = Pattern::ContextId(self.scopes.len() + 1);
                 ::std::mem::swap(&mut new, pattern);
                 match new {
                     Pattern::ScopeMatch(scope) => self.scopes.push(scope),

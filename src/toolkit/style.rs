@@ -55,7 +55,9 @@ impl Color {
             0xF4...0xFF => (WHITE, 0xff),
             _ => unreachable!(),
         };
-        let gray_diff = (origin_value - r) + (origin_value - g) + (origin_value - b);
+        let gray_diff = if origin_value > r { origin_value - r } else { r - origin_value }
+                      + if origin_value > g { origin_value - g } else { g - origin_value }
+                      + if origin_value > b { origin_value - b } else { b - origin_value };
         // compare best match and return
         if gray_diff < cube_diff {
             gray_color

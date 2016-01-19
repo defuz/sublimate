@@ -29,7 +29,7 @@ impl<'a> HighlightIterator<'a> {
            highlighter: &'a Highlighter) -> HighlightIterator<'a> {
 
         let style = highlighter.get_default();
-        for i in 0..path.len() {
+        for i in 1..path.len() {
             style.apply(highlighter.get_style(&path[0..i]));
         }
 
@@ -72,7 +72,11 @@ impl<'a> Iterator for HighlightIterator<'a> {
         };
         self.pos = end;
         self.index += 1;
-        Some((style, text))
+        if text.is_empty() {
+            self.next()
+        } else {
+            Some((style, text))
+        }
     }
 }
 
@@ -105,7 +109,7 @@ impl Highlighter {
     pub fn get_default(&self) -> Style {
         Style {
             foreground: self.settings.foreground.unwrap_or(WHITE),
-            background: self.settings.foreground.unwrap_or(BLACK),
+            background: self.settings.background.unwrap_or(BLACK),
             font_style: FontStyle::empty()
         }
     }

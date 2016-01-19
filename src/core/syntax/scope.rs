@@ -120,6 +120,7 @@ impl<T: Clone> ScopeTree<T> {
     }
 
     fn get(&self, key: &str, is_parent: bool) -> Option<&ScopeTree<T>> {
+        let key = key.trim_right_matches('.');
         if is_parent {
             self.parents.get(key)
         } else {
@@ -128,6 +129,7 @@ impl<T: Clone> ScopeTree<T> {
     }
 
     fn get_or_create(&mut self, key: &str, is_parent: bool) -> &mut ScopeTree<T> {
+        let key = key.trim_right_matches('.');
         if is_parent {
             self.parents.entry(key.to_owned()).or_insert_with(ScopeTree::new)
         } else {
@@ -136,7 +138,9 @@ impl<T: Clone> ScopeTree<T> {
     }
 
     fn add_subpath(&mut self, path: &[Scope], depth: usize, shift: usize, value: T) {
+        // println!("Add subpath, depth={}, shift={}, path={:?}", depth, shift, path);
         let part = &path[depth].name[shift..];
+        // println!("   part={:?}", part);
         if part.is_empty() {
             if depth == 0 {
                 // TODO: warning: reassigned style
@@ -145,15 +149,16 @@ impl<T: Clone> ScopeTree<T> {
                 self.add_subpath(path, depth - 1, 0, value);
             }
         } else {
-            let next_shift = part.find('.').unwrap_or(part.len());
-            let key = &part[shift..next_shift];
+            let next_shift = part.find('.').map(|i| i + 1).unwrap_or(part.len());
+            let key = &part[..next_shift];
+            // println!("   key={:?}", key);
             let node = self.get_or_create(key, shift == 0);
-            node.add_subpath(path, depth, next_shift, value);
+            node.add_subpath(path, depth, shift + next_shift, value);
         }
     }
 
     pub fn add(&mut self, path: &[Scope], value: T) {
-        self.add_subpath(path, path.len(), 0, value)
+        self.add_subpath(path, path.len() - 1, 0, value)
     }
 
     fn find_subpath(&self, path: &[Scope], depth: usize, shift: usize) -> Option<T> {
@@ -165,10 +170,10 @@ impl<T: Clone> ScopeTree<T> {
                 self.find_subpath(path, depth - 1, 0)
             }
         } else {
-            let next_shift = part.find('.').unwrap_or(part.len());
-            let key = &part[shift..next_shift];
+            let next_shift = part.find('.').map(|i| i + 1).unwrap_or(part.len());
+            let key = &part[..next_shift];
             if let Some(node) = self.get(key, shift == 0) {
-                let r = node.find_subpath(path, depth, next_shift);
+                let r = node.find_subpath(path, depth, shift + next_shift);
                 if r.is_some() {
                     return r
                 }
@@ -184,6 +189,6 @@ impl<T: Clone> ScopeTree<T> {
     }
 
     pub fn find(&self, path: &[Scope]) -> Option<T> {
-        self.find_subpath(path, path.len(), 0)
+        self.find_subpath(path, path.len() - 1, 0)
     }
 }

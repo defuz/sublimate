@@ -1,7 +1,8 @@
 use core::regex::{Regex, Region, OPTION_NONE};
 
 use super::scope::{ScopePath, ScopeCommand};
-use super::definition::Captures;
+use super::builder::ParserBuilder;
+use super::definition::{Syntax, Captures};
 
 pub type ContextId = usize;
 
@@ -35,7 +36,6 @@ pub enum ContextCommand {
 
 #[derive(Debug, Clone)]
 pub struct ParserState {
-    parsed: bool,
     context_path: Vec<ContextId>,
     pub scope_path: ScopePath,
     pub changes: Vec<(usize, ScopeCommand)>
@@ -44,7 +44,6 @@ pub struct ParserState {
 impl ParserState {
     pub fn new() -> ParserState {
         ParserState {
-            parsed: false,
             scope_path: Vec::new(),
             context_path: Vec::new(),
             changes: Vec::new()
@@ -57,8 +56,12 @@ impl ParserState {
 
     fn change_scope(&mut self, pos: usize, command: ScopeCommand) {
         match command {
-            ScopeCommand::Push(ref scope) => self.scope_path.push(scope.clone()),
-            ScopeCommand::Pop => { self.scope_path.pop(); },
+            ScopeCommand::Push(ref scope) => {
+                self.scope_path.push(scope.clone())
+            },
+            ScopeCommand::Pop => {
+                self.scope_path.pop();
+            },
             ScopeCommand::Noop => return
         };
         let mut index = self.changes.len();
@@ -70,8 +73,12 @@ impl ParserState {
 
     fn change_context(&mut self, command: ContextCommand) {
         match command {
-            ContextCommand::Push(id) => self.context_path.push(id),
-            ContextCommand::Pop => { self.context_path.pop(); },
+            ContextCommand::Push(id) => {
+                self.context_path.push(id);
+            },
+            ContextCommand::Pop => {
+                self.context_path.pop();
+            },
             ContextCommand::Noop => ()
         }
     }
@@ -85,22 +92,31 @@ impl Parser {
         }
     }
 
+    pub fn from_syntax(mut syntax: Syntax) -> Parser {
+        ParserBuilder::new().build(&mut syntax)
+    }
+
     pub fn parse(&mut self, text: &str, state: &mut ParserState) {
         let mut pos = 0;
-        while !text.is_empty() {
+        while pos < text.len() {
             let context = match state.context_path.last() {
                 Some(id) => &self.contexts[*id],
                 None => &self.contexts[0]
             };
             self.region.clear();
-            let r = context.regex.match_with_region(&text[pos..], &mut self.region, OPTION_NONE);
-            if let Some(end) = r.unwrap() {
+            let r = context.regex.search_with_region(&text[pos..], &mut self.region, OPTION_NONE);
+            if r.unwrap().is_some() {
+                let (_, end) = self.region.pos(0).unwrap();
+                if end == 0 {
+                    // TODO: Warning
+                    break
+                }
                 let mut capture_index = 1;
                 for parser_match in &context.matches {
                     let (beg, end) = match self.region.pos(capture_index) {
                         Some(range) => range,
                         None => {
-                            capture_index += parser_match.captures_len;
+                            capture_index += parser_match.captures_len + 1;
                             continue
                         }
                     };
@@ -115,12 +131,12 @@ impl Parser {
                     }
                     state.change_scope(pos + end, parser_match.after.clone());
                     state.change_context(parser_match.context);
+                    break
                 }
-                pos += end
+                pos += end;
             } else {
                 break
             }
         }
-        state.parsed = true;
     }
 }

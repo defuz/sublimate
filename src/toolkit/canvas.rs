@@ -39,6 +39,14 @@ impl Canvas {
         Canvas {win: stdscr, x0: 0, y0: 0, x1: 0, y1: 0, x2: x as usize, y2: y as usize}
     }
 
+    pub fn width(&self) -> usize {
+        self.x2 - self.x1
+    }
+
+    pub fn height(&self) -> usize {
+        self.y2 - self.y1
+    }
+
     // fn inner(&self, inner: Canvas) -> Canvas {
     //     Canvas {
     //         x1: max(self.x1, self.x1 + inner.x1),
