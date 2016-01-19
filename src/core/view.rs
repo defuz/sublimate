@@ -7,12 +7,12 @@ use core::syntax::{Parser, ParserState, Highlighter, HighlightIterator};
 #[derive(Debug)]
 pub struct View {
     path: Option<PathBuf>,
-    lines: Vec<Line>
+    pub lines: Vec<Line>
 }
 
 #[derive(Debug)]
 pub struct Line {
-    text: String,
+    pub text: String,
     parser_state: ParserState,
 }
 

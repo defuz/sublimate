@@ -1,31 +1,33 @@
+use std::cell::{Cell, RefCell};
 use std::collections::HashMap;
 
 use toolkit::style::{Color, ColorPair};
 
-struct ColorPalette {
-    index: u8,
+#[derive(Debug)]
+pub struct ColorPalette {
+    index: Cell<u8>,
     end: u8,
-    map: HashMap<(Color, Color), ColorPair>
+    map: RefCell<HashMap<(Color, Color), ColorPair>>
 }
 
 impl ColorPalette {
-    fn new(from: u8, to: u8) -> ColorPalette {
+    pub fn new(from: u8, to: u8) -> ColorPalette {
         ColorPalette {
-            index: from,
+            index: Cell::new(from),
             end: to,
-            map: HashMap::new()
+            map: RefCell::new(HashMap::new())
         }
     }
 
-    fn get_color_pair(&mut self, foreground: Color, background: Color) -> ColorPair {
-        let (map, index, end) = (&mut self.map, &mut self.index, &self.end);
-        map.entry((foreground, background)).or_insert_with(|| {
-            if *index == *end {
+    pub fn color_pair(&self, foreground: Color, background: Color) -> ColorPair {
+        let index = self.index.get();
+        self.map.borrow_mut().entry((foreground, background)).or_insert_with(|| {
+            if index < self.end {
+                self.index.set(index + 1);
+            } else {
                 // TODO: warning
-                return ColorPair(*index)
             }
-            *index += 1;
-            ColorPair(*index - 1)
+            ColorPair(index)
         }).clone()
     }
 }

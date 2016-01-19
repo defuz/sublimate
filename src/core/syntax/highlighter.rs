@@ -4,6 +4,7 @@ use super::scope::{Scope, ScopePath, ScopeCommand, ScopeTree};
 use super::theme::{Theme, ThemeSettings};
 use super::style::{Style, StyleModifier, Color, FontStyle, BLACK, WHITE};
 
+#[derive(Debug)]
 pub struct Highlighter {
     settings: ThemeSettings,
     foreground_tree: ScopeTree<Color>,

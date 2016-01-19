@@ -12,9 +12,10 @@ pub mod view;
 use std::path::PathBuf;
 
 use core::project::Project;
-use core::packages::PackageRepository;
+use core::packages::{PackageRepository, PackageError};
 use core::bindings::HotkeyPerformer;
 use core::view::View;
+use core::syntax::Highlighter;
 
 #[derive(Debug)]
 pub struct Core {
@@ -38,6 +39,11 @@ impl Core {
             hotkeys: hotkeys,
             view: View::open(view_path).unwrap()
         }
+    }
+
+    pub fn highlighter(&self) -> Result<Highlighter, PackageError> {
+        let theme = try!(self.package_repository.get_theme("themes/Twilight.tmTheme"));
+        Ok(Highlighter::new(theme))
     }
 
 

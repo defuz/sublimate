@@ -3,3 +3,4 @@ pub mod menubar;
 pub mod context;
 pub mod window;
 pub mod modal;
+pub mod editor;

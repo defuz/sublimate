@@ -27,6 +27,13 @@ pub enum ScopeCommand {
 }
 
 #[derive(Debug)]
+pub struct ScopeTree<T: Clone> {
+    subscopes: BTreeMap<String, ScopeTree<T>>,
+    parents: BTreeMap<String, ScopeTree<T>>,
+    value: Option<T>
+}
+
+#[derive(Debug)]
 pub struct ParseScopeError(char);
 
 impl ScopeCommand {
@@ -101,12 +108,6 @@ impl ScopeSelector {
     pub fn path(&self) -> &[Scope] {
         &self.path
     }
-}
-
-pub struct ScopeTree<T: Clone> {
-    subscopes: BTreeMap<String, ScopeTree<T>>,
-    parents: BTreeMap<String, ScopeTree<T>>,
-    value: Option<T>
 }
 
 impl<T: Clone> ScopeTree<T> {
