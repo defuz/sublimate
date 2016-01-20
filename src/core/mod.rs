@@ -30,6 +30,7 @@ impl Core {
     pub fn load() -> Core {
         let packages_path = PathBuf::from("/Users/defuz/Projects/sublimate/packages/");
         let view_path = PathBuf::from("/Users/defuz/Projects/sublimate/src/core/syntax/builder.rs");
+        let project_path = PathBuf::from("/Users/defuz/Projects/sublimate/sublimate.sublime-project");
         let repository = PackageRepository::open(packages_path);
         let mut view = View::open(view_path).unwrap();
         let syntax = repository.get_syntax("Rust/Rust.tmLanguage").unwrap();
@@ -38,7 +39,7 @@ impl Core {
         let mut hotkeys = HotkeyPerformer::new();
         hotkeys.add_keymap(repository.get_keymap("default/Default (OSX).sublime-keymap"));
         Core {
-            project: Project::open("/Users/defuz/Projects/sublimate/sublimate.sublime-project"),
+            project: Project::open(project_path),
             package_repository: repository,
             hotkeys: hotkeys,
             view: view

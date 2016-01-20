@@ -1,3 +1,5 @@
+use std::path::PathBuf;
+
 use core::build::BuildSystem;
 use core::settings::Settings;
 
@@ -18,7 +20,7 @@ struct ProjectFolder {
 
 #[derive(Debug)]
 pub struct Project {
-    path: Option<String>,
+    path: Option<PathBuf>,
     folders: Vec<ProjectFolder>,
     settings: Option<Settings>,
     build_systems: Vec<BuildSystem>
@@ -34,9 +36,9 @@ impl Project {
         }
     }
 
-    pub fn open(path: &str) -> Project {
+    pub fn open(path: PathBuf) -> Project {
         Project {
-            path: Some(path.to_string()),
+            path: Some(path),
             folders: Vec::new(),
             settings: None,
             build_systems: Vec::new()
