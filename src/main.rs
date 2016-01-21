@@ -12,6 +12,7 @@ extern crate bitflags;
 extern crate log;
 extern crate env_logger;
 
+extern crate glob;
 extern crate oniguruma;
 extern crate unicode_width;
 

@@ -1,8 +1,7 @@
 pub mod settings;
 pub mod menu;
-mod project;
+mod workspace;
 mod packages;
-mod build;
 pub mod command;
 pub mod syntax;
 pub mod regex;
@@ -11,7 +10,7 @@ pub mod view;
 
 use std::path::PathBuf;
 
-use core::project::Project;
+use core::workspace::Project;
 use core::packages::{PackageRepository, PackageError};
 use core::bindings::HotkeyPerformer;
 use core::view::View;
@@ -39,7 +38,7 @@ impl Core {
         let mut hotkeys = HotkeyPerformer::new();
         hotkeys.add_keymap(repository.get_keymap("default/Default (OSX).sublime-keymap"));
         Core {
-            project: Project::open(project_path),
+            project: Project::open(project_path).unwrap(),
             package_repository: repository,
             hotkeys: hotkeys,
             view: view
@@ -47,10 +46,9 @@ impl Core {
     }
 
     pub fn create_highlighter(&self) -> Result<Highlighter, PackageError> {
-        let theme = try!(self.package_repository.get_theme("themes/Twilight.tmTheme"));
+        let theme = try!(self.package_repository.get_theme("themes/Monokai.tmTheme"));
         let highlighter = Highlighter::new(theme);
         Ok(highlighter)
     }
-
 
 }
