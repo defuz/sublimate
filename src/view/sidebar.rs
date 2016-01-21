@@ -29,6 +29,10 @@ enum ProjectTreeEntryViewType {
 
 impl Sidebar {
     pub fn new(core: &Core) -> Sidebar {
-        unimplemented!()
+        unimplemented!();
+        // folders = Vec::new();
+        // for folder in core.project.folders {
+
+        // }
     }
 }

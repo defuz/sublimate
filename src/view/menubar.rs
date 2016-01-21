@@ -6,8 +6,7 @@ use core::bindings::Key;
 use core::menu::MenuItem;
 use view::theme::*;
 
-use view::context::ContextMenu;
-use view::context::view::ContextMenuView;
+use view::context::{ContextMenu, ContextMenuView};
 use view::modal::{Modal, ModalView, ModalPosition};
 
 #[derive(Debug)]
