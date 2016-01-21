@@ -1,7 +1,7 @@
 use std::collections::BTreeMap;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::io::{BufReader, Error as IoError};
-use std::fs::{File};
+use std::fs::{File, Metadata, read_dir, metadata, symlink_metadata};
 
 use glob::{Pattern, PatternError};
 
@@ -20,8 +20,8 @@ pub struct Project {
 #[derive(Debug)]
 struct ProjectFolder {
     name: Option<String>,
-    path: String,
-    folder: Option<Folder>,
+    path: PathBuf,
+    folder: Folder,
     settings: ProjectFolderSettings
 }
 
@@ -37,7 +37,7 @@ struct ProjectFolderSettings {
     follow_symlinks: bool
 }
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 struct Folder {
     folders: BTreeMap<String, Folder>,
     files: Vec<String>
@@ -100,10 +100,7 @@ impl ParseSettings for ExcludePatterns {
 
         for pattern in arr {
             match pattern {
-                Settings::String(s) => match Pattern::new(&s) {
-                    Ok(pattern) => patterns.push(pattern),
-                    Err(err) => return Err(IncorrectPattern(err))
-                },
+                Settings::String(s) => patterns.push(try!(Pattern::new(&s))),
                 _ => return Err(PatternIsNotString)
             }
         }
@@ -130,7 +127,7 @@ impl ParseSettings for ProjectFolder {
         };
 
         let path = match obj.remove("name") {
-            Some(Settings::String(s)) => s,
+            Some(Settings::String(s)) => PathBuf::from(s),
             _ => return Err(FolderPathIsNotString)
         };
 
@@ -150,15 +147,17 @@ impl ParseSettings for ProjectFolder {
             Some(..) => return Err(FollowSymlinksIsNotBoolean),
         };
 
+        let settings = ProjectFolderSettings {
+            follow_symlinks: follow_symlinks,
+            file_exclude_patterns: file_exclude_patterns,
+            folder_exclude_patterns: folder_exclude_patterns
+        };
+
         Ok(ProjectFolder {
             name: name,
             path: path,
-            folder: None,
-            settings: ProjectFolderSettings {
-                follow_symlinks: follow_symlinks,
-                file_exclude_patterns: file_exclude_patterns,
-                folder_exclude_patterns: folder_exclude_patterns
-            }
+            folder: Folder::default(),
+            settings: settings
         })
     }
 }
@@ -177,18 +176,58 @@ impl ParseSettings for Project {
             _ => return Err(ProjectFoldersIsNotArray),
         };
 
-        let mut folders = Vec::new();
-
-        for folder_settings in folders_arr {
-            folders.push(try!(ProjectFolder::parse_settings(folder_settings)))
-        }
-
+        let folders = try!(folders_arr.into_iter().map(ProjectFolder::parse_settings).collect());
         let settings = obj.remove("settings");
 
         Ok(Project {
             path: None,
             folders: folders,
             settings: settings
+        })
+    }
+}
+
+impl ProjectFolderSettings {
+    fn metadata(&self, path: &Path) -> Result<Metadata, IoError> {
+        if self.follow_symlinks {
+            metadata(path)
+        } else {
+            symlink_metadata(path)
+        }
+    }
+
+    fn file_matched(&self, path: &Path) -> bool {
+        !self.file_exclude_patterns.patterns.iter().any(|p| p.matches_path(path))
+    }
+
+    fn folder_matched(&self, path: &Path) -> bool {
+        !self.folder_exclude_patterns.patterns.iter().any(|p| p.matches_path(path))
+    }
+}
+
+impl Folder {
+    fn walk(path: &Path, settings: &ProjectFolderSettings) -> Result<Folder, IoError> {
+        let mut files = Vec::new();
+        let mut folders = BTreeMap::new();
+        for entry in try!(read_dir(path)) {
+            let entry = try!(entry);
+            let path = entry.path();
+            let metadata = try!(settings.metadata(&path));
+            let name = entry.file_name().to_string_lossy().into_owned();
+            if metadata.is_file() {
+                if settings.file_matched(&path) {
+                    files.push(name);
+                }
+            } else if metadata.is_dir() {
+                if settings.folder_matched(&path) {
+                    let folder = try!(Folder::walk(&path, settings));
+                    folders.insert(name, folder);
+                }
+            }
+        }
+        Ok(Folder {
+            files: files,
+            folders: folders
         })
     }
 }
@@ -208,6 +247,14 @@ impl Project {
         let settings = try!(read_json(reader));
         let mut project = try!(Project::parse_settings(settings));
         project.path = Some(path);
+        try!(project.walk());
         Ok(project)
+    }
+
+    pub fn walk(&mut self) -> Result<(), ProjectError> {
+        for pf in self.folders.iter_mut() {
+            pf.folder = try!(Folder::walk(&pf.path, &pf.settings));
+        }
+        Ok(())
     }
 }
