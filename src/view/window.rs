@@ -5,21 +5,25 @@ use core::bindings::Key;
 
 use view::menubar::Menubar;
 use view::editor::Editor;
+use view::sidebar::Sidebar;
 
 #[derive(Debug)]
 pub struct Window {
     core: Core,
     menubar: Menubar,
-    editor: Editor
+    editor: Editor,
+    sidebar: Sidebar,
 }
 
 impl Window {
     pub fn new(core: Core) -> Window {
-        let menubar = Menubar::new(core.package_repository.get_menu("default/Main.sublime-menu"));
-        let editor = Editor::new(core.create_highlighter().unwrap(), ColorPalette::new(32, 255));
+        let menubar = Menubar::new(&core);
+        let sidebar = Sidebar::new(&core);
+        let editor = Editor::new(&core);
         Window {
             core: core,
             menubar: menubar,
+            sidebar: sidebar,
             editor: editor
         }
     }

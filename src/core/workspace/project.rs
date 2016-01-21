@@ -126,7 +126,7 @@ impl ParseSettings for ProjectFolder {
             Some(_) => return Err(FolderNameIsNotString)
         };
 
-        let path = match obj.remove("name") {
+        let path = match obj.remove("path") {
             Some(Settings::String(s)) => PathBuf::from(s),
             _ => return Err(FolderPathIsNotString)
         };

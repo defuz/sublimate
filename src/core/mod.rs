@@ -14,6 +14,7 @@ use core::workspace::Project;
 use core::packages::{PackageRepository, PackageError};
 use core::bindings::HotkeyPerformer;
 use core::view::View;
+use core::menu::Menu;
 use core::syntax::{Parser, Highlighter};
 
 #[derive(Debug)]
@@ -43,6 +44,10 @@ impl Core {
             hotkeys: hotkeys,
             view: view
         }
+    }
+
+    pub fn create_menu(&self) -> Menu {
+        self.package_repository.get_menu("default/Main.sublime-menu")
     }
 
     pub fn create_highlighter(&self) -> Result<Highlighter, PackageError> {

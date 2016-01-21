@@ -3,7 +3,7 @@ use unicode_width::UnicodeWidthStr;
 use toolkit::*;
 use core::Core;
 use core::bindings::Key;
-use core::menu::{Menu, MenuItem};
+use core::menu::MenuItem;
 use view::theme::*;
 
 use view::context::ContextMenu;
@@ -33,9 +33,9 @@ pub struct MenubarView<'a> {
 }
 
 impl Menubar {
-    pub fn new(menu: Menu) -> Menubar {
+    pub fn new(core: &Core) -> Menubar {
         let mut items = Vec::new();
-        for item in menu {
+        for item in core.create_menu() {
             match item {
                 MenuItem::Group(caption, menu) => {
                     items.push(MenubarItem {

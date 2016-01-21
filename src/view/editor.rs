@@ -20,10 +20,10 @@ pub struct EditorView<'a> {
 }
 
 impl Editor {
-    pub fn new(highlighter: Highlighter, palette: ColorPalette) -> Editor {
+    pub fn new(core: &Core) -> Editor {
         Editor {
-            highlighter: highlighter,
-            palette: palette
+            highlighter: core.create_highlighter().unwrap(),
+            palette: ColorPalette::new(32, 255)
         }
     }
 }
