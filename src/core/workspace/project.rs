@@ -1,3 +1,4 @@
+use std::borrow::Cow;
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 use std::io::{BufReader, Error as IoError};
@@ -11,17 +12,17 @@ use self::ParseProjectError::*;
 
 #[derive(Debug)]
 pub struct Project {
-    path: Option<PathBuf>,
-    folders: Vec<ProjectFolder>,
-    settings: Option<Settings>,
+    pub path: Option<PathBuf>,
+    pub folders: Vec<ProjectFolder>,
+    pub settings: Option<Settings>,
     // todo: add buils system here
 }
 
 #[derive(Debug)]
-struct ProjectFolder {
+pub struct ProjectFolder {
     name: Option<String>,
-    path: PathBuf,
-    folder: Folder,
+    pub path: PathBuf,
+    pub folder: Folder,
     settings: ProjectFolderSettings
 }
 
@@ -38,9 +39,9 @@ struct ProjectFolderSettings {
 }
 
 #[derive(Debug, Default)]
-struct Folder {
-    folders: BTreeMap<String, Folder>,
-    files: Vec<String>
+pub struct Folder {
+    pub folders: BTreeMap<String, Folder>,
+    pub files: Vec<String>
 }
 
 #[derive(Debug)]
@@ -229,6 +230,18 @@ impl Folder {
             files: files,
             folders: folders
         })
+    }
+}
+
+impl ProjectFolder {
+    pub fn name(&self) -> Cow<str> {
+        match self.name {
+            Some(ref s) => Cow::Borrowed(s),
+            None => match self.path.file_name() {
+                Some(s) => s.to_string_lossy(),
+                None => self.path.to_string_lossy()
+            }
+        }
     }
 }
 

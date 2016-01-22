@@ -56,9 +56,10 @@ impl<'a> View for EditorView<'a> {
         self.view.lines.len()
     }
 
-    fn render(&self, canvas: Canvas) {
-        for (y, line) in self.view.lines.iter().enumerate() {
-            let mut x = 0;
+    fn render(&self, mut canvas: Canvas) {
+        for line in self.view.lines.iter() {
+            let mut canvas = canvas.cut_top(1);
+            canvas.cut_left(2).fill();
             for (style, text) in line.highlight(self.highlighter) {
                 let foreground = Color::from_rgb256(
                     style.foreground.r,
@@ -74,12 +75,9 @@ impl<'a> View for EditorView<'a> {
                     colors: self.palette.color_pair(foreground, background),
                     attrs: Attr::empty() // impl convert
                 });
-                canvas.text(text, y, x);
-                x += text.width();
+                canvas.cut_left(text.width()).text(text, 0, 0);
             }
-            for x in x..canvas.width() {
-                canvas.char(' ', y, x);
-            }
+            canvas.fill();
         }
     }
 }

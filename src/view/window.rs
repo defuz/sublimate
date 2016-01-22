@@ -35,6 +35,7 @@ impl Window {
 
     pub fn render(&self, mut canvas: Canvas) {
         self.menubar.view(&self.core).render(canvas.cut_top(1));
+        self.sidebar.view(&self.core).render(canvas.cut_left(30));
         self.editor.view(&self.core).render(canvas);
     }
 }

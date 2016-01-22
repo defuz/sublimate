@@ -3,7 +3,7 @@ use unicode_width::UnicodeWidthStr;
 use toolkit::*;
 use core::Core;
 use core::bindings::Key;
-use core::menu::MenuItem;
+use core::menu::{Menu, MenuItem};
 use view::theme::*;
 
 use view::context::{ContextMenu, ContextMenuView};
@@ -37,10 +37,7 @@ impl Menubar {
         for item in core.create_menu() {
             match item {
                 MenuItem::Group(caption, menu) => {
-                    items.push(MenubarItem {
-                        caption: caption,
-                        modal: Modal::new(ContextMenu::new(menu), ModalPosition::UnderLeft)
-                    });
+                    items.push(MenubarItem::new(caption, menu));
                 },
                 _ => error!("Incorrect menu item")
             }
@@ -82,7 +79,15 @@ impl Menubar {
             None => 0
         })
     }
+}
 
+impl MenubarItem {
+    fn new(caption: String, menu: Menu) -> MenubarItem {
+        MenubarItem {
+            caption: caption,
+            modal: Modal::new(ContextMenu::new(menu), ModalPosition::UnderLeft)
+        }
+    }
 }
 
 impl<'a> Widget<'a> for Menubar {

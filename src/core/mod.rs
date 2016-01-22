@@ -1,6 +1,6 @@
 pub mod settings;
 pub mod menu;
-mod workspace;
+pub mod workspace;
 mod packages;
 pub mod command;
 pub mod syntax;
@@ -51,7 +51,7 @@ impl Core {
     }
 
     pub fn create_highlighter(&self) -> Result<Highlighter, PackageError> {
-        let theme = try!(self.package_repository.get_theme("themes/Monokai.tmTheme"));
+        let theme = try!(self.package_repository.get_theme("themes/Twilight.tmTheme"));
         let highlighter = Highlighter::new(theme);
         Ok(highlighter)
     }
