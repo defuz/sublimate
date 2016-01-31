@@ -1,6 +1,4 @@
-*.pyc
 *.sublime-workspace
-*.egg-info
 
 # Compiled files
 *.o
