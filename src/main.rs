@@ -22,6 +22,7 @@ extern crate rustc_serialize;
 extern crate weakjson;
 extern crate plist;
 
+extern crate clap;
 
 use ncurses::*;
 
@@ -30,8 +31,33 @@ use core::bindings::Key;
 use view::window::Window;
 use toolkit::*;
 use view::theme::PALETTE;
+use clap::{App, Arg};
 
 fn main() {
+
+    let matches = App::new("sublimate")
+                    .version(env!("CARGO_PKG_VERSION"))
+                    .author("Ivan Ivaschenko <defuz@me.com>")
+                    .about("ToDo")
+                    .arg(Arg::with_name("packages")
+                        .long("packages")
+                        .value_name("PACKAGES PATH")
+                        .help("Sets packages path")
+                        .takes_value(true)
+                        .required(true))
+                    .arg(Arg::with_name("file")
+                        .index(1)
+                        .value_name("FILE PATH")
+                        .help("Sets a path to viewing file")
+                        .takes_value(true)
+                        .required(true))
+                    .arg(Arg::with_name("project")
+                        .long("project")
+                        .value_name("PROJECT PATH")
+                        .help("Sets path to sublime project")
+                        .takes_value(true)
+                        .required(true))
+                    .get_matches();
 
     setlocale(LcCategory::all, "en_US.utf-8");
 
@@ -49,8 +75,10 @@ fn main() {
         init_pair(i as i16, fg.to_term(), bg.to_term());
     }
 
-
-    let mut window = Window::new(Core::load());
+    let mut window = Window::new(Core::load(
+                                    matches.value_of("packages").unwrap(), 
+                                    matches.value_of("file").unwrap(), 
+                                    matches.value_of("project").unwrap()));
     window.render(Canvas::screen());
     loop {
         if let Some(key) = Key::from_keycode(getch()) {

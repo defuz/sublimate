@@ -15,6 +15,7 @@ env_logger = "0.3"
 plist = "0.0.11"
 oniguruma = "0.3.1"
 glob = "0.2.10"
+clap = "2"
 
 [features]
 default = ["ncurses/panel"]

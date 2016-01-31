@@ -27,10 +27,10 @@ pub struct Core {
 
 impl Core {
 
-    pub fn load() -> Core {
-        let packages_path = PathBuf::from("/Users/defuz/Projects/sublimate/packages/");
-        let view_path = PathBuf::from("/Users/defuz/Projects/sublimate/src/core/syntax/builder.rs");
-        let project_path = PathBuf::from("/Users/defuz/Projects/sublimate/sublimate.sublime-project");
+    pub fn load(packages_path_str: &str, file_path_str: &str, project_path_str: &str) -> Core {
+        let packages_path = PathBuf::from(packages_path_str);
+        let view_path = PathBuf::from(file_path_str);
+        let project_path = PathBuf::from(project_path_str);
         let repository = PackageRepository::open(packages_path);
         let mut view = View::open(view_path).unwrap();
         let syntax = repository.get_syntax("Rust/Rust.tmLanguage").unwrap();
