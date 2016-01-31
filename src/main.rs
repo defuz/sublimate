@@ -1,5 +1,4 @@
 #![allow(dead_code)]
-#![feature(slice_patterns)]
 
 mod core;
 mod toolkit;
