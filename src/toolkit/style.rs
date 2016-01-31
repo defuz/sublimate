@@ -83,7 +83,7 @@ impl Color {
 }
 
 bitflags! {
-    flags Attr: u64 {
+    flags Attr: attr_t {
         const NORMAL    = 0,
         const BOLD      = 1 << (8 + 13),
         const UNDERLINE = 1 << (8 +  9),
@@ -111,7 +111,7 @@ struct StyleContext {
 }
 
 impl Attr {
-    pub fn to_term(&self) -> u64 {
+    pub fn to_term(&self) -> attr_t {
         self.bits
     }
 }
