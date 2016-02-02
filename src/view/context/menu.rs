@@ -32,7 +32,7 @@ impl ContextMenu {
     }
 
     fn focus_prev(&mut self, core: &Core) {
-        let skip = self.focused.map(|i| self.items.len() - i).unwrap_or(0);
+        let skip = self.focused.map_or(0, |i| self.items.len() - i);
         self.unfocus(core);
         self.focused = self.items
             .iter()
@@ -46,7 +46,7 @@ impl ContextMenu {
     }
 
     fn focus_next(&mut self, core: &Core) {
-        let skip = self.focused.map(|i| i + 1).unwrap_or(0);
+        let skip = self.focused.map_or(0, |i| i + 1);
         self.unfocus(core);
         self.focused = self.items
             .iter()
@@ -93,7 +93,7 @@ impl<'a> Widget<'a> for ContextMenu {
             self.view(core).render(canvas);
             return true
         }
-        return false
+        false
     }
 
     fn focus(&mut self, core: &Core) {
@@ -120,7 +120,7 @@ impl<'a> View for ContextMenuView<'a> {
     }
 
     fn render(&self, mut canvas: Canvas) {
-        for view in self.views.iter() {
+        for view in &self.views {
             let h = view.height();
             if h > canvas.height() {
                 break;

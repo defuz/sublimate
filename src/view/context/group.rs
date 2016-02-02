@@ -65,7 +65,7 @@ impl<'a> Widget<'a> for Group {
                 return true
             }
         }
-        return false;
+        false
     }
 
     fn focus(&mut self, (core, _): Self::Context) {

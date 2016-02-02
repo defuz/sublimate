@@ -1,4 +1,4 @@
-use super::settings::{Settings, FromSettings, ParseSettings};
+use super::settings::{Settings, ParseSettings};
 use core::command::{Command, ParseCommandError};
 
 use self::ParseMenuError::*;
@@ -12,7 +12,9 @@ pub enum MenuItem {
     Divider,
 }
 
+#[derive(Debug)]
 pub enum ParseMenuError {
+    MenuIsNotArray,
     ItemIsNotObject,
     CaptionIsNotString,
     CaptionIsNotDefinedForGroup,
@@ -45,7 +47,7 @@ impl ParseSettings for MenuItem {
                 None => return Err(CaptionIsNotDefinedForGroup)
             };
             // TODO: check obj is empty
-            return Ok(MenuItem::Group(caption, Menu::from_settings(settings)));
+            return Ok(MenuItem::Group(caption, try!(Menu::parse_settings(settings))));
         };
         // parse button
         let is_checkbox = match obj.remove("checkbox") {
@@ -62,24 +64,18 @@ impl ParseSettings for MenuItem {
     }
 }
 
-impl FromSettings for Menu {
-    fn from_settings(settings: Settings) -> Menu {
+impl ParseSettings for Menu {
+    type Error = ParseMenuError;
+
+    fn parse_settings(settings: Settings) -> Result<Menu, ParseMenuError> {
         let arr = match settings {
             Settings::Array(arr) => arr,
-            _ => {
-                // TODO: warning
-                return Menu::default();
-            }
+            _ => return Err(MenuIsNotArray)
         };
         let mut menu = Menu::new();
         for settings in arr {
-            match MenuItem::parse_settings(settings) {
-                Ok(item) => menu.push(item),
-                Err(_) => {
-                    // TODO: warning
-                }
-            }
+            menu.push(try!(MenuItem::parse_settings(settings)))
         }
-        menu
+        Ok(menu)
     }
 }

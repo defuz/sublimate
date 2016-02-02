@@ -149,7 +149,7 @@ impl<T: Clone> ScopeTree<T> {
                 self.add_subpath(path, depth - 1, 0, value);
             }
         } else {
-            let next_shift = part.find('.').map(|i| i + 1).unwrap_or(part.len());
+            let next_shift = part.find('.').map_or(part.len(), |i| i + 1);
             let key = &part[..next_shift];
             // println!("   key={:?}", key);
             let node = self.get_or_create(key, shift == 0);
@@ -170,7 +170,7 @@ impl<T: Clone> ScopeTree<T> {
                 self.find_subpath(path, depth - 1, 0)
             }
         } else {
-            let next_shift = part.find('.').map(|i| i + 1).unwrap_or(part.len());
+            let next_shift = part.find('.').map_or(part.len(), |i| i + 1);
             let key = &part[..next_shift];
             if let Some(node) = self.get(key, shift == 0) {
                 let r = node.find_subpath(path, depth, shift + next_shift);

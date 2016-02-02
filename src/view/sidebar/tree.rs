@@ -95,11 +95,11 @@ impl ProjectEntries {
         }
     }
 
-    pub fn iter<'a>(&'a self) -> SliceIter<'a, ProjectEntry> {
+    pub fn iter(&self) -> SliceIter<ProjectEntry> {
         self.entries.iter()
     }
 
-    pub fn views<'a>(&'a self) -> ProjectEntriesIterator<'a> {
+    pub fn views(&self) -> ProjectEntriesIterator {
         ProjectEntriesIterator {
             path: vec![self.iter()]
         }
@@ -165,7 +165,7 @@ impl<'a> View for ProjectEntriesView<'a> {
     }
 
     fn render(&self, mut canvas: Canvas) {
-        for view in self.entries.iter() {
+        for view in &self.entries {
             let h = view.height();
             if h > canvas.height() {
                 break;

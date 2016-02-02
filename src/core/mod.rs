@@ -37,7 +37,8 @@ impl Core {
         let mut parser = Parser::from_syntax(syntax);
         view.parse(&mut parser);
         let mut hotkeys = HotkeyPerformer::new();
-        hotkeys.add_keymap(repository.get_keymap("default/Default (OSX).sublime-keymap"));
+        // TODO: fix unwrap
+        hotkeys.add_keymap(repository.get_keymap("default/Default (OSX).sublime-keymap").unwrap());
         Core {
             project: Project::open(project_path).unwrap(),
             package_repository: repository,
@@ -47,7 +48,8 @@ impl Core {
     }
 
     pub fn create_menu(&self) -> Menu {
-        self.package_repository.get_menu("default/Main.sublime-menu")
+        // todo: fix unwrap
+        self.package_repository.get_menu("default/Main.sublime-menu").unwrap()
     }
 
     pub fn create_highlighter(&self) -> Result<Highlighter, PackageError> {

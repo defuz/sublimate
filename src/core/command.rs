@@ -17,6 +17,7 @@ impl Hash for Command {
     }
 }
 
+#[derive(Debug)]
 pub enum ParseCommandError {
     CommandIsNotObject,
     CommandNameIsNotString,

@@ -79,7 +79,7 @@ impl<'a> ParserContextBuilder<'a> {
         self.push_patterns(patterns);
     }
 
-    fn push_patterns(&mut self, patterns: &Patterns) {
+    fn push_patterns(&mut self, patterns: &[Pattern]) {
         for pattern in patterns {
             match *pattern {
                 Pattern::Match(ref pattern) => self.push_match(pattern),
@@ -109,7 +109,7 @@ impl ParserBuilder {
     pub fn build(mut self, syntax: &mut Syntax) -> Parser {
         // identificate context scopes
         self.identificate_patterns(&mut syntax.patterns);
-        for (_, patterns) in syntax.repository.iter_mut() {
+        for (_, patterns) in &mut syntax.repository {
             self.identificate_patterns(patterns);
         }
         // build context parsers
@@ -130,7 +130,7 @@ impl ParserBuilder {
         builder.build()
     }
 
-    fn build_root(&self, patterns: &Patterns, syntax: &Syntax) -> ParserContext {
+    fn build_root(&self, patterns: &[Pattern], syntax: &Syntax) -> ParserContext {
         let mut builder = ParserContextBuilder::new(syntax, &self.scopes);
         builder.push_patterns(patterns);
         builder.build()

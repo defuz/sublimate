@@ -57,7 +57,7 @@ impl<'a> View for EditorView<'a> {
     }
 
     fn render(&self, mut canvas: Canvas) {
-        for line in self.view.lines.iter() {
+        for line in &self.view.lines {
             let mut canvas = canvas.cut_top(1);
             canvas.cut_left(2).fill();
             for (style, text) in line.highlight(self.highlighter) {

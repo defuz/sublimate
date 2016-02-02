@@ -3,12 +3,11 @@ use std::iter::IntoIterator;
 use std::fmt::{Display, Formatter, Write, Error as FormatterError};
 
 use core::command::{Command, ParseCommandError};
-use core::settings::{Settings, FromSettings, ParseSettings};
+use core::settings::{Settings, ParseSettings};
 
 use super::context::{Context, ParseContextError};
 
-use self::ParseHotkeyError::*;
-use self::ParseHotkeyBindingError::*;
+use self::ParseKeymapError::*;
 
 pub type Keymap = Vec<HotkeyBinding>;
 
@@ -83,19 +82,16 @@ bitflags! {
     }
 }
 
-pub enum ParseHotkeyBindingError {
+#[derive(Debug)]
+pub enum ParseKeymapError {
+    KeymapIsNotArray,
     BindingIsNotObject,
     HotkeySequenceIsNotArray,
     HotKeyIsNotString,
-    HotKeyError(ParseHotkeyError),
-    CommandError(ParseCommandError),
-    ContextError(ParseContextError),
-}
-
-#[derive(Debug)]
-pub enum ParseHotkeyError {
     IncorrectKey(String),
     IncorrectModifier(String),
+    CommandError(ParseCommandError),
+    ContextError(ParseContextError),
 }
 
 impl IntoIterator for HotkeySequence {
@@ -187,7 +183,7 @@ impl Display for Hotkey {
 impl Display for HotkeySequence {
     fn fmt(&self, fmt: &mut Formatter) -> Result<(), FormatterError> {
         let mut comma = false;
-        for key in self.vec.iter() {
+        for key in &self.vec {
             if comma {
                 try!(fmt.write_str(", "));
             }
@@ -199,7 +195,7 @@ impl Display for HotkeySequence {
 }
 
 impl FromStr for Key {
-    type Err = ParseHotkeyError;
+    type Err = ParseKeymapError;
     fn from_str(s: &str) -> Result<Key, Self::Err> {
         if s.len() == 1 {
             // Single character keys
@@ -243,7 +239,7 @@ impl FromStr for Key {
                     // F1, F2, ..., F20 keys
                     match u8::from_str(&s[1..]) {
                         Ok(i) if 1 <= i && i <= 20 => Key::F(i),
-                        _ => return Err(IncorrectKey(s.to_string())),
+                        _ => return Err(IncorrectKey(s.to_owned())),
                     }
                 } else if s.starts_with("keypad_") {
                     // Keypad special keys
@@ -254,13 +250,13 @@ impl FromStr for Key {
                         "minus" => Key::KeypadMinus,
                         "plus" => Key::KeypadPlus,
                         "enter" => Key::KeypadEnter,
-                        _ => return Err(IncorrectKey(s.to_string())),
+                        _ => return Err(IncorrectKey(s.to_owned())),
                     }
                 } else if s.starts_with("keypad") {
                     // Keypad digits
                     match u8::from_str(&s[6..]) {
                         Ok(i) if i <= 9 => Key::Keypad(i),
-                        _ => return Err(IncorrectKey(s.to_string())),
+                        _ => return Err(IncorrectKey(s.to_owned())),
                     }
                 } else if s.starts_with("browser_") {
                     // "Browser" keys
@@ -272,10 +268,10 @@ impl FromStr for Key {
                         "search" => Key::BrowserSearch,
                         "favorites" => Key::BrowserFavorites,
                         "home" => Key::BrowserHome,
-                        _ => return Err(IncorrectKey(s.to_string())),
+                        _ => return Err(IncorrectKey(s.to_owned())),
                     }
                 } else {
-                    return Err(IncorrectKey(s.to_string()));
+                    return Err(IncorrectKey(s.to_owned()));
                 }
             }
         };
@@ -284,7 +280,7 @@ impl FromStr for Key {
 }
 
 impl FromStr for Modifiers {
-    type Err = ParseHotkeyError;
+    type Err = ParseKeymapError;
 
     fn from_str(s: &str) -> Result<Modifiers, Self::Err> {
         Ok(match s {
@@ -292,13 +288,13 @@ impl FromStr for Modifiers {
             "ctrl" => MODIFIER_CTRL,
             "alt" => MODIFIER_ALT,
             "shift" => MODIFIER_SHIFT,
-            _ => return Err(IncorrectModifier(s.to_string())),
+            _ => return Err(IncorrectModifier(s.to_owned())),
         })
     }
 }
 
 impl FromStr for Hotkey {
-    type Err = ParseHotkeyError;
+    type Err = ParseKeymapError;
     fn from_str(s: &str) -> Result<Hotkey, Self::Err> {
         let mut parts = s.rsplit('+');
         let mut modifiers = Modifiers::empty();
@@ -321,7 +317,7 @@ impl FromStr for Hotkey {
 }
 
 impl ParseSettings for HotkeyBinding {
-    type Error = ParseHotkeyBindingError;
+    type Error = ParseKeymapError;
     fn parse_settings(settings: Settings) -> Result<HotkeyBinding, Self::Error> {
         let mut obj = match settings {
             Settings::Object(obj) => obj,
@@ -338,10 +334,7 @@ impl ParseSettings for HotkeyBinding {
         for settings in arr {
             match settings {
                 Settings::String(s) => {
-                    match Hotkey::from_str(&s) {
-                        Ok(hotkey) => hotkeys.push(hotkey),
-                        Err(err) => return Err(HotKeyError(err)),
-                    }
+                    hotkeys.push(try!(Hotkey::from_str(&s)))
                 }
                 _ => return Err(HotKeyIsNotString),
             }
@@ -372,24 +365,18 @@ impl ParseSettings for HotkeyBinding {
     }
 }
 
-impl FromSettings for Keymap {
-    fn from_settings(settings: Settings) -> Keymap {
+impl ParseSettings for Keymap {
+    type Error = ParseKeymapError;
+
+    fn parse_settings(settings: Settings) -> Result<Keymap, ParseKeymapError> {
         let arr = match settings {
             Settings::Array(arr) => arr,
-            _ => {
-                // TODO: warning
-                return Keymap::default();
-            }
+            _ => return Err(KeymapIsNotArray)
         };
         let mut keymap = Keymap::new();
         for settings in arr {
-            match HotkeyBinding::parse_settings(settings) {
-                Ok(binding) => keymap.push(binding),
-                Err(_) => {
-                    // TODO: warning
-                }
-            }
+            keymap.push(try!(HotkeyBinding::parse_settings(settings)))
         }
-        keymap
+        Ok(keymap)
     }
 }

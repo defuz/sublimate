@@ -118,7 +118,7 @@ impl<'a> Widget<'a> for Menubar {
             _ => return false
         }
         self.view(core).render(canvas);
-        return true;
+        true
     }
 }
 
@@ -159,10 +159,10 @@ impl<'a> View for MenubarItemView<'a> {
 impl<'a> View for MenubarView<'a> {
     fn width(&self) -> usize {
         let mut r = 0;
-        for v in self.views.iter() {
+        for v in &self.views {
             r += v.width();
         }
-        return r
+        r
     }
 
     fn height(&self) -> usize {
@@ -170,7 +170,7 @@ impl<'a> View for MenubarView<'a> {
     }
 
     fn render(&self, mut canvas: Canvas) {
-        for view in self.views.iter() {
+        for view in &self.views {
             let w = view.width();
             if w > canvas.width() {
                 break

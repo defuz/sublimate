@@ -1,4 +1,6 @@
 #![allow(dead_code)]
+#![cfg_attr(feature="clippy", feature(plugin))]
+#![cfg_attr(feature="clippy", plugin(clippy))]
 
 mod core;
 mod toolkit;
@@ -75,8 +77,8 @@ fn main() {
     }
 
     let mut window = Window::new(Core::load(
-                                    matches.value_of("packages").unwrap(), 
-                                    matches.value_of("file").unwrap(), 
+                                    matches.value_of("packages").unwrap(),
+                                    matches.value_of("file").unwrap(),
                                     matches.value_of("project").unwrap()));
     window.render(Canvas::screen());
     loop {

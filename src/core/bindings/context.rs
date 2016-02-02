@@ -48,6 +48,7 @@ pub enum Operator<T> {
     NotRegexContains(Regex),
 }
 
+#[derive(Debug)]
 pub enum ParseContextError {
     ContextIsNotArray,
     ContextRuleIsNotObject,
@@ -72,7 +73,7 @@ impl ParseSettings for ContextRule {
 
         let (operator_string, operand) = match (obj.remove("operator"), obj.remove("operand")) {
             (Some(Settings::String(operator)), Some(operand)) => (operator, operand),
-            (None, None) => ("equal".to_string(), Settings::Boolean(true)),
+            (None, None) => ("equal".to_owned(), Settings::Boolean(true)),
             _ => return Err(IncorrectOperatorOrOperand),
         };
 
@@ -83,9 +84,9 @@ impl ParseSettings for ContextRule {
             ("text",
              match (&operator_string[..], operand) {
                 ("not_equal", Settings::Boolean(false)) | ("equal", Settings::Boolean(true)) =>
-                    ("equal", Settings::String("".to_string())),
+                    ("equal", Settings::String("".to_owned())),
                 ("not_equal", Settings::Boolean(true)) | ("equal", Settings::Boolean(false)) =>
-                    ("not_equal", Settings::String("".to_string())),
+                    ("not_equal", Settings::String("".to_owned())),
                 _ => return Err(IncorrectOperatorOrOperand),
             })
         } else {
@@ -96,16 +97,16 @@ impl ParseSettings for ContextRule {
              match (&operator_string[..], operand) {
                 ("regex_match", Settings::String(s)) =>
                     ("regex_contains",
-                     Settings::String("^".to_string() + &s + "$")),
+                     Settings::String("^".to_owned() + &s + "$")),
                 ("not_regex_match", Settings::String(s)) =>
                     ("not_regex_contains",
-                     Settings::String("^".to_string() + &s + "$")),
+                     Settings::String("^".to_owned() + &s + "$")),
                 (operator, operand) => (operator, operand),
             })
         };
 
         let context_rule = if key.starts_with("setting.") {
-            let key = key[8..].to_string();
+            let key = key[8..].to_owned();
             let operator = match operator {
                 ("equal", operand) => Operator::Equal(operand),
                 ("not_equal", operand) => Operator::NotEqual(operand),

@@ -61,7 +61,7 @@ impl View {
 
     pub fn parse(&mut self, parser: &mut Parser) {
         let mut state = ParserState::new();
-        for line in self.lines.iter_mut() {
+        for line in &mut self.lines {
             line.parse(parser, &mut state);
         }
     }

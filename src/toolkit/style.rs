@@ -9,8 +9,8 @@ impl ColorPair {
     }
 
     pub fn to_term(&self) -> i16 {
-        match self {
-            &ColorPair(colors) => colors as i16,
+        match *self {
+            ColorPair(colors) => colors as i16,
         }
     }
 }
@@ -23,7 +23,7 @@ const WHITE : Color = Color(231);
 
 fn color_chanel_256_to_6(x: u8) -> (u8, u8) {
     match x {
-        0x00...0x2F => (0, x - 0x00),
+        0x00...0x2F => (0, x),
         0x2F...0x5F => (1, 0x5F - x),
         0x5F...0x73 => (1, x - 0x5F),
         0x73...0x87 => (2, 0x87 - x),
@@ -76,8 +76,8 @@ impl Color {
     }
 
     pub fn to_term(&self) -> i16 {
-        match self {
-            &Color(color) => color as i16,
+        match *self {
+            Color(color) => color as i16,
         }
     }
 }

@@ -271,6 +271,7 @@ impl ParseSettings for ThemeItem {
 impl ParseSettings for ThemeSettings {
     type Error = ParseThemeError;
 
+    #[allow(cyclomatic_complexity)]
     fn parse_settings(json: Settings) -> Result<ThemeSettings, Self::Error> {
         let mut settings = ThemeSettings::default();
 
@@ -371,13 +372,7 @@ impl ParseSettings for Theme {
         };
         let mut scopes = Vec::new();
         for json in iter {
-            match ThemeItem::parse_settings(json) {
-                Ok(scope) => scopes.push(scope),
-                Err(..) => {
-                    // TODO: warning
-                }
-            }
-
+            scopes.push(try!(ThemeItem::parse_settings(json)));
         }
         Ok(Theme {
             name: name,

@@ -2,9 +2,9 @@ use std::io::{Error as IoError, BufReader};
 use std::fs::File;
 use std::path::{Path, PathBuf};
 
-use core::settings::{Settings, SettingsError, read_json, read_plist, FromSettings, ParseSettings};
-use core::menu::Menu;
-use core::bindings::Keymap;
+use core::settings::{Settings, SettingsError, read_json, read_plist, ParseSettings};
+use core::menu::{Menu, ParseMenuError};
+use core::bindings::{Keymap, ParseKeymapError};
 use core::syntax::{Syntax, ParseSyntaxError, Theme, ParseThemeError};
 
 #[derive(Debug)]
@@ -17,6 +17,8 @@ pub enum PackageError {
     ReadSettings(SettingsError),
     ParseTheme(ParseThemeError),
     ParseSyntax(ParseSyntaxError),
+    ParseKeymap(ParseKeymapError),
+    ParseMenu(ParseMenuError),
     Io(IoError)
 }
 
@@ -35,6 +37,18 @@ impl From<ParseThemeError> for PackageError {
 impl From<ParseSyntaxError> for PackageError {
     fn from(error: ParseSyntaxError) -> PackageError {
         PackageError::ParseSyntax(error)
+    }
+}
+
+impl From<ParseKeymapError> for PackageError {
+    fn from(error: ParseKeymapError) -> PackageError {
+        PackageError::ParseKeymap(error)
+    }
+}
+
+impl From<ParseMenuError> for PackageError {
+    fn from(error: ParseMenuError) -> PackageError {
+        PackageError::ParseMenu(error)
     }
 }
 
@@ -62,18 +76,12 @@ impl PackageRepository {
         Ok(try!(read_plist(try!(self.read_file(path)))))
     }
 
-    pub fn get_menu<P: AsRef<Path>>(&self, path: P) -> Menu {
-        match self.read_json(path.as_ref()) {
-            Ok(settings) => Menu::from_settings(settings),
-            Err(..) => Menu::default()
-        }
+    pub fn get_menu<P: AsRef<Path>>(&self, path: P) -> Result<Menu, PackageError> {
+        Ok(try!(Menu::parse_settings(try!(self.read_json(path.as_ref())))))
     }
 
-    pub fn get_keymap<P: AsRef<Path>>(&self, path: P) -> Keymap {
-        match self.read_json(path.as_ref()) {
-            Ok(settings) => Keymap::from_settings(settings),
-            Err(..) => Keymap::default()
-        }
+    pub fn get_keymap<P: AsRef<Path>>(&self, path: P) -> Result<Keymap, PackageError> {
+        Ok(try!(Keymap::parse_settings(try!(self.read_json(path.as_ref())))))
     }
 
     pub fn get_theme<P: AsRef<Path>>(&self, path: P) -> Result<Theme, PackageError> {

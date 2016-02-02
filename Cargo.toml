@@ -6,16 +6,18 @@ authors = ["Ivan Ivaschenko <defuz@me.com>"]
 
 [dependencies]
 ncurses = "*"
-bitflags = "0.3"
+bitflags = "0.4"
 weakjson = "0.0.7"
 rustc-serialize = "0.3"
 unicode-width = "0.1"
 log = "0.3"
 env_logger = "0.3"
-plist = "0.0.11"
+plist = "0.0.12"
 oniguruma = "0.3.1"
 glob = "0.2.10"
 clap = "2"
+
+clippy = {version = "*", optional = true}
 
 [features]
 default = ["ncurses/panel"]

@@ -219,11 +219,9 @@ impl Folder {
                 if settings.file_matched(&path) {
                     files.push(name);
                 }
-            } else if metadata.is_dir() {
-                if settings.folder_matched(&path) {
-                    let folder = try!(Folder::walk(&path, settings));
-                    folders.insert(name, folder);
-                }
+            } else if metadata.is_dir() && settings.folder_matched(&path) {
+                let folder = try!(Folder::walk(&path, settings));
+                folders.insert(name, folder);
             }
         }
         Ok(Folder {
@@ -265,7 +263,7 @@ impl Project {
     }
 
     pub fn walk(&mut self) -> Result<(), ProjectError> {
-        for pf in self.folders.iter_mut() {
+        for pf in &mut self.folders {
             pf.folder = try!(Folder::walk(&pf.path, &pf.settings));
         }
         Ok(())
