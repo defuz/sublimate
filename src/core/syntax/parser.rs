@@ -1,4 +1,4 @@
-use core::regex::{Regex, Region, OPTION_NONE};
+use core::regex::{Regex, Region, SEARCH_OPTION_NONE};
 
 use super::scope::{ScopePath, ScopeCommand};
 use super::builder::ParserBuilder;
@@ -104,8 +104,8 @@ impl Parser {
                 None => &self.contexts[0]
             };
             self.region.clear();
-            let r = context.regex.search_with_region(&text[pos..], &mut self.region, OPTION_NONE);
-            if r.unwrap().is_some() {
+            let r = context.regex.search_with_options(text, pos, text.len(), SEARCH_OPTION_NONE, Some(&mut self.region));
+            if r.is_some() {
                 let (_, end) = self.region.pos(0).unwrap();
                 if end == 0 {
                     // TODO: Warning
@@ -120,20 +120,20 @@ impl Parser {
                             continue
                         }
                     };
-                    state.change_scope(pos + beg, parser_match.before.clone());
+                    state.change_scope(beg, parser_match.before.clone());
                     for (capture_id, scope) in &parser_match.captures_map {
                         let (beg, end) = match self.region.pos(capture_index + *capture_id) {
                             Some(range) => range,
                             None => continue
                         };
-                        state.change_scope(pos + beg, ScopeCommand::Push(scope.clone()));
-                        state.change_scope(pos + end, ScopeCommand::Pop);
+                        state.change_scope(beg, ScopeCommand::Push(scope.clone()));
+                        state.change_scope(end, ScopeCommand::Pop);
                     }
-                    state.change_scope(pos + end, parser_match.after.clone());
+                    state.change_scope(end, parser_match.after.clone());
                     state.change_context(parser_match.context);
                     break
                 }
-                pos += end;
+                pos = end;
             } else {
                 break
             }

@@ -21,19 +21,23 @@ pub enum ContextRule {
     /// Returns `true` if a panel has input focus.
     PanelHasFocusEqual(bool),
     /// Returns `true` if the panel given as operand is visible.
-    PanelEqual(bool),
+    PanelEqual(Operator<String>, bool), // TODO: change to Panel(String)
     /// Returns the number of selections.
     NumSelectionsEqual(u64),
     /// Returns the number of selections.
     NumSelectionsNotEqual(u64),
+    /// ???
+    LastCommand(Operator<String>, bool), // TODO: change to LastCommand(String)
     /// Returns the name of the current scope.
-    Selector(Operator<String>, bool),
+    Selector(Operator<String>, bool),  // TODO: change to Selector(String)
     /// Restricts the test to the selected text.
     Text(Operator<String>, bool),
     /// Restricts the test to the text following the caret.
     FollowingText(Operator<String>, bool),
     /// Restricts the test to the text preceding the caret.
     PrecedingText(Operator<String>, bool),
+    /// ???
+    EolSelector(Operator<String>, bool),
     /// Returns the value of the setting.
     Setting(String, Operator<Settings>),
 }
@@ -61,6 +65,7 @@ pub enum ParseContextError {
 impl ParseSettings for ContextRule {
     type Error = ParseContextError;
     fn parse_settings(settings: Settings) -> Result<ContextRule, Self::Error> {
+        println!("{:?}", settings);
         let mut obj = match settings {
             Settings::Object(obj) => obj,
             _ => return Err(ContextRuleIsNotObject),
@@ -73,6 +78,7 @@ impl ParseSettings for ContextRule {
 
         let (operator_string, operand) = match (obj.remove("operator"), obj.remove("operand")) {
             (Some(Settings::String(operator)), Some(operand)) => (operator, operand),
+            (None, Some(v)) => ("equal".to_owned(), v),
             (None, None) => ("equal".to_owned(), Settings::Boolean(true)),
             _ => return Err(IncorrectOperatorOrOperand),
         };
@@ -139,7 +145,6 @@ impl ParseSettings for ContextRule {
                 "overlay_visible" => Some(ContextRule::OverlayVisibleEqual),
                 "panel_visible" => Some(ContextRule::PanelVisibleEqual),
                 "panel_has_focus" => Some(ContextRule::PanelHasFocusEqual),
-                "panel" => Some(ContextRule::PanelEqual),
                 _ => None,
             };
             match bool_rule_builder {
@@ -153,9 +158,12 @@ impl ParseSettings for ContextRule {
                 None => {
                     let rule_builder: fn(Operator<String>, bool) -> ContextRule = match key {
                         "selector" => ContextRule::Selector,
+                        "eol_selector" => ContextRule::EolSelector,
                         "text" => ContextRule::Text,
                         "following_text" => ContextRule::FollowingText,
                         "preceding_text" => ContextRule::PrecedingText,
+                        "last_command" => ContextRule::LastCommand,
+                        "panel" => ContextRule::PanelEqual,
                         _ => return Err(IncorrectKey),
                     };
                     let operator = match operator {

@@ -14,7 +14,7 @@ extern crate log;
 extern crate env_logger;
 
 extern crate glob;
-extern crate oniguruma;
+extern crate onig;
 extern crate unicode_width;
 
 extern crate ncurses;
@@ -60,6 +60,11 @@ fn main() {
                         .required(true))
                     .get_matches();
 
+    let core = Core::load(
+        matches.value_of("packages").unwrap(),
+        matches.value_of("file").unwrap(),
+        matches.value_of("project").unwrap());
+
     setlocale(LcCategory::all, "en_US.utf-8");
 
     initscr();
@@ -76,10 +81,7 @@ fn main() {
         init_pair(i as i16, fg.to_term(), bg.to_term());
     }
 
-    let mut window = Window::new(Core::load(
-                                    matches.value_of("packages").unwrap(),
-                                    matches.value_of("file").unwrap(),
-                                    matches.value_of("project").unwrap()));
+    let mut window = Window::new(core);
     window.render(Canvas::screen());
     loop {
         if let Some(key) = Key::from_keycode(getch()) {

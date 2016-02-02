@@ -153,12 +153,6 @@
 		</dict>
 		<dict>
 			<key>name</key>
-			<string>-----------------------------------</string>
-			<key>settings</key>
-			<dict/>
-		</dict>
-		<dict>
-			<key>name</key>
 			<string>♦ Embedded Source</string>
 			<key>scope</key>
 			<string>text source</string>

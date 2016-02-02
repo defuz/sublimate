@@ -13,7 +13,7 @@ unicode-width = "0.1"
 log = "0.3"
 env_logger = "0.3"
 plist = "0.0.12"
-oniguruma = "0.3.1"
+onig = "0.4"
 glob = "0.2.10"
 clap = "2"
 
