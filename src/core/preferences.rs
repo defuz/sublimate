@@ -1,3 +1,6 @@
+use super::settings::{Settings, ParseSettings};
+use std::path::PathBuf;
+
 pub enum WordWrap {
     Auto,
     Wrap,
@@ -46,9 +49,15 @@ pub struct Trigger {
    pub characters: String
 }
 
+pub enum ParsePreferencesError {
+    PreferencesIsNotObject,
+    PreferencesIsNotDefined(String),
+}
+
+#[derive(Debug)]
 pub struct Preferences {
 	/// Sets the colors used within the text area
-	pub color_scheme: std::path::PathBuf,
+	pub color_scheme: PathBuf,
 
 	/// Note that the font_face and font_size are overridden in the platform
     /// specific settings file, for example, "Preferences (Linux).sublime-settings".
@@ -60,7 +69,7 @@ pub struct Preferences {
 	/// Valid  are "no_bold", "no_italic", "no_antialias", "gray_antialias",
     /// "subpixel_antialias", "no_round" (OS X only), "gdi" (Windows only) and
     /// "directwrite" (Windows only)
-	pub font_options: Vec<String>,
+	/*pub font_options: Vec<String>,
 
 	/// Characters that are considered to separate words
 	pub word_separators: core::regex::Regex,
@@ -445,5 +454,30 @@ pub struct Preferences {
 
     /// List any packages to ignore here. When removing entries from this list,
     /// a restart may be required if the package contains plugins.
-    pub ignored_packages: Vec<String>
+    pub ignored_packages: Vec<String>*/
+}
+
+impl ParseSettings for Preferences {
+    type Error = ParsePreferencesError;
+    fn parse_settings(settings: Settings) -> Result<Preferences, Self::Error> {
+        let mut obj = match settings {
+            Settings::Object(obj) => obj,
+            _ => return Err(ParsePreferencesError::PreferencesIsNotObject),
+        };
+
+        let color_scheme = match obj.remove("color_scheme") {
+            Some(Settings::String(s)) => PathBuf::from(s.as_string()),
+            None => return Err(PreferencesIsNotDefined("color_scheme".to_string()))
+        };
+
+        let font_face = match obj.remove("font_face") {
+            Some(Settings::String(s)) => s.as_string(),
+            None => return Err(PreferencesIsNotDefined("font_face".to_string()))
+        };
+
+        let font_size = match obj.remove("font_size") {
+            Some(Settings::I64(i)) => i.as_i64() as i32,
+            None => return Err(PreferencesIsNotDefined("font_size".to_string()))
+        }
+    }
 }
