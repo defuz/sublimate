@@ -69,9 +69,9 @@ pub struct Preferences {
 	/// Valid  are "no_bold", "no_italic", "no_antialias", "gray_antialias",
     /// "subpixel_antialias", "no_round" (OS X only), "gdi" (Windows only) and
     /// "directwrite" (Windows only)
-	/*pub font_options: Vec<String>,
+	pub font_options: Vec<String>,
 
-	/// Characters that are considered to separate words
+    /// Characters that are considered to separate words
 	pub word_separators: core::regex::Regex,
 
 	/// Set to false to prevent line numbers being drawn in the gutter
@@ -96,7 +96,7 @@ pub struct Preferences {
 	pub spell_check: bool,
 
 	/// The number of spaces a tab is considered equal to
-	pub tab_size: i32,
+	pub tab_size: u32,
 
 	/// Set to true to insert spaces when tab is pressed
 	pub translate_tabs_to_spaces: bool,
@@ -137,13 +137,13 @@ pub struct Preferences {
     pub indent_subsequent_lines: bool,
 
     /// Draws text centered in the window rather than left aligned
-    pub draw_centered: bool,
+    /*pub draw_centered: bool,
 
     /// Controls auto pairing of quotes, brackets etc
     pub auto_match_enabled: bool,
 
     /// Word list to use for spell checking
-    pub dictionary: std::path::PathBuf,
+    pub dictionary: PathBuf,
 
     /// Sets which scopes are checked for spelling errors
     pub spelling_selector: Vec<Trigger>,
@@ -478,6 +478,129 @@ impl ParseSettings for Preferences {
         let font_size = match obj.remove("font_size") {
             Some(Settings::I64(i)) => i.as_i64() as i32,
             None => return Err(PreferencesIsNotDefined("font_size".to_string()))
-        }
+        };
+
+        let font_options = match obj.remove("font_options") {
+            Some(Settings::Array(arr)) => arr,
+            None => Err(PreferencesIsNotDefined("font_options".to_string()))
+        };
+
+        let word_separators = match obj.remove("word_separators") {
+            Some(Settings::String(s)) => core::regex::Regex::new(s.as_string()),
+            None => return Err(PreferencesIsNotDefined("word_separators".to_string()))
+        };
+
+        let line_numbers = match obj.remove("line_numbers") {
+            Some(Settings::Boolean(b)) => b.as_boolean(),
+            None => return Err(PreferencesIsNotDefined("line_numbers".to_string()))
+        };
+
+        let gutter = match obj.remove("gutter") {
+            Some(Settings::Boolean(b)) => b.as_boolean(),
+            None => return Err(PreferencesIsNotDefined("gutter".to_string()))
+        };
+
+        let margin = match obj.remove("margin") {
+            Some(Settings::Boolean(b)) => b.as_boolean(),
+            None => return Err(PreferencesIsNotDefined("margin".to_string()))
+        };
+
+        let fold_buttons = match obj.remove("fold_buttons") {
+            Some(Settings::Boolean(b)) => b.as_boolean(),
+            None => return Err(PreferencesIsNotDefined("fold_buttons".to_string()))
+        };
+
+        let fade_fold_buttons = match obj.remove("fade_fold_buttons") {
+            Some(Settings::Boolean(b)) => b.as_boolean(),
+            None => return Err(PreferencesIsNotDefined("fade_fold_buttons".to_string()))
+        };
+
+        let rulers = match obj.remove("rulers") {
+            Some(Settings::Array(arr)) => arr,
+            None => Err(PreferencesIsNotDefined("rulers".to_string()))
+        };
+
+        let spell_check = match obj.remove("spell_check") {
+            Some(Settings::Boolean(b)) => b.as_boolean(),
+            None => return Err(PreferencesIsNotDefined("spell_check".to_string()))
+        };
+
+        let tab_size = match obj.remove("tab_size") {
+            Some(Settings::U64(num)) => num.as_u64() as u32,
+            None => return Err(PreferencesIsNotDefined("tab_size".to_string()))
+        };
+
+        let translate_tabs_to_spaces = match obj.remove("translate_tabs_to_spaces") {
+            Some(Settings::Boolean(b)) => b.as_boolean(),
+            None => return Err(PreferencesIsNotDefined("translate_tabs_to_spaces".to_string()))
+        };
+
+        let use_tab_stops = match obj.remove("use_tab_stops") {
+            Some(Settings::Boolean(b)) => b.as_boolean(),
+            None => return Err(PreferencesIsNotDefined("use_tab_stops".to_string()))
+        };
+
+        let detect_indentation = match obj.remove("detect_indentation") {
+            Some(Settings::Boolean(b)) => b.as_boolean(),
+            None => return Err(PreferencesIsNotDefined("detect_indentation".to_string()))
+        };
+
+        let auto_indent = match obj.remove("auto_indent") {
+            Some(Settings::Boolean(b)) => b.as_boolean(),
+            None => return Err(PreferencesIsNotDefined("auto_indent".to_string()))
+        };
+
+        let smart_indent = match obj.remove("smart_indent") {
+            Some(Settings::Boolean(b)) => b.as_boolean(),
+            None => return Err(PreferencesIsNotDefined("smart_indent".to_string()))
+        };
+
+        let indent_to_bracket = match obj.remove("indent_to_bracket") {
+            Some(Settings::Boolean(b)) => b.as_boolean(),
+            None => return Err(PreferencesIsNotDefined("indent_to_bracket".to_string()))
+        };
+
+        let trim_automatic_white_space = match obj.remove("trim_automatic_white_space") {
+            Some(Settings::Boolean(b)) => b.as_boolean(),
+            None => return Err(PreferencesIsNotDefined("trim_automatic_white_space".to_string()))
+        };
+
+        let word_wrap: WordWrap = match obj.remove("word_wrap") {
+            Some(Settings::String(s)) => match s.as_string() {
+                "auto" => WordWrap::Auto,
+                "true" => WordWrap::Wrap,
+                "false" => WordWrap::NoWrap
+            },
+            None => None => return Err(PreferencesIsNotDefined("word_wrap".to_string()))
+        };
+
+        let wrap_width = match obj.remove("wrap_width") {
+            Some(Settings::I64(num)) => num.as_i64() as i32,
+            None => return Err(PreferencesIsNotDefined("wrap_width".to_string()))
+        };
+
+        let indent_subsequent_lines = match obj.remove("indent_subsequent_lines") {
+            Some(Settings::Boolean(b)) => b.as_boolean(),
+            None => return Err(PreferencesIsNotDefined("indent_subsequent_lines".to_string()))
+        };       
+
+        let draw_centered = match obj.remove("draw_centered") {
+            Some(Settings::Boolean(b)) => b.as_boolean(),
+            None => return Err(PreferencesIsNotDefined("draw_centered".to_string()))
+        };       
+
+        let auto_match_enabled = match obj.remove("auto_match_enabled") {
+            Some(Settings::Boolean(b)) => b.as_boolean(),
+            None => return Err(PreferencesIsNotDefined("auto_match_enabled".to_string()))
+        };
+
+        let dictionary = match obj.remove("dictionary") {
+            Some(Settings::String(s)) => PathBuf::from(s.as_string()),
+            None => return Err(PreferencesIsNotDefined("dictionary".to_string()))
+        };
+
+        let spelling_selector = obj.remove("spelling_selector") {
+            Some(Settings::Array(arr)) => 
+        };
     }
 }
