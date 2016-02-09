@@ -27,7 +27,7 @@ pub struct ProjectFolder {
 }
 
 #[derive(Debug, Default)]
-struct ExcludePatterns {
+pub struct ExcludePatterns {
     patterns: Vec<Pattern>
 }
 
