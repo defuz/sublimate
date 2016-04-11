@@ -36,3 +36,7 @@ ARGS:
     file    Sets a path to viewing file
 ```
 You can also obtain this help by runing `sublimate` with `-h` flag.
+
+## License
+
+This project is dual-licensed under the terms of the MIT and Apache (version 2.0) licenses.
