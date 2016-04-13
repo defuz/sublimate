@@ -2,6 +2,7 @@ pub mod settings;
 pub mod menu;
 pub mod workspace;
 mod packages;
+mod preferences;
 pub mod command;
 pub mod syntax;
 pub mod regex;
