@@ -10,10 +10,10 @@ Installation on Ubuntu Linux: `$ sudo apt-get install libonig-dev libncurses5-de
 
 ## Compiling
 
-Once you install all dependencies - follow this instructions to compile `sublimate`.
+Once you install all dependencies, follow these instructions to compile `sublimate`.
 
  1. Clone the project `$ git clone https://github.com/defuz/sublimate && cd sublimate`
- 2. Build the project `$ cargo build --release` (**NOTE:** There is a large performance differnce when compiling without optimizations, so I recommend alwasy using `--release` to enable to them)
+ 2. Build the project `$ cargo build --release` (**NOTE:** There is a large performance difference when compiling without optimizations, so I recommend always using `--release` to enable them)
  3. Once complete, the binary will be located at `target/release/sublimate`
 
 ## Options
@@ -35,7 +35,7 @@ OPTIONS:
 ARGS:
     file    Sets a path to viewing file
 ```
-You can also obtain this help by runing `sublimate` with `-h` flag.
+You can also obtain this help by running `sublimate` with the `-h` flag.
 
 ## License
 
